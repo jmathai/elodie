@@ -1,1 +1,2 @@
-# hyde
+# elodie
+pip install exifread
