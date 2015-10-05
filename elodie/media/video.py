@@ -15,10 +15,10 @@ Video package that handles all video operations
 Video class for general video operations
 """
 class Video(object):
+    __valid_extensions = ('avi','m4v','mov','mp4')
+
     # Constructor
     def __init__(self, source=None):
-        self.__valid_extensions = ['avi','m4v','mov','mp4']
-
         self.source = source
 
     def get_metadata(self):
@@ -36,15 +36,10 @@ class Video(object):
 
         return metadata
 
-           #directory_name = time.strftime('%Y-%m', date_taken)
-           #file_base_name = path_regex.group(1)
-           #file_extension = path_regex.group(2)
-           #file_name = '%s-%s-%s.%s' % (time.strftime('%d-%H-%M', date_taken), file_base_name, video_length, file_extension)
-
     def is_valid(self):
         source = self.source
         # we can't use self.__get_extension else we'll endlessly recurse
-        return os.path.splitext(source)[1][1:].lower() in self.__valid_extensions
+        return os.path.splitext(source)[1][1:].lower() in self.get_valid_extensions()
 
     #
     # Private methods
@@ -95,6 +90,10 @@ class Video(object):
             return None
 
         return mimetype[0]
+
+    @classmethod
+    def get_valid_extensions(Video):
+        return Video.__valid_extensions
 
 class Transcode(object):
     # Constructor takes a video object as it's parameter
