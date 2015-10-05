@@ -1,5 +1,9 @@
-#!/usr/bin/env python
+"""
+Author: Jaisen Mathai <jaisen@jmathai.com>
+Video package that handles all video operations
+"""
 
+# load modules
 from sys import argv
 import mimetypes
 import os
@@ -7,20 +11,26 @@ import re
 import subprocess
 import time
 
-"""
-Video package that handles all video operations
-"""
 
 """
 Video class for general video operations
 """
 class Video(object):
+    # class / static variable accessible through get_valid_extensions()
     __valid_extensions = ('avi','m4v','mov','mp4')
 
-    # Constructor
+    """
+    @param, source, string, The fully qualified path to the video file
+    """
     def __init__(self, source=None):
         self.source = source
 
+    """
+    Get a dictionary of metadata for a video.
+    All keys will be present and have a value of None if not obtained.
+
+    @returns, dictionary or None for non-video files
+    """
     def get_metadata(self):
         if(not self.is_valid()):
             return None
@@ -36,17 +46,22 @@ class Video(object):
 
         return metadata
 
+    """
+    Check the file extension against valid file extensions as returned by get_valid_extensions()
+    
+    @returns, boolean
+    """
     def is_valid(self):
         source = self.source
         # we can't use self.__get_extension else we'll endlessly recurse
         return os.path.splitext(source)[1][1:].lower() in self.get_valid_extensions()
 
-    #
-    # Private methods
-    #
+    """
+    Get the date which the video was taken.
+    The date value returned is defined by the min() of mtime and ctime.
 
-    # get the min() of mtime and ctime
-    # returns a time object
+    @returns, time object or None for non-video files or 0 timestamp
+    """
     def __get_date_taken(self):
         if(not self.is_valid()):
             return None
@@ -58,20 +73,29 @@ class Video(object):
 
         return time.gmtime(seconds_since_epoch)
         
-    # get the duration of a video in seconds
-    # uses ffmpeg
+    """
+    Get the duration of a video in seconds.
+    Uses ffmpeg/ffprobe
+
+    @returns, string or None for a non-video file
+    """
     def __get_duration(self):
         if(not self.is_valid()):
             return None
 
         source = self.source
-        result = subprocess.Popen(['/usr/local/bin/ffprobe', source],
+        result = subprocess.Popen(['ffprobe', source],
             stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
         for key in result.stdout.readlines():
             if 'Duration' in key:
                 return re.search('(\d{2}:\d{2}.\d{2})', key).group(1).replace('.', ':')
+        return None
 
-    # returns file extension
+    """
+    Get the file extension as a lowercased string.
+
+    @returns, string or None for a non-video
+    """
     def __get_extension(self):
         if(not self.is_valid()):
             return None
@@ -79,7 +103,11 @@ class Video(object):
         source = self.source
         return os.path.splitext(source)[1][1:].lower()
     
-    # returns the mime type
+    """
+    Get the mimetype of the video.
+
+    @returns, string or None for a non-video
+    """
     def __get_mimetype(self):
         if(not self.is_valid()):
             return None
@@ -91,6 +119,11 @@ class Video(object):
 
         return mimetype[0]
 
+    """
+    Static method to access static __valid_extensions variable.
+
+    @returns, tuple
+    """
     @classmethod
     def get_valid_extensions(Video):
         return Video.__valid_extensions
