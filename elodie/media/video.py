@@ -17,7 +17,7 @@ Video class for general video operations
 """
 class Video(object):
     # class / static variable accessible through get_valid_extensions()
-    __valid_extensions = ('avi','m4v','mov','mp4')
+    __valid_extensions = ('avi','m4v','mov','mp4','3gp')
 
     """
     @param, source, string, The fully qualified path to the video file
@@ -45,6 +45,14 @@ class Video(object):
         }
 
         return metadata
+
+    """
+    Get the full path to the video.
+
+    @returns string
+    """
+    def get_file_path(self):
+        return self.source
 
     """
     Check the file extension against valid file extensions as returned by get_valid_extensions()
