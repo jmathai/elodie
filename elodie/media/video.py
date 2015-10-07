@@ -27,27 +27,6 @@ class Video(Media):
         super(Video, self).__init__(source)
 
     """
-    Get a dictionary of metadata for a video.
-    All keys will be present and have a value of None if not obtained.
-
-    @returns, dictionary or None for non-video files
-    """
-    def get_metadata(self):
-        if(not self.is_valid()):
-            return None
-
-        source = self.source
-        metadata = {
-            "date_taken": self.get_date_taken(),
-            "length": self.get_duration(),
-            "mime_type": self.get_mimetype(),
-            "base_name": os.path.splitext(os.path.basename(source))[0],
-            "extension": self.get_extension()
-        }
-
-        return metadata
-
-    """
     Get the date which the video was taken.
     The date value returned is defined by the min() of mtime and ctime.
 
@@ -81,6 +60,27 @@ class Video(Media):
             if 'Duration' in key:
                 return re.search('(\d{2}:\d{2}.\d{2})', key).group(1).replace('.', ':')
         return None
+
+    """
+    Get a dictionary of metadata for a video.
+    All keys will be present and have a value of None if not obtained.
+
+    @returns, dictionary or None for non-video files
+    """
+    def get_metadata(self):
+        if(not self.is_valid()):
+            return None
+
+        source = self.source
+        metadata = {
+            "date_taken": self.get_date_taken(),
+            "length": self.get_duration(),
+            "mime_type": self.get_mimetype(),
+            "base_name": os.path.splitext(os.path.basename(source))[0],
+            "extension": self.get_extension()
+        }
+
+        return metadata
 
     """
     Static method to access static __valid_extensions variable.
