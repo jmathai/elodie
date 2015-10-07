@@ -11,11 +11,12 @@ import re
 import subprocess
 import time
 
+from elodie.media.media import Media
 
 """
 Video class for general video operations
 """
-class Video(object):
+class Video(Media):
     # class / static variable accessible through get_valid_extensions()
     __valid_extensions = ('avi','m4v','mov','mp4','3gp')
 
@@ -23,7 +24,7 @@ class Video(object):
     @param, source, string, The fully qualified path to the video file
     """
     def __init__(self, source=None):
-        self.source = source
+        super(Video, self).__init__(source)
 
     """
     Get a dictionary of metadata for a video.
@@ -37,32 +38,14 @@ class Video(object):
 
         source = self.source
         metadata = {
-            "date_taken": self.__get_date_taken(),
-            "length": self.__get_duration(),
-            "mime_type": self.__get_mimetype(),
+            "date_taken": self.get_date_taken(),
+            "length": self.get_duration(),
+            "mime_type": self.get_mimetype(),
             "base_name": os.path.splitext(os.path.basename(source))[0],
-            "extension": self.__get_extension()
+            "extension": self.get_extension()
         }
 
         return metadata
-
-    """
-    Get the full path to the video.
-
-    @returns string
-    """
-    def get_file_path(self):
-        return self.source
-
-    """
-    Check the file extension against valid file extensions as returned by get_valid_extensions()
-    
-    @returns, boolean
-    """
-    def is_valid(self):
-        source = self.source
-        # we can't use self.__get_extension else we'll endlessly recurse
-        return os.path.splitext(source)[1][1:].lower() in self.get_valid_extensions()
 
     """
     Get the date which the video was taken.
@@ -70,7 +53,7 @@ class Video(object):
 
     @returns, time object or None for non-video files or 0 timestamp
     """
-    def __get_date_taken(self):
+    def get_date_taken(self):
         if(not self.is_valid()):
             return None
 
@@ -87,7 +70,7 @@ class Video(object):
 
     @returns, string or None for a non-video file
     """
-    def __get_duration(self):
+    def get_duration(self):
         if(not self.is_valid()):
             return None
 
@@ -98,34 +81,6 @@ class Video(object):
             if 'Duration' in key:
                 return re.search('(\d{2}:\d{2}.\d{2})', key).group(1).replace('.', ':')
         return None
-
-    """
-    Get the file extension as a lowercased string.
-
-    @returns, string or None for a non-video
-    """
-    def __get_extension(self):
-        if(not self.is_valid()):
-            return None
-
-        source = self.source
-        return os.path.splitext(source)[1][1:].lower()
-    
-    """
-    Get the mimetype of the video.
-
-    @returns, string or None for a non-video
-    """
-    def __get_mimetype(self):
-        if(not self.is_valid()):
-            return None
-
-        source = self.source
-        mimetype = mimetypes.guess_type(source)
-        if(mimetype == None):
-            return None
-
-        return mimetype[0]
 
     """
     Static method to access static __valid_extensions variable.
