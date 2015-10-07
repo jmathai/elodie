@@ -60,7 +60,7 @@ class FileSystem:
             return None
 
         file_name = '%s-%s.%s' % (time.strftime('%Y-%m-%d_%H-%M-%S', metadata['date_taken']), metadata['base_name'], metadata['extension'])
-        return file_name
+        return file_name.lower()
 
     """
     Get date based folder name.
