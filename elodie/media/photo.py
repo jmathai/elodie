@@ -52,11 +52,11 @@ class Photo(Media):
         # Sourced from https://github.com/photo/frontend/blob/master/src/libraries/models/Photo.php#L500
         exif = self.get_exif()
         if('EXIF DateTimeOriginal' in exif):
-            seconds_since_epoch = time.mktime(datetime.strptime(exif['EXIF DateTimeOriginal'], '%Y:%m:%d %H:%M:%S').timetuple())
+            seconds_since_epoch = time.mktime(datetime.strptime(str(exif['EXIF DateTimeOriginal']), '%Y:%m:%d %H:%M:%S').timetuple())
         elif('EXIF DateTime' in exif):
-            seconds_since_epoch = time.mktime(datetime.strptime(exif['EXIF DateTime'], '%Y:%m:%d %H:%M:%S').timetuple())
+            seconds_since_epoch = time.mktime(datetime.strptime(str(exif['EXIF DateTime']), '%Y:%m:%d %H:%M:%S').timetuple())
         elif('EXIF FileDateTime' in exif):
-            seconds_since_epoch = exif['EXIF DateTime']
+            seconds_since_epoch = str(exif['EXIF DateTime'])
 
         if(seconds_since_epoch == 0):
             return None
@@ -115,11 +115,19 @@ class Photo(Media):
         if(key not in exif):
             return None
 
+        # this is a hack to get the proper direction by negating the values for S and W
+        latdir = 1
+        if(key == 'GPS GPSLatitude' and str(exif['GPS GPSLatitudeRef']) == 'S'):
+            latdir = -1
+        londir = 1
+        if(key == 'GPS GPSLongitude' and str(exif['GPS GPSLongitudeRef']) == 'W'):
+            londir = -1
+
         coords = [float(Fraction(ratio.num, ratio.den)) for ratio in exif[key].values]
         if(key == 'latitude'):
-            return str(LatLon.Latitude(degree=coords[0], minute=coords[1], second=coords[2]))
+            return float(str(LatLon.Latitude(degree=coords[0], minute=coords[1], second=coords[2]))) * latdir
         else:
-            return str(LatLon.Longitude(degree=coords[0], minute=coords[1], second=coords[2]))
+            return float(str(LatLon.Longitude(degree=coords[0], minute=coords[1], second=coords[2]))) * londir
 
     """
     Get a dictionary of metadata for a photo.
@@ -134,7 +142,7 @@ class Photo(Media):
         source = self.source
 
         metadata = {
-            #"date_taken": self.get_date_taken(),
+            "date_taken": self.get_date_taken(),
             "latitude": self.get_coordinate('latitude'),
             "longitude": self.get_coordinate('longitude'),
             "mime_type": self.get_mimetype(),

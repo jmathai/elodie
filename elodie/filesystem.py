@@ -6,6 +6,8 @@ import os
 import re
 import time
 
+from elodie import geolocation
+
 """
 General file system methods
 """
@@ -51,7 +53,7 @@ class FileSystem:
     @param, video, Video, A Video instance
     @returns, string or None for non-videos
     """
-    def get_file_name_for_video(self, video):
+    def get_file_name(self, video):
         if(not video.is_valid()):
             return None
 
@@ -70,6 +72,26 @@ class FileSystem:
     """
     def get_folder_name_by_date(self, time_obj):
         return time.strftime('%Y-%m-%b', time_obj)
+
+    """
+    Get folder path by various parameters.
+
+    @param, time_obj, time, Time object to be used to determine folder name.
+    @returns, string
+    """
+    def get_folder_path(self, **kwargs):
+        path = []
+        if('date' in kwargs):
+            path.append(time.strftime('%Y-%m-%b', kwargs['date']))
+
+        if('latitude' in kwargs and 'longitude' in kwargs):
+            place_name = geolocation.place_name(kwargs['latitude'], kwargs['longitude'])
+            if(place_name is None):
+                path.append('Unknown Location')
+            else:
+                path.append(place_name)
+
+        return '/'.join(path)
 
     """
     Set the modification time on the file based on the file path.
