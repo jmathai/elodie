@@ -51,12 +51,15 @@ class Photo(Media):
         # EXIF DateTime is already stored as a timestamp
         # Sourced from https://github.com/photo/frontend/blob/master/src/libraries/models/Photo.php#L500
         exif = self.get_exif()
-        if('EXIF DateTimeOriginal' in exif):
-            seconds_since_epoch = time.mktime(datetime.strptime(str(exif['EXIF DateTimeOriginal']), '%Y:%m:%d %H:%M:%S').timetuple())
-        elif('EXIF DateTime' in exif):
-            seconds_since_epoch = time.mktime(datetime.strptime(str(exif['EXIF DateTime']), '%Y:%m:%d %H:%M:%S').timetuple())
-        elif('EXIF FileDateTime' in exif):
-            seconds_since_epoch = str(exif['EXIF DateTime'])
+        try:
+            if('EXIF DateTimeOriginal' in exif):
+                seconds_since_epoch = time.mktime(datetime.strptime(str(exif['EXIF DateTimeOriginal']), '%Y:%m:%d %H:%M:%S').timetuple())
+            elif('EXIF DateTime' in exif):
+                seconds_since_epoch = time.mktime(datetime.strptime(str(exif['EXIF DateTime']), '%Y:%m:%d %H:%M:%S').timetuple())
+            elif('EXIF FileDateTime' in exif):
+                seconds_since_epoch = str(exif['EXIF DateTime'])
+        except:
+            pass
 
         if(seconds_since_epoch == 0):
             return None

@@ -17,8 +17,17 @@ def reverse_lookup(lat, lon):
 
     key = config.get('MapQuest', 'key')
 
-    r = requests.get('https://open.mapquestapi.com/nominatim/v1/reverse.php?key=%s&lat=%s&lon=%s&format=json' % (key, lat, lon))
-    return r.json()
+    try:
+        r = requests.get('https://open.mapquestapi.com/nominatim/v1/reverse.php?key=%s&lat=%s&lon=%s&format=json' % (key, lat, lon))
+        return r.json()
+    except requests.exceptions.RequestException as e:
+        print e
+        return None
+    except ValueError as e:
+        print r.text
+        print e
+        return None
+
 
 def place_name(lat, lon):
     geolocation_info = reverse_lookup(lat, lon)
