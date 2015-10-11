@@ -13,7 +13,7 @@ from elodie.localstorage import Db
 db = Db()
 filesystem = FileSystem()
 
-def process_file(_file):
+def process_file(_file, destination, media):
     checksum = db.checksum(_file)
     if(checksum == None):
         print 'Could not get checksum for %s. Skipping...' % _file
@@ -23,15 +23,17 @@ def process_file(_file):
         print '%s already exists at %s. Skipping...' % (_file, db.get_hash(checksum))
         return
 
-    media = media_type(_file)
-
-    if(media_type.__name__ == 'Video'):
-        filesystem.set_date_from_path_video(media)
-
     metadata = media.get_metadata()
 
-    directory_name = filesystem.get_folder_path(date=metadata['date_taken'], latitude=metadata['latitude'], longitude=metadata['longitude'])
-    #directory_name = filesystem.get_folder_path(date=metadata['date_taken'])
+    if(type(media).__name__ == 'Video'):
+        directory_name = filesystem.get_folder_path(date=metadata['date_taken'])
+    elif(type(media).__name__ == 'Photo'):
+        directory_name = filesystem.get_folder_path(date=metadata['date_taken'], latitude=metadata['latitude'], longitude=metadata['longitude'])
+    else:
+        print 'Invalid media type'
+        sys.exit(2)
+
+
     dest_directory = '%s/%s' % (destination, directory_name)
     # TODO remove the day prefix of the file that was there prior to the crawl
     file_name = filesystem.get_file_name(media)
@@ -62,7 +64,12 @@ def main(argv):
 
         write_counter = 0
         for current_file in filesystem.get_all_files(source, media_type.get_valid_extensions()):
-            process_file(current_file)
+            media = media_type(current_file)
+
+            if(media_type.__name__ == 'Video'):
+                filesystem.set_date_from_path_video(media)
+
+            process_file(current_file, destination, media)
             # Write to the hash database every 10 iterations
             write_counter += 1
             if(write_counter % 10 == 0):
@@ -72,9 +79,14 @@ def main(argv):
         if(write_counter % 10 != 10):
             db.update_hash_db()
     elif('file' in args):
-        process_file(args['file'])
+        media = media_type(args['file'])
+        if(media_type.__name__ == 'Video'):
+            filesystem.set_date_from_path_video(media)
+
+        process_file(args['file'], destination, media)
         db.update_hash_db()
 
 if __name__ == '__main__':
     main(sys.argv[1:])
     sys.exit(0)
+
