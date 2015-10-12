@@ -25,14 +25,7 @@ def process_file(_file, destination, media):
 
     metadata = media.get_metadata()
 
-    if(type(media).__name__ == 'Video'):
-        directory_name = filesystem.get_folder_path(date=metadata['date_taken'])
-    elif(type(media).__name__ == 'Photo'):
-        directory_name = filesystem.get_folder_path(date=metadata['date_taken'], latitude=metadata['latitude'], longitude=metadata['longitude'])
-    else:
-        print 'Invalid media type'
-        sys.exit(2)
-
+    directory_name = filesystem.get_folder_path(date=metadata['date_taken'], latitude=metadata['latitude'], longitude=metadata['longitude'])
 
     dest_directory = '%s/%s' % (destination, directory_name)
     # TODO remove the day prefix of the file that was there prior to the crawl

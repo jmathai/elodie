@@ -104,7 +104,7 @@ class Photo(Media):
         return self.exif
 
     """
-    Get latitude of photo from EXIF
+    Get latitude or longitude of photo from EXIF
 
     @returns, float or None if not present in EXIF or a non-photo file
     """
