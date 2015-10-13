@@ -61,7 +61,13 @@ class FileSystem:
         if(metadata == None):
             return None
 
-        file_name = '%s-%s.%s' % (time.strftime('%Y-%m-%d_%H-%M-%S', metadata['date_taken']), metadata['base_name'], metadata['extension'])
+        # We want to remove the date prefix we add to the name.
+        # This helps when re-running the program on file which were already processed. 
+        base_name = re.sub('^\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}-', '', metadata['base_name'])
+        if(len(base_name) == 0):
+            base_name = metadata['base_name']
+
+        file_name = '%s-%s.%s' % (time.strftime('%Y-%m-%d_%H-%M-%S', metadata['date_taken']), base_name, metadata['extension'])
         return file_name.lower()
 
     """
