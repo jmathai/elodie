@@ -7,11 +7,12 @@ def reverse_lookup(lat, lon):
     if(lat is None or lon is None):
         return None
 
-    if not path.exists('./config.ini'):
+    config_file = '%s/config.ini' % path.dirname(path.dirname(path.abspath(__file__)))
+    if not path.exists(config_file):
         return None
         
     config = ConfigParser()
-    config.read('./config.ini')
+    config.read(config_file)
     if('MapQuest' not in config.sections()):
         return None
 
