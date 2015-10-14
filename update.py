@@ -28,6 +28,7 @@ def parse_arguments(args):
     return config
 
 def main(config, args):
+    location_coords = None
     for arg in args:
         if(arg[:2] == '--'):
             continue
@@ -52,19 +53,18 @@ def main(config, args):
         exif_metadata = pyexiv2.ImageMetadata(file_path)
         exif_metadata.read()
         if(config['location'] is not None):
-            location_coords = geolocation.coordinates_by_name(config['location'])
+            if(location_coords is None):
+                location_coords = geolocation.coordinates_by_name(config['location'])
+
             if(location_coords is not None and 'latitude' in location_coords and 'longitude' in location_coords):
-                print 'Queueing location to exif ...',
                 exif_metadata['Exif.GPSInfo.GPSLatitude'] = geolocation.decimal_to_dms(location_coords['latitude'])
                 exif_metadata['Exif.GPSInfo.GPSLatitudeRef'] = pyexiv2.ExifTag('Exif.GPSInfo.GPSLatitudeRef', 'N' if location_coords['latitude'] >= 0 else 'S')
                 exif_metadata['Exif.GPSInfo.GPSLongitude'] = geolocation.decimal_to_dms(location_coords['longitude'])
                 exif_metadata['Exif.GPSInfo.GPSLongitudeRef'] = pyexiv2.ExifTag('Exif.GPSInfo.GPSLongitudeRef', 'E' if location_coords['longitude'] >= 0 else 'W')
                 write = True
-                print 'OK'
 
         if(config['time'] is not None):
             time_string = config['time']
-            print '%r' % time_string
             time_format = '%Y-%m-%d %H:%M:%S'
             if(re.match('^\d{4}-\d{2}-\d{2}$', time_string)):
                 time_string = '%s 00:00:00' % time_string
@@ -74,12 +74,9 @@ def main(config, args):
                 sys.exit(1)
 
             if(time_format is not None):
-                print 'Queueing time to exif ...',
                 exif_metadata['Exif.Photo.DateTimeOriginal'].value = datetime.strptime(time_string, time_format)
                 exif_metadata['Exif.Image.DateTime'].value = datetime.strptime(time_string, time_format)
-                print '%r' % datetime.strptime(time_string, time_format)
                 write = True
-                print 'OK'
                 
         if(write == True):
             exif_metadata.write()
@@ -89,8 +86,7 @@ def main(config, args):
 
             media = _class(file_path)
             dest_path = filesystem.process_file(file_path, destination, media, move=True, allowDuplicate=True)
-            print '%s ...' % dest_path,
-            print 'OK'
+            print '%s -> %s' % (file_path, dest_path)
 
             # If the folder we moved the file out of or its parent are empty we delete it.
             filesystem.delete_directory_if_empty(os.path.dirname(file_path))
@@ -98,7 +94,7 @@ def main(config, args):
 
 db = Db()
 filesystem = FileSystem()
-args = arguments.parse(sys.argv[1:], None, ['time=','location=','process='], './adjust.py --time=<string time> --location=<string location> --process=no file1 file2...fileN')
+args = arguments.parse(sys.argv[1:], None, ['time=','location=','process='], './update.py --time=<string time> --location=<string location> --process=no file1 file2...fileN')
 config = parse_arguments(args)
 
 if __name__ == '__main__':

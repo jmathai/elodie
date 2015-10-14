@@ -80,7 +80,8 @@ def main(argv):
             if(media_type.__name__ == 'Video'):
                 filesystem.set_date_from_path_video(media)
 
-            process_file(current_file, destination, media)
+            dest_path = filesystem.process_file(current_file, destination, media, allowDuplicate=False, move=False)
+            print '%s -> %s' % (current_file, dest_path)
             # Write to the hash database every 10 iterations
             write_counter += 1
             if(write_counter % 10 == 0):
@@ -94,7 +95,8 @@ def main(argv):
         if(media_type.__name__ == 'Video'):
             filesystem.set_date_from_path_video(media)
 
-        process_file(config['file'], destination, media)
+        dest_path = process_file(config['file'], destination, media, allowDuplicate=False, move=False)
+        print '%s -> %s' % (current_file, dest_path)
         db.update_hash_db()
     else:
         help()
