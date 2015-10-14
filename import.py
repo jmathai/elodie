@@ -10,8 +10,31 @@ from elodie.media.video import Video
 from elodie.filesystem import FileSystem
 from elodie.localstorage import Db
 
-db = Db()
-filesystem = FileSystem()
+def help():
+    return """
+    usage: ./import.py --type=photo --source=/path/to/photos --destination=/path/to/destination
+
+    --type          Valid values are 'photo' or 'video'. Only files of *type* are imported.
+    --file          Full path to a photo or video to be imported. The --type argument should match the file type of the file.
+                    @TODO: Automatically determine *type* from *file*
+    --source        Full path to a directory which will be recursively crawled for files of *type*.
+    --destination   Full path to a directory where organized photos will be placed.
+    """
+
+def parse_arguments(args):
+    config = {
+        'type': 'photo',
+        'file': None,
+        'source': None,
+        'destination': None
+    }
+
+    if('destination' not in args):
+        help()
+        sys.exit(2)
+    
+    config.update(args)
+    return config
 
 def process_file(_file, destination, media):
     checksum = db.checksum(_file)
@@ -35,25 +58,20 @@ def process_file(_file, destination, media):
     filesystem.create_directory(dest_directory)
 
     print '%s -> %s' % (_file, dest_path)
-    shutil.copy2(_file, dest_path)
-    #shutil.move(_file, dest_path)
+    #shutil.copy2(_file, dest_path)
+    shutil.move(_file, dest_path)
     db.add_hash(checksum, dest_path)
 
 def main(argv):
-    args = arguments.parse(argv, None, ['file=','type=','source=','destination='], './import.py --type=<photo or video> --source=<source directory> -destination=<destination directory>')
 
-    if('destination' not in args):
-        print 'No destination passed in'
-        sys.exit(2)
-
-    destination = args['destination']
-    if('type' in args and args['type'] == 'photo'):
+    destination = config['destination']
+    if(config['type'] == 'photo'):
         media_type = Photo
     else:
         media_type = Video
 
-    if('source' in args):
-        source = args['source']
+    if(config['source'] is not None):
+        source = config['source']
 
         write_counter = 0
         for current_file in filesystem.get_all_files(source, media_type.get_valid_extensions()):
@@ -71,15 +89,21 @@ def main(argv):
         # If there's anything we haven't written to the hash database then write it now
         if(write_counter % 10 != 10):
             db.update_hash_db()
-    elif('file' in args):
-        media = media_type(args['file'])
+    elif(config['file'] is not None):
+        media = media_type(config['file'])
         if(media_type.__name__ == 'Video'):
             filesystem.set_date_from_path_video(media)
 
-        process_file(args['file'], destination, media)
+        process_file(config['file'], destination, media)
         db.update_hash_db()
+    else:
+        help()
+
+db = Db()
+filesystem = FileSystem()
+args = arguments.parse(sys.argv[1:], None, ['file=','type=','source=','destination='], help())
+config = parse_arguments(args)
 
 if __name__ == '__main__':
-    main(sys.argv[1:])
+    main(config)
     sys.exit(0)
-

@@ -4,9 +4,11 @@ Video package that handles all video operations
 """
 import os
 import re
+import shutil
 import time
 
 from elodie import geolocation
+from elodie.localstorage import Db
 
 """
 General file system methods
@@ -20,6 +22,18 @@ class FileSystem:
     def create_directory(self, directory_path):
         if not os.path.exists(directory_path):
             os.makedirs(directory_path)
+
+    """
+    Delete a directory only if it's empty.
+    Instead of checking first using `len([name for name in os.listdir(directory_path)]) == 0` we catch the OSError exception.
+
+    @param, directory_name, string, A fully qualified path of the directory to delete.
+    """
+    def delete_directory_if_empty(self, directory_path):
+        try:
+            os.rmdir(directory_path)
+        except OSError:
+            pass
 
     """
     Recursively get all files which match a path and extension.
@@ -98,6 +112,46 @@ class FileSystem:
                 path.append(place_name)
 
         return '/'.join(path)
+
+    def process_file(self, _file, destination, media, **kwargs):
+        move = False
+        if('move' in kwargs):
+            move = kwargs['move']
+
+        allowDuplicate = False
+        if('allowDuplicate' in kwargs):
+            allowDuplicate = kwargs['allowDuplicate']
+
+        metadata = media.get_metadata()
+
+        directory_name = self.get_folder_path(date=metadata['date_taken'], latitude=metadata['latitude'], longitude=metadata['longitude'])
+
+        dest_directory = '%s/%s' % (destination, directory_name)
+        file_name = self.get_file_name(media)
+        dest_path = '%s/%s' % (dest_directory, file_name)
+
+        db = Db()
+        checksum = db.checksum(_file)
+        if(checksum == None):
+            print 'Could not get checksum for %s. Skipping...' % _file
+            return
+
+        # If duplicates are not allowed and this hash exists in the db then we return
+        if(allowDuplicate == False and db.check_hash(checksum) == True):
+            print '%s already exists at %s. Skipping...' % (_file, db.get_hash(checksum))
+            return
+
+        self.create_directory(dest_directory)
+
+        if(move == True):
+            shutil.move(_file, dest_path)
+        else:
+            shutil.copy2(_file, dest_path)
+
+        db.add_hash(checksum, dest_path)
+        db.update_hash_db()
+
+        return dest_path
 
     """
     Set the modification time on the file based on the file path.

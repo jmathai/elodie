@@ -161,5 +161,5 @@ class Photo(Media):
     @returns, tuple
     """
     @classmethod
-    def get_valid_extensions(Video):
-        return Video.__valid_extensions
+    def get_valid_extensions(Photo):
+        return Photo.__valid_extensions

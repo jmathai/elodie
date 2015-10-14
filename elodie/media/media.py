@@ -66,3 +66,13 @@ class Media(object):
             return None
 
         return mimetype[0]
+
+    def get_class_by_file(Media, _file):
+        extension = os.path.splitext(_file)[1][1:].lower()
+        if(extension in Photo.get_valid_extensions()):
+            return Photo
+        elif(extension in Video.get_valid_extensions()):
+            return Video
+        else:
+            return None
+
