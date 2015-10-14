@@ -21,6 +21,7 @@ def parse_arguments(args):
     config = {
         'time': None,
         'location': None,
+        'album': None,
         'process': 'yes'
     }
     
@@ -28,6 +29,10 @@ def parse_arguments(args):
     return config
 
 def main(config, args):
+    try:
+        pyexiv2.xmp.register_namespace('https://github.com/jmathai/elodie/', 'elodie')
+    except KeyError:
+        pass
     location_coords = None
     for arg in args:
         if(arg[:2] == '--'):
@@ -77,6 +82,10 @@ def main(config, args):
                 exif_metadata['Exif.Photo.DateTimeOriginal'].value = datetime.strptime(time_string, time_format)
                 exif_metadata['Exif.Image.DateTime'].value = datetime.strptime(time_string, time_format)
                 write = True
+
+        if(config['album'] is not None):
+            exif_metadata['Xmp.elodie.album'] = config['album']
+            write = True
                 
         if(write == True):
             exif_metadata.write()
@@ -94,7 +103,7 @@ def main(config, args):
 
 db = Db()
 filesystem = FileSystem()
-args = arguments.parse(sys.argv[1:], None, ['time=','location=','process='], './update.py --time=<string time> --location=<string location> --process=no file1 file2...fileN')
+args = arguments.parse(sys.argv[1:], None, ['album=','time=','location=','process='], './update.py --time=<string time> --location=<string location> --process=no file1 file2...fileN')
 config = parse_arguments(args)
 
 if __name__ == '__main__':
