@@ -36,32 +36,6 @@ def parse_arguments(args):
     config.update(args)
     return config
 
-def process_file(_file, destination, media):
-    checksum = db.checksum(_file)
-    if(checksum == None):
-        print 'Could not get checksum for %s. Skipping...' % _file
-        return
-
-    if(db.check_hash(checksum) == True):
-        print '%s already exists at %s. Skipping...' % (_file, db.get_hash(checksum))
-        return
-
-    metadata = media.get_metadata()
-
-    directory_name = filesystem.get_folder_path(date=metadata['date_taken'], latitude=metadata['latitude'], longitude=metadata['longitude'])
-
-    dest_directory = '%s/%s' % (destination, directory_name)
-    # TODO remove the day prefix of the file that was there prior to the crawl
-    file_name = filesystem.get_file_name(media)
-    dest_path = '%s/%s' % (dest_directory, file_name)
-
-    filesystem.create_directory(dest_directory)
-
-    print '%s -> %s' % (_file, dest_path)
-    #shutil.copy2(_file, dest_path)
-    shutil.move(_file, dest_path)
-    db.add_hash(checksum, dest_path)
-
 def main(argv):
 
     destination = config['destination']
@@ -95,7 +69,7 @@ def main(argv):
         if(media_type.__name__ == 'Video'):
             filesystem.set_date_from_path_video(media)
 
-        dest_path = process_file(config['file'], destination, media, allowDuplicate=False, move=False)
+        dest_path = filesystem.process_file(config['file'], destination, media, allowDuplicate=False, move=False)
         print '%s -> %s' % (current_file, dest_path)
         db.update_hash_db()
     else:

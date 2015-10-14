@@ -99,13 +99,15 @@ class FileSystem:
     @param, time_obj, time, Time object to be used to determine folder name.
     @returns, string
     """
-    def get_folder_path(self, **kwargs):
+    def get_folder_path(self, metadata):
         path = []
-        if('date' in kwargs):
-            path.append(time.strftime('%Y-%m-%b', kwargs['date']))
+        if(metadata['date_taken'] is not None):
+            path.append(time.strftime('%Y-%m-%b', metadata['date_taken']))
 
-        if('latitude' in kwargs and 'longitude' in kwargs):
-            place_name = geolocation.place_name(kwargs['latitude'], kwargs['longitude'])
+        if(metadata['album'] is not None):
+            path.append(metadata['album'])
+        elif(metadata['latitude'] is not None and metadata['longitude'] is not None):
+            place_name = geolocation.place_name(metadata['latitude'], metadata['longitude'])
             if(place_name is None):
                 path.append('Unknown Location')
             else:
@@ -124,7 +126,7 @@ class FileSystem:
 
         metadata = media.get_metadata()
 
-        directory_name = self.get_folder_path(date=metadata['date_taken'], latitude=metadata['latitude'], longitude=metadata['longitude'])
+        directory_name = self.get_folder_path(metadata)
 
         dest_directory = '%s/%s' % (destination, directory_name)
         file_name = self.get_file_name(media)
