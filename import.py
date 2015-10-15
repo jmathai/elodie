@@ -47,7 +47,6 @@ def main(argv):
     if(config['source'] is not None):
         source = config['source']
 
-        write_counter = 0
         for current_file in filesystem.get_all_files(source, media_type.get_valid_extensions()):
             media = media_type(current_file)
 
@@ -55,23 +54,16 @@ def main(argv):
                 filesystem.set_date_from_path_video(media)
 
             dest_path = filesystem.process_file(current_file, destination, media, allowDuplicate=False, move=False)
-            print '%s -> %s' % (current_file, dest_path)
-            # Write to the hash database every 10 iterations
-            write_counter += 1
-            if(write_counter % 10 == 0):
-                db.update_hash_db()
-
-        # If there's anything we haven't written to the hash database then write it now
-        if(write_counter % 10 != 10):
-            db.update_hash_db()
+            if(dest_path is not None):
+                print '%s -> %s' % (current_file, dest_path)
     elif(config['file'] is not None):
         media = media_type(config['file'])
         if(media_type.__name__ == 'Video'):
             filesystem.set_date_from_path_video(media)
 
         dest_path = filesystem.process_file(config['file'], destination, media, allowDuplicate=False, move=False)
-        print '%s -> %s' % (current_file, dest_path)
-        db.update_hash_db()
+        if(dest_path is not None):
+            print '%s -> %s' % (current_file, dest_path)
     else:
         help()
 
