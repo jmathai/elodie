@@ -5,15 +5,15 @@ I work tirelessly to make sure your photos are always sorted and organized so yo
 You don't love me yet but you will.
 
 I only do 3 things.
-* Firstly I organize all of your existing collection of photos.
-* Second I help make it easy for all the photos you haven't taken yet to flow into the exact location it belongs.
-* Third but not least I do all of this without a yucky propietary database that some of my friends use.
+* Firstly I organize your existing collection of photos.
+* Second I help make it easy for all the photos you haven't taken yet to flow into the exact location they belong.
+* Third but not least I do all of this without a yucky propietary database that some colleagues of mine use.
 
-*NOTE: make sure you've installed me and my friends before running the commands below. Instructions at the bottom of this page.*
+*NOTE: make sure you've installed me and my friends before running the commands below. [Instructions](#install-everything-you-need) at the bottom of this page.*
 
 ## Let's organize your existing photos
 
-I bet you've got quite a few photos scattered around. The first thing I'll help you do is to get those photos organized. It doesn't matter if you have hundreds, thousands or tens of thousands of photos; the more the merrier.
+My guess is you've got quite a few photos scattered around. The first thing I'll help you do is to get those photos organized. It doesn't matter if you have hundreds, thousands or tens of thousands of photos; the more the merrier.
 
 Fire up your terminal and run this command which *__copies__* your photos into something a bit more structured.
 
@@ -21,13 +21,13 @@ Fire up your terminal and run this command which *__copies__* your photos into s
 ./elodie.py --type=photo --source="/where/my/photos/are" --destination="/where/i/want/my/photos/to/go"
 ```
 
-I'm pretty fast but depending on how many photos you have you might want to go grab a snack. When you run this command I'll `print` out my work as I go along. If you're bored you can open `/where/i/want/my/photos/to/go` and watch as I effortlessly copy your photos there.
+I'm pretty fast but depending on how many photos you have you might want to grab a snack. When you run this command I'll `print` out my work as I go along. If you're bored you can open `/where/i/want/my/photos/to/go` in *Finder* and watch as I effortlessly copy your photos there.
 
-You'll notice that your photos are now organized by date and location. Some photos do not have proper dates or location information in them. I do my best and in the worst case scenario I'll use the earlier of the files access or modified time. Ideally your photos have dates and location in the EXIF so I my work is more accurate.
+You'll notice that your photos are now organized by date and location. Some photos do not have proper dates or location information in them. I do my best and in the worst case scenario I'll use the earlier of the files access or modified time. Ideally your photos have dates and location in the EXIF so my work is more accurate.
 
 Don't fret if your photos don't have much EXIF information. I'll show you how you can fix them up later on but let's walk before we run.
 
-Back to your photos. You should see something like this.
+Back to your photos. When I'm done you should see something like this.
 
 ```
 ├── 2015-06-Jun
@@ -46,14 +46,14 @@ Back to your photos. You should see something like this.
     │   └── 2015-09-27_01-41-38-_dsc8705.nef
 ```
 
-Not too bad, eh? Wait, what's *Unknown Location*? If I'm not able to figure out where a photo was taken I'll place it into a folder named *Unknown Location*. This typically happens when photos do not have GPS information in their EXIF. You shouldn't see this for photos taken on smartphones but it's often the case with digital cameras and SLRs. I can help you add GPS information to those photos and get them organized better. Let me show you how.
+Not too bad, eh? Wait a second, what's *Unknown Location*? If I'm not able to figure out where a photo was taken I'll place it into a folder named *Unknown Location*. This typically happens when photos do not have GPS information in their EXIF. You shouldn't see this for photos taken on a smartphone but it's often the case with digital cameras and SLRs. I can help you add GPS information to those photos and get them organized better. Let me show you how.
 
 ### Reorganize by changing location and dates
 
 If you notice some photos were incorrectly organized you should definitely let me know. In the example above I put two photos into an *Unknown Location* folder because I didn't find GPS information in their EXIF. To fix this I'll help you add GPS information into the photos' EXIF and then I'll reorganize them.
 
 #### Tell me where your photos were taken
-Run the command below if you want to tell me the photos were taken in Las Vegas. You don't have to type all that in though. It's easier to just type `./update.py --location="Las Vegas, NV" ` and select and drag the files from OS X Finder into the terminal.
+Run the command below if you want to tell me the photos were taken in Las Vegas. You don't have to type all that in though. It's easier to just type `./update.py --location="Las Vegas, NV" ` and select and drag the files from *OS X Finder* into the terminal.
 
 ```
 ./update.py --location="Las Vegas, NV" /where/i/want/my/photos/to/go/2015-09-Sep/Unknown\ Location/2015-09-27_01-41-38-_dsc8705.dng /where/i/want/my/photos/to/go/2015-09-Sep/Unknown\ Location/2015-09-27_01-41-38-_dsc8705.nef
@@ -68,7 +68,27 @@ You should see this after running that command.
     │   └── 2015-09-27_01-41-38-_dsc8705.nef
 ```
 
-#### 
+#### Tell me when you took your photos
+Run the command below if I got the date wrong when organizing your photos. Similarly to the above command you can drag files from *Finder* into your terminal.
+
+```
+./update.py --time="2015-04-15" /where/i/want/my/photos/to/go/2015-09-Sep/Unknown\ Location/2015-09-27_01-41-38-_dsc8705.dng /where/i/want/my/photos/to/go/2015-09-Sep/Unknown\ Location/2015-09-27_01-41-38-_dsc8705.nef
+```
+
+That will change the date folder like so.
+
+```
+└── 2015-04-Apr
+│   ├── Las Vegas
+    │   ├── 2015-09-27_01-41-38-_dsc8705.dng
+    │   └── 2015-09-27_01-41-38-_dsc8705.nef
+```
+
+You can, of course, ask me to change the location and time. I'll happily update the photos and move them around accordingly.
+
+```
+./update.py --location="Las Vegas, NV" --time="2015-04-15" /where/i/want/my/photos/to/go/2015-09-Sep/Unknown\ Location/2015-09-27_01-41-38-_dsc8705.dng /where/i/want/my/photos/to/go/2015-09-Sep/Unknown\ Location/2015-09-27_01-41-38-_dsc8705.nef
+```
 
 ## What about photos I take in the future?
 
