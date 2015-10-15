@@ -10,9 +10,16 @@ class Db(object):
         if not os.path.exists(constants.application_directory):
             os.makedirs(constants.application_directory)
 
+        # If the hash db doesn't exist we create it.
+        # Otherwise we only open for reading
+        if not os.path.isfile(constants.hash_db):
+            with open(constants.hash_db, 'a'):
+                os.utime(constants.hash_db, None)
+
         self.hash_db = {}
-        # we need to open in w incase the file doesn't exist
-        with open(constants.hash_db, 'rw') as f:
+
+        # We know from above that this file exists so we open it for reading only.
+        with open(constants.hash_db, 'r') as f:
             try:
                 self.hash_db = json.load(f)
             except ValueError:
