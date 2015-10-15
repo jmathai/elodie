@@ -1,20 +1,117 @@
-# elodie
-pip install exifread
+# Hello, I'm Elodie
+
+I work tirelessly to make sure your photos are always sorted and organized so you can focus on more important things. By photos I mean JPEG, DNG, NEF and common video files.
+
+You don't love me yet but you will.
+
+I only do 3 things.
+* Firstly I organize all of your existing collection of photos.
+* Second I help make it easy for all the photos you haven't taken yet to flow into the exact location it belongs.
+* Third but not least I do all of this without a yucky propietary database that some of my friends use.
+
+*NOTE: make sure you've installed me and my friends before running the commands below. Instructions at the bottom of this page.*
+
+## Let's organize your existing photos
+
+I bet you've got quite a few photos scattered around. The first thing I'll help you do is to get those photos organized. It doesn't matter if you have hundreds, thousands or tens of thousands of photos; the more the merrier.
+
+Fire up your terminal and run this command which *__copies__* your photos into something a bit more structured.
+
+```
+./elodie.py --type=photo --source="/where/my/photos/are" --destination="/where/i/want/my/photos/to/go"
+```
+
+I'm pretty fast but depending on how many photos you have you might want to go grab a snack. When you run this command I'll `print` out my work as I go along. If you're bored you can open `/where/i/want/my/photos/to/go` and watch as I effortlessly copy your photos there.
+
+You'll notice that your photos are now organized by date and location. Some photos do not have proper dates or location information in them. I do my best and in the worst case scenario I'll use the earlier of the files access or modified time. Ideally your photos have dates and location in the EXIF so I my work is more accurate.
+
+Don't fret if your photos don't have much EXIF information. I'll show you how you can fix them up later on but let's walk before we run.
+
+Back to your photos. You should see something like this.
+
+```
+├── 2015-06-Jun
+│   ├── California
+│   │   ├── 2015-06-29_16-34-14-img_3900.jpg
+│   │   └── 2015-06-29_17-07-06-img_3901.jpg
+│   └── Paris
+│       └── 2015-06-30_02-40-43-img_3903.jpg
+├── 2015-07-Jul
+│   ├── Mountain View
+│   │   ├── 2015-07-19_17-16-37-img_9426.jpg
+│   │   └── 2015-07-24_19-06-33-img_9432.jpg
+└── 2015-09-Sep
+│   ├── Unknown Location
+    │   ├── 2015-09-27_01-41-38-_dsc8705.dng
+    │   └── 2015-09-27_01-41-38-_dsc8705.nef
+```
+
+Not too bad, eh? Wait, what's *Unknown Location*? If I'm not able to figure out where a photo was taken I'll place it into a folder named *Unknown Location*. This typically happens when photos do not have GPS information in their EXIF. You shouldn't see this for photos taken on smartphones but it's often the case with digital cameras and SLRs. I can help you add GPS information to those photos and get them organized better. Let me show you how.
+
+### Reorganize by changing location and dates
+
+If you notice some photos were incorrectly organized you should definitely let me know. In the example above I put two photos into an *Unknown Location* folder because I didn't find GPS information in their EXIF. To fix this I'll help you add GPS information into the photos' EXIF and then I'll reorganize them.
+
+#### Tell me where your photos were taken
+Run the command below if you want to tell me the photos were taken in Las Vegas. You don't have to type all that in though. It's easier to just type `./update.py --location="Las Vegas, NV" ` and select and drag the files from OS X Finder into the terminal.
+
+```
+./update.py --location="Las Vegas, NV" /where/i/want/my/photos/to/go/2015-09-Sep/Unknown\ Location/2015-09-27_01-41-38-_dsc8705.dng /where/i/want/my/photos/to/go/2015-09-Sep/Unknown\ Location/2015-09-27_01-41-38-_dsc8705.nef
+```
+
+You should see this after running that command.
+
+```
+└── 2015-09-Sep
+│   ├── Las Vegas
+    │   ├── 2015-09-27_01-41-38-_dsc8705.dng
+    │   └── 2015-09-27_01-41-38-_dsc8705.nef
+```
+
+#### 
+
+## What about photos I take in the future?
+
+Organizing your existing photos is great but I'd be lying to you if I said I was the only one who could help you with that. Unlike other programs I put the same effort into keeping your library organized into the future as I have in getting it organized in the first place.
+
+### Letting me know when you've got more photos to organize
+
+*Automation instructions not yet documented*
+
+## Why not use a database?
+
+Look, it's not that I think databases are evil. One of my friends is a database. It's just that I've been doing this for a long time and I've always used a database for it. In the end they're more trouble than they're worth. I should have listened to my mother when she told me to not date a database.
+
+It's a lot more work to organize photos without a database. No wonder everyone else uses them. But your happiness is my happiness. If a little elbow grease on my part makes you happy then I'm glad to do it.
+
+### A bit on how I do all this without a database
+
+Every photo is essentially a database. So it's more accurate to say I use the thousands of tiny databases you already have and use them to organize your photos.
+
+I'm simple. I put a photo into its proper location. I can update a photo to have the right date or location. The latter triggers the first; creating a nice tidy loop of organizational goodness.
+
+I don't do anything else so don't bother asking.
+
+## Install everything you need
+
+The commands on this page assume you're running them from the root of this repository. I don't have any submodules but you'll need to install the following packages.
+
+```
 pip install LatLon
 pip install requests
+```
 
-brew install exiftool
+You'll need *pyexiv2* which isn't available through `pip`. Thankfully it's available view homebew for OS X. If you're running another operating system you're sort of on your own but my pal Google should be able to help. Some folks may be able to simply run these commands. The first is a drag and can take up to 30 minutes. Don't say I didn't warn you.
 
-Need config.ini for reverse lookup
-
-Need pyexiv2. Here's how to install on OS X using homebrew...on your own to use other tools.
-
-Sourced from http://stackoverflow.com/a/18817419/1318758
-
-May need to run these.
-brew rm $(brew deps pyexiv2)
-brew rm pyexiv2
-
-Definietly need to run these
+```
 brew install boost --build-from-source
 brew install pyexiv2
+```
+
+If you have problems you can run the following commands which the fine folks at StackOverflow [suggested to me once](http://stackoverflow.com/a/18817419/1318758).
+
+### Using OpenStreetMap data from MapQuest
+
+I use MapQuest to help me organize your photos by location. You'll need to sign up for a [free developer account](https://developer.mapquest.com/plan_purchase/steps/business_edition/business_edition_free) and get an API key. They give you 15,000 calls per month so I can't do any more than that unless you shell out some big bucks to them. Once I hit my limit the best I'll be able to do is *Unknown Location* until the following month.
+
+Once you sign up you'll have to get an API key and copy it into a file named `config.ini` at the root of the repository. I've included a `config.ini-sample` file which you can copy to `config.ini`.
