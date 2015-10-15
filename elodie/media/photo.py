@@ -29,37 +29,6 @@ class Photo(Media):
 
         # We only want to parse EXIF once so we store it here
         self.exif = None
-
-    """
-    Get the date which the photo was taken.
-    The date value returned is defined by the min() of mtime and ctime.
-
-    @returns, time object or None for non-photo files or 0 timestamp
-    """
-    def get_date_taken(self):
-        if(not self.is_valid()):
-            return None
-
-        source = self.source
-        seconds_since_epoch = min(os.path.getmtime(source), os.path.getctime(source))
-        # We need to parse a string from EXIF into a timestamp.
-        # EXIF DateTimeOriginal and EXIF DateTime are both stored in %Y:%m:%d %H:%M:%S format
-        # we use date.strptime -> .timetuple -> time.mktime to do the conversion in the local timezone
-        # EXIF DateTime is already stored as a timestamp
-        # Sourced from https://github.com/photo/frontend/blob/master/src/libraries/models/Photo.php#L500
-        exif = self.get_exif()
-        for key in self.exif_map['date_taken']:
-            try:
-                if(key in exif):
-                    seconds_since_epoch = time.mktime(datetime.strptime(str(exif[key]), '%Y:%m:%d %H:%M:%S').timetuple())
-                    break;
-            except:
-                pass
-
-        if(seconds_since_epoch == 0):
-            return None
-
-        return time.gmtime(seconds_since_epoch)
         
     """
     Get the duration of a photo in seconds.

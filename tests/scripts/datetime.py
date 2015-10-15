@@ -15,13 +15,15 @@ def main(argv):
         print 'No file specified'
         sys.exit(1)
 
-    if('type' in args and args['type'] == 'photo'):
-        media_type = Photo
-    else:
+    if('type' in args and args['type'] == 'video'):
         media_type = Video
+    else:
+        media_type = Photo
 
     media = media_type(args['file'])
     metadata = media.get_metadata()
+
+    print '%r' % metadata
 
     output = {'date_taken': metadata['date_taken']}
     print '%r' % output

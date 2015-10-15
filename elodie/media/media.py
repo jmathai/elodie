@@ -5,6 +5,7 @@ Media package that handles all video operations
 
 # load modules
 from sys import argv
+from datetime import datetime
 from fractions import Fraction
 import LatLon
 import mimetypes
@@ -117,9 +118,11 @@ class Media(object):
         for key in self.exif_map['date_taken']:
             try:
                 if(key in exif):
-                    seconds_since_epoch = time.mktime(datetime.strptime(str(exif[key].value), '%Y:%m:%d %H:%M:%S').timetuple())
-                    break;
-            except:
+                    if(re.match('\d{4}(-|:)\d{2}(-|:)\d{2}', str(exif[key].value)) is not None):
+                        seconds_since_epoch = time.mktime(exif[key].value.timetuple())
+                        break;
+            except BaseException as e:
+                print e
                 pass
 
         if(seconds_since_epoch == 0):
