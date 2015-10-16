@@ -1,4 +1,5 @@
 # Hello, I'm Elodie
+~~ *Your Personal EXIF-based Photo Assistant* ~~
 
 I work tirelessly to make sure your photos are always sorted and organized so you can focus on more important things. By photos I mean JPEG, DNG, NEF and common video files.
 
@@ -10,6 +11,16 @@ I only do 3 things.
 * Third but not least I promise to do all this without a yucky propietary database that some colleagues of mine use.
 
 *NOTE: make sure you've installed me and my friends before running the commands below. [Instructions](#install-everything-you-need) at the bottom of this page.*
+
+## See me in action
+
+Watch me importing photos and organizing them.
+
+[![IMAGE ALT TEXT](http://img.youtube.com/vi/oOvKpUO3LLs/0.jpg)](http://www.youtube.com/watch?v=oOvKpUO3LLs "Import Photos")
+
+Sometimes photos don't have much information for me to organize them well. Here is how you can fix them up.
+
+[![IMAGE ALT TEXT](http://img.youtube.com/vi/7kqirQRQ--4/0.jpg)](http://www.youtube.com/watch?v=7kqirQRQ--4 "Updating Photos")
 
 ## The dream setup I am optimized for
 
