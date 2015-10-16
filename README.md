@@ -7,9 +7,24 @@ You don't love me yet but you will.
 I only do 3 things.
 * Firstly I organize your existing collection of photos.
 * Second I help make it easy for all the photos you haven't taken yet to flow into the exact location they belong.
-* Third but not least I do all of this without a yucky propietary database that some colleagues of mine use.
+* Third but not least I promise to do all this without a yucky propietary database that some colleagues of mine use.
 
 *NOTE: make sure you've installed me and my friends before running the commands below. [Instructions](#install-everything-you-need) at the bottom of this page.*
+
+## The dream setup I am optimized for
+
+I'm most helpful when I'm fully utilized to keep your photos organized. My parents had ambitious aspirations for me even when I was growing in my momma's belly . They're dreamers and so am I.
+
+Here's dada's (very asynchronous) setup.
+* Specify a folder in his Dropbox to store the organized photo library.
+* Set up a Hazel rule to notify me when photos arrive in `~/Downloads` so I can import them.
+  * The rule waits 1 minute before processing the photo which gives him a chance to move it elsewhere if it's not something he wants in the library.
+* Use AirDrop to transfer files from his or momma's iPhone to his laptop. That goes to `~/Downloads` for the Hazel rule to process.
+  * AirDrop is fast, easy for momma to use and once the transfer is finished they don't have to stick around. I'll move it to Dropbox and Dropbox will sync it to their servers.
+* Periodically recategorize photos by fixing their location or date or by adding them to an album.
+* Have a Synology at home set to automatically sync down from Dropbox.
+ 
+This setup means dada can quickly get photos off his or momma's phone and know that they'll be organized and backed up by the time they're ready to view them.
 
 ## Let's organize your existing photos
 
@@ -92,11 +107,21 @@ You can, of course, ask me to change the location and time. I'll happily update 
 
 ## What about photos I take in the future?
 
-Organizing your existing photos is great but I'd be lying to you if I said I was the only one who could help you with that. Unlike other programs I put the same effort into keeping your library organized into the future as I have in getting it organized in the first place.
+Organizing your existing photos is great. But I'd be lying if I said I was the only one who could help you with that. Unlike other programs I put the same effort into keeping your library organized into the future as I have in getting it organized in the first place.
 
 ### Letting me know when you've got more photos to organize
 
-*Automation instructions not yet documented*
+In order to sort new photos that I haven't already organized I need someone to tell me about them. There's no single way to do this. You could use inotify, cron, Automator or my favorite app - Hazel; it doesn't matter.
+
+If you'd like to let me know of a specific photo or group of photos to add to your library you would run one of the following command. Use fully qualified paths for everything since you won't be running this manually.
+
+```
+# I can import a single file into your library.
+/full/path/to/import.py --type=photo --file="/full/path/to/file.jpg" --destination="/where/i/want/my/photo/to/go"
+
+# I can also import all the photos from a directory into your library.
+/full/path/to/import.py --type=photo --source="/where/my/photos/are" --destination="/where/i/want/my/photo/to/go"
+```
 
 ## Why not use a database?
 
@@ -113,6 +138,12 @@ I'm simple. I put a photo into its proper location. I can update a photo to have
 I don't do anything else so don't bother asking.
 
 ## Install everything you need
+
+You'll need to clone this repository and install a few dependencies. Let's start by cloning.
+
+```
+git clone git@github.com:jmathai/elodie.git
+```
 
 The commands on this page assume you're running them from the root of this repository. I don't have any submodules but you'll need to install the following packages.
 
