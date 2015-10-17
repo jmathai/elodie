@@ -108,10 +108,12 @@ class FileSystem:
             path.append(metadata['album'])
         elif(metadata['latitude'] is not None and metadata['longitude'] is not None):
             place_name = geolocation.place_name(metadata['latitude'], metadata['longitude'])
-            if(place_name is None):
-                path.append('Unknown Location')
-            else:
+            if(place_name is not None):
                 path.append(place_name)
+
+        # if we don't have a 2nd level directory we use 'Unknown Location'
+        if(len(path) < 2):
+            path.append('Unknown Location')
 
         return '/'.join(path)
 

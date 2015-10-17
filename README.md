@@ -53,7 +53,7 @@ You'll notice that your photos are now organized by date and location. Some phot
 
 Don't fret if your photos don't have much EXIF information. I'll show you how you can fix them up later on but let's walk before we run.
 
-Back to your photos. When I'm done you should see something like this.
+Back to your photos. When I'm done you should see something like this. Notice that I've renamed your files by adding the date and time they were taken. This helps keep them in chronological order when using most viewing applications. You'll can thank me later.
 
 ```
 ├── 2015-06-Jun
