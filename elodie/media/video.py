@@ -195,6 +195,24 @@ class Video(Media):
         result = self.__update_using_plist(latitude=latitude, longitude=longitude)
         return result
 
+
+    """
+    Updates video metadata using avmetareadwrite.
+    This method is a does a lot more than it should.
+    The general steps are...
+    1) Check if avmetareadwrite is installed
+    2) Export a plist file to a temporary location from the source file
+    3) Regex replace values in the plist file
+    4) Update the source file using the updated plist and save it to a temporary location
+    5) Validate that the metadata in the updated temorary movie is valid
+    6) Copystat permission and time bits from the source file to the temporary movie
+    7) Move the temporary file to overwrite the source file
+
+    @param, latitude, float, Latitude of the file
+    @param, longitude, float, Longitude of the file
+
+    @returns, boolean
+    """
     def __update_using_plist(self, **kwargs):
         if('latitude' not in kwargs and 'longitude' not in kwargs):
             print 'No lat/lon passed into __create_plist'
@@ -258,9 +276,10 @@ class Video(Media):
 
             # We create a temporary file to save the modified file to.
             # If the modification is successful we will update the existing file.
+            metadata = self.get_metadata()
             temp_movie = None
             with tempfile.NamedTemporaryFile() as temp_file:
-                temp_movie = temp_file.name
+                temp_movie = '%s.%s' % (temp_file.name, metadata['extension'])
 
             # We need to block until the child process completes.
             # http://stackoverflow.com/a/5631819/1318758
@@ -273,8 +292,9 @@ class Video(Media):
                 return False
 
             # Before we do anything destructive we confirm that the file is in tact.
-            metadata = self.get_metadata()
-            if(metadata['latitude'] is None or metadata['longitude'] is None or metadata['date_taken'] is None):
+            check_media = Video(temp_movie)
+            check_metadata = check_media.get_metadata()
+            if(check_metadata['latitude'] is None or check_metadata['longitude'] is None or check_metadata['date_taken'] is None):
                 print 'Something went wrong updating video metadata'
                 return False
 
