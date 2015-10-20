@@ -29,10 +29,6 @@ def parse_arguments(args):
     return config
 
 def main(config, args):
-    try:
-        pyexiv2.xmp.register_namespace('https://github.com/jmathai/elodie/', 'elodie')
-    except KeyError:
-        pass
     location_coords = None
     for arg in args:
         if(arg[:2] == '--'):
@@ -54,19 +50,20 @@ def main(config, args):
         if(_class is None):
             continue
 
-        write = False
-        exif_metadata = pyexiv2.ImageMetadata(file_path)
-        exif_metadata.read()
+        media = _class(file_path)
+
+        updated = False
         if(config['location'] is not None):
             if(location_coords is None):
                 location_coords = geolocation.coordinates_by_name(config['location'])
 
             if(location_coords is not None and 'latitude' in location_coords and 'longitude' in location_coords):
-                exif_metadata['Exif.GPSInfo.GPSLatitude'] = geolocation.decimal_to_dms(location_coords['latitude'])
-                exif_metadata['Exif.GPSInfo.GPSLatitudeRef'] = pyexiv2.ExifTag('Exif.GPSInfo.GPSLatitudeRef', 'N' if location_coords['latitude'] >= 0 else 'S')
-                exif_metadata['Exif.GPSInfo.GPSLongitude'] = geolocation.decimal_to_dms(location_coords['longitude'])
-                exif_metadata['Exif.GPSInfo.GPSLongitudeRef'] = pyexiv2.ExifTag('Exif.GPSInfo.GPSLongitudeRef', 'E' if location_coords['longitude'] >= 0 else 'W')
-                write = True
+                location_status = media.set_location(location_coords['latitude'], location_coords['longitude'])
+                if(location_status != True):
+                    print 'Failed to update location'
+                    sys.exit(1)
+                updated = True
+
 
         if(config['time'] is not None):
             time_string = config['time']
@@ -79,21 +76,15 @@ def main(config, args):
                 sys.exit(1)
 
             if(time_format is not None):
-                exif_metadata['Exif.Photo.DateTimeOriginal'].value = datetime.strptime(time_string, time_format)
-                exif_metadata['Exif.Image.DateTime'].value = datetime.strptime(time_string, time_format)
-                write = True
+                time = datetime.strptime(time_string, time_format)
+                media.set_datetime(time)
+                updated = True
 
         if(config['album'] is not None):
-            exif_metadata['Xmp.elodie.album'] = config['album']
-            write = True
+            media.set_album(config['album'])
+            updated = True
                 
-        if(write == True):
-            exif_metadata.write()
-
-            exif_metadata = pyexiv2.ImageMetadata(file_path)
-            exif_metadata.read()
-
-            media = _class(file_path)
+        if(updated == True):
             dest_path = filesystem.process_file(file_path, destination, media, move=True, allowDuplicate=True)
             print '%s -> %s' % (file_path, dest_path)
 

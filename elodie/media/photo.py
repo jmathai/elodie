@@ -9,17 +9,17 @@ from datetime import datetime
 
 import mimetypes
 import os
+import pyexiv2
 import re
 import time
 
-from elodie.media.media import Media
+from media import Media
+from elodie import geolocation
 
 """
-Video class for general photo operations
+Photo class for general photo operations
 """
 class Photo(Media):
-    # class / static variable accessible through get_valid_extensions()
-    __valid_extensions = ('jpg', 'jpeg', 'nef', 'dng')
 
     """
     @param, source, string, The fully qualified path to the photo file
@@ -49,10 +49,76 @@ class Photo(Media):
         return None
 
     """
+    Set album for a photo
+
+    @param, name, string, Name of album
+
+    @returns, boolean
+    """
+    def set_album(self, name):
+        if(name is None):
+            return False
+
+        source = self.source
+        exif_metadata = pyexiv2.ImageMetadata(source)
+        exif_metadata.read()
+
+        exif_metadata['Xmp.elodie.album'] = name
+
+        exif_metadata.write()
+
+    """
+    Set the date/time a photo was taken
+
+    @param, time, datetime, datetime object of when the photo was taken
+
+    @returns, boolean
+    """
+    def set_datetime(self, time):
+        if(time is None):
+            return False
+
+        source = self.source
+        exif_metadata = pyexiv2.ImageMetadata(source)
+        exif_metadata.read()
+
+        exif_metadata['Exif.Photo.DateTimeOriginal'].value = time
+        exif_metadata['Exif.Image.DateTime'].value = time
+
+        exif_metadata.write()
+        return True
+
+    """
+    Set lat/lon for a photo
+
+    @param, latitude, float, Latitude of the file
+    @param, longitude, float, Longitude of the file
+
+    @returns, boolean
+    """
+    def set_location(self, latitude, longitude):
+        if(latitude is None or longitude is None):
+            return False
+
+        source = self.source
+        exif_metadata = pyexiv2.ImageMetadata(source)
+        exif_metadata.read()
+
+        exif_metadata['Exif.GPSInfo.GPSLatitude'] = geolocation.decimal_to_dms(latitude)
+        exif_metadata['Exif.GPSInfo.GPSLatitudeRef'] = pyexiv2.ExifTag('Exif.GPSInfo.GPSLatitudeRef', 'N' if latitude >= 0 else 'S')
+        exif_metadata['Exif.GPSInfo.GPSLongitude'] = geolocation.decimal_to_dms(longitude)
+        exif_metadata['Exif.GPSInfo.GPSLongitudeRef'] = pyexiv2.ExifTag('Exif.GPSInfo.GPSLongitudeRef', 'E' if longitude >= 0 else 'W')
+
+        exif_metadata.write()
+        return True
+
+    """
     Static method to access static __valid_extensions variable.
+    def set_location(self, latitude, longitude):
+        return None
 
     @returns, tuple
     """
     @classmethod
     def get_valid_extensions(Photo):
-        return Photo.__valid_extensions
+        return Media.photo_extensions

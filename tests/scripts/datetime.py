@@ -5,26 +5,24 @@ import shutil
 import sys
 
 from elodie import arguments
+from elodie.media.photo import Media
 from elodie.media.photo import Photo
 from elodie.media.video import Video
 
 def main(argv):
-    args = arguments.parse(argv, None, ['file=','type='], './import.py --type=<photo or video> --file=<path to file>')
+    args = arguments.parse(argv, None, ['file='], './import.py --file=<path to file>')
 
     if('file' not in args):
         print 'No file specified'
         sys.exit(1)
 
-    if('type' in args and args['type'] == 'video'):
-        media_type = Video
-    else:
-        media_type = Photo
+    media = Media.get_class_by_file(args['file'], [Photo, Video])
 
-    media = media_type(args['file'])
+    if(media is None):
+        print 'Not a valid file'
+        sys.exit(1)
+
     metadata = media.get_metadata()
-
-    print '%r' % metadata
-
     output = {'date_taken': metadata['date_taken']}
     print '%r' % output
 

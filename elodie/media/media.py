@@ -19,6 +19,10 @@ import time
 Media class for general video operations
 """
 class Media(object):
+    # class / static variable accessible through get_valid_extensions()
+    video_extensions = ('avi','m4v','mov','mp4','3gp')
+    photo_extensions = ('jpg', 'jpeg', 'nef', 'dng')
+
     """
     @param, source, string, The fully qualified path to the video file
     """
@@ -201,12 +205,17 @@ class Media(object):
 
         return mimetype[0]
 
-    def get_class_by_file(Media, _file):
+    @classmethod
+    def get_class_by_file(Media, _file, classes):
         extension = os.path.splitext(_file)[1][1:].lower()
-        if(extension in Photo.get_valid_extensions()):
-            return Photo
-        elif(extension in Video.get_valid_extensions()):
-            return Video
-        else:
-            return None
+        name = None
+        if(extension in Media.photo_extensions):
+            name = 'Photo'
+        elif(extension in Media.video_extensions):
+            name = 'Video'
 
+        for i in classes:
+            if(name == i.__name__):
+                return i(_file)
+
+        return None

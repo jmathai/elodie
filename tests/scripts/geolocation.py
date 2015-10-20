@@ -6,6 +6,7 @@ import sys
 
 from elodie import arguments
 from elodie import geolocation
+from elodie.media.photo import Media
 from elodie.media.photo import Photo
 from elodie.media.video import Video
 
@@ -16,12 +17,12 @@ def main(argv):
         print 'No file specified'
         sys.exit(1)
 
-    if('type' in args and args['type'] == 'photo'):
-        media_type = Photo
-    else:
-        media_type = Video
+    media = Media.get_class_by_file(args['file'], [Photo, Video])
 
-    media = media_type(args['file'])
+    if(media is None):
+        print 'Not a valid file'
+        sys.exit(1)
+
     metadata = media.get_metadata()
 
     place_name = geolocation.place_name(metadata['latitude'], metadata['longitude'])
