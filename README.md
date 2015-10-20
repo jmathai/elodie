@@ -163,9 +163,10 @@ pip install LatLon
 pip install requests
 ```
 
-You'll need *pyexiv2* which isn't available through `pip`. Thankfully it's available view homebew for OS X. If you're running another operating system you're sort of on your own but my pal Google should be able to help. Some folks may be able to simply run these commands. The first is a drag and can take up to 30 minutes. Don't say I didn't warn you.
+You'll need to install *exiftool* *pyexiv2* using  `homebrew` on OSX. If you're running another operating system you're sort of on your own but my pal Google should be able to help. Some folks may be able to simply run these commands. Installing *boost* is a drag and can take up to 30 minutes. Don't say I didn't warn you.
 
 ```
+brew install exiftool
 brew install boost --build-from-source
 brew install pyexiv2
 ```

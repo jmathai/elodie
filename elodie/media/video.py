@@ -256,18 +256,9 @@ class Video(Media):
                     lon_sign = '+' if longitude > 0 else '-'
                     longitude_str = '{:9.5f}'.format(abs(longitude)).replace(' ', '0')
 
-                    print longitude_str
-                    print '>%s%s%s%s' % (lat_sign, latitude, lon_sign, longitude_str)
-
                     plist_updated_text = re.sub('\>([+-])([0-9.]+)([+-])([0-9.]+)', '>%s%s%s%s' % (lat_sign, latitude, lon_sign, longitude_str), plist_text);
                     plist_final = plist_written.name
                     plist_written.write(plist_updated_text)
-                    
-                    f = open('/Users/jaisenmathai/dev/tools/elodie/script.plist', 'w')
-                    f.write(plist_updated_text)
-                    f.close()
-                    print plist_updated_text
-
 
             # If we've written to the plist file then we proceed
             if(plist_final is None):
@@ -279,14 +270,13 @@ class Video(Media):
             metadata = self.get_metadata()
             temp_movie = None
             with tempfile.NamedTemporaryFile() as temp_file:
-                temp_movie = '%s.%s' % (temp_file.name, metadata['extension'])
+                temp_movie = '%s.%s' % (temp_file.name, metadata['extenseon'])
 
             # We need to block until the child process completes.
             # http://stackoverflow.com/a/5631819/1318758
             avmetareadwrite_command = '%s -w %s "%s" "%s"' % (avmetareadwrite, plist_written.name, source, temp_movie)
             update_process = subprocess.Popen([avmetareadwrite_command], stdout=subprocess.PIPE, shell=True)
             streamdata = update_process.communicate()[0]
-            print streamdata
             if(update_process.returncode != 0):
                 print '%s did not complete successfully' % avmetareadwrite_command
                 return False
@@ -299,7 +289,6 @@ class Video(Media):
                 return False
 
             # Copy file information from original source to temporary file before copying back over
-            print 'copy from %s to %s' % (temp_movie, source)
             shutil.copystat(source, temp_movie)
             shutil.move(temp_movie, source)
             return True
