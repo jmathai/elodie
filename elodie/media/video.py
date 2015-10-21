@@ -137,7 +137,7 @@ class Video(Media):
             "date_taken": self.get_date_taken(),
             "latitude": self.get_coordinate('latitude'),
             "longitude": self.get_coordinate('longitude'),
-            "album": None,
+            "album": self.get_album(),
             #"length": self.get_duration(),
             "mime_type": self.get_mimetype(),
             "base_name": os.path.splitext(os.path.basename(source))[0],
@@ -145,18 +145,6 @@ class Video(Media):
         }
 
         return metadata
-
-    """
-    Set album for a photo
-    Not yet implemented
-
-    @param, name, string, Name of album
-
-    @returns, boolean
-    """
-    def set_album(self, name):
-        if(name is None):
-            return False
 
     """
     Set the date/time a photo was taken
@@ -270,7 +258,7 @@ class Video(Media):
             metadata = self.get_metadata()
             temp_movie = None
             with tempfile.NamedTemporaryFile() as temp_file:
-                temp_movie = '%s.%s' % (temp_file.name, metadata['extenseon'])
+                temp_movie = '%s.%s' % (temp_file.name, metadata['extension'])
 
             # We need to block until the child process completes.
             # http://stackoverflow.com/a/5631819/1318758

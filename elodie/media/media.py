@@ -4,9 +4,12 @@ Media package that handles all video operations
 """
 
 # load modules
-from sys import argv
 from datetime import datetime
+from distutils.spawn import find_executable
+from elodie import constants
 from fractions import Fraction
+from sys import argv
+
 import LatLon
 import mimetypes
 import os
@@ -34,22 +37,18 @@ class Media(object):
             'latitude_ref': 'Exif.GPSInfo.GPSLatitudeRef',
             'longitude': 'Exif.GPSInfo.GPSLongitude',
             'longitude_ref': 'Exif.GPSInfo.GPSLongitudeRef',
-            'album': 'Xmp.elodie.album'
         }
-        try:
-            pyexiv2.xmp.register_namespace('https://github.com/jmathai/elodie/', 'elodie')
-        except KeyError:
-            pass
+        self.exiftool_attributes = None
 
     def get_album(self):
         if(not self.is_valid()):
             return None
 
-        exif = self.get_exif()
-        try:
-            return exif[self.exif_map['album']].value
-        except KeyError:
+        exiftool_attributes = self.get_exiftool_attributes()
+        if('album' not in exiftool_attributes):
             return None
+        
+        return exiftool_attributes['album']
 
     """
     Get the full path to the video.
@@ -153,6 +152,30 @@ class Media(object):
 
         return self.exif
 
+    def get_exiftool_attributes(self):
+        if(self.exiftool_attributes is not None):
+            return self.exiftool_attributes
+
+        exiftool = find_executable('exiftool')
+        if(exiftool is None):
+            return False
+
+        source = self.source
+        process_output = subprocess.Popen(['%s "%s"' % (exiftool, source)], stdout=subprocess.PIPE, shell=True)
+        output = process_output.stdout.read()
+
+        album = None
+        album_regex = re.search('Album +: +(.+)', output)
+        if(album_regex is not None):
+            album = album_regex.group(1)
+
+        self.exiftool_attributes = {
+            'album': album
+        }
+
+        return self.exiftool_attributes
+
+
     """
     Get the file extension as a lowercased string.
 
@@ -204,6 +227,31 @@ class Media(object):
             return None
 
         return mimetype[0]
+
+    """
+    Set album for a photo
+
+    @param, name, string, Name of album
+
+    @returns, boolean
+    """
+    def set_album(self, name):
+        if(name is None):
+            return False
+
+        exiftool = find_executable('exiftool')
+        if(exiftool is None):
+            return False
+
+        source = self.source
+        exiftool_config = constants.exiftool_config
+        process_output = subprocess.Popen(['%s -config "%s" -xmp-elodie:Album="%s" "%s"' % (exiftool, exiftool_config, name, source)], stdout=subprocess.PIPE, shell=True)
+        streamdata = process_output.communicate()[0]
+        if(process_output.returncode != 0):
+            return False
+
+        os.remove('%s%s' % (source, '_original'))
+        return True
 
     @classmethod
     def get_class_by_file(Media, _file, classes):

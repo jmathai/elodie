@@ -4,13 +4,15 @@ Photo package that handles all photo operations
 """
 
 # load modules
-from sys import argv
 from datetime import datetime
+from distutils.spawn import find_executable
+from sys import argv
 
 import mimetypes
 import os
 import pyexiv2
 import re
+import subprocess
 import time
 
 from media import Media
@@ -47,25 +49,6 @@ class Photo(Media):
             if 'Duration' in key:
                 return re.search('(\d{2}:\d{2}.\d{2})', key).group(1).replace('.', ':')
         return None
-
-    """
-    Set album for a photo
-
-    @param, name, string, Name of album
-
-    @returns, boolean
-    """
-    def set_album(self, name):
-        if(name is None):
-            return False
-
-        source = self.source
-        exif_metadata = pyexiv2.ImageMetadata(source)
-        exif_metadata.read()
-
-        exif_metadata['Xmp.elodie.album'] = name
-
-        exif_metadata.write()
 
     """
     Set the date/time a photo was taken
