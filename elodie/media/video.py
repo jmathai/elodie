@@ -16,6 +16,7 @@ import shutil
 import subprocess
 import time
 
+from elodie import plist_parser
 from media import Media
 
 """
@@ -157,15 +158,8 @@ class Video(Media):
         if(time is None):
             return False
 
-        source = self.source
-        exif_metadata = pyexiv2.ImageMetadata(source)
-        exif_metadata.read()
-
-        exif_metadata['Exif.Photo.DateTimeOriginal'].value = time
-        exif_metadata['Exif.Image.DateTime'].value = time
-
-        exif_metadata.write()
-        return True
+        result = self.__update_using_plist(time=time)
+        return result
 
     """
     Set lat/lon for a video
@@ -179,7 +173,6 @@ class Video(Media):
         if(latitude is None or longitude is None):
             return False
 
-        print 'SET LOCATION %s %s' % (latitude, longitude)
         result = self.__update_using_plist(latitude=latitude, longitude=longitude)
         return result
 
@@ -202,7 +195,7 @@ class Video(Media):
     @returns, boolean
     """
     def __update_using_plist(self, **kwargs):
-        if('latitude' not in kwargs and 'longitude' not in kwargs):
+        if('latitude' not in kwargs and 'longitude' not in kwargs and 'time' not in kwargs):
             print 'No lat/lon passed into __create_plist'
             return False
 
@@ -224,33 +217,53 @@ class Video(Media):
                 print 'Failed to generate plist file'
                 return False
 
-            with open(plist_temp.name, 'r') as plist_written:
-                plist_text = plist_written.read()
+            plist = plist_parser.Plist(plist_temp.name)
+            # Depending on the kwargs that were passed in we regex the plist_text before we write it back.
+            plist_should_be_written = False
+            if('latitude' in kwargs and 'longitude' in kwargs):
+                latitude = str(abs(kwargs['latitude'])).lstrip('0')
+                longitude = kwargs['longitude']
 
-            # Once the plist file has been written we need to open the file to read and update it.
-            plist_final = None
-            with open(plist_temp.name, 'w') as plist_written:
-                # Depending on the kwargs that were passed in we regex the plist_text before we write it back.
-                if('latitude' in kwargs and 'longitude' in kwargs):
-                    latitude = kwargs['latitude']
-                    longitude = kwargs['longitude']
+                # Add a literal '+' to the lat/lon if it is positive.
+                # Do this first because we convert longitude to a string below.
+                lat_sign = '+' if latitude > 0 else '-'
+                # We need to zeropad the longitude.
+                # No clue why - ask Apple.
+                # We set the sign to + or - and then we take the absolute value and fill it.
+                lon_sign = '+' if longitude > 0 else '-'
+                longitude_str = '{:9.5f}'.format(abs(longitude)).replace(' ', '0')
+                lat_lon_str = '%s%s%s%s' % (lat_sign, latitude, lon_sign, longitude_str)
 
-                    # Add a literal '+' to the lat/lon if it is positive.
-                    # Do this first because we convert longitude to a string below.
-                    lat_sign = '+' if latitude > 0 else ''
-                    # We need to zeropad the longitude.
-                    # No clue why - ask Apple.
-                    # We set the sign to + or - and then we take the absolute value and fill it.
-                    lon_sign = '+' if longitude > 0 else '-'
-                    longitude_str = '{:9.5f}'.format(abs(longitude)).replace(' ', '0')
+                plist.update_key('common/location', lat_lon_str)
+                plist_should_be_written = True
 
-                    plist_updated_text = re.sub('\>([+-])([0-9.]+)([+-])([0-9.]+)', '>%s%s%s%s' % (lat_sign, latitude, lon_sign, longitude_str), plist_text);
-                    plist_final = plist_written.name
-                    plist_written.write(plist_updated_text)
+            if('time' in kwargs):
+                # The time formats can be YYYY-mm-dd or YYYY-mm-dd hh:ii:ss
+                time_parts = str(kwargs['time']).split(' ')
+                ymd, hms = [None, None]
+                if(len(time_parts) >= 1):
+                    ymd = [int(x) for x in time_parts[0].split('-')]
 
-            # If we've written to the plist file then we proceed
-            if(plist_final is None):
-                print 'plist file was not be written to'
+                    if(len(time_parts) == 2):
+                        hms = [int(x) for x in time_parts[1].split(':')]
+
+                    if(hms is not None):
+                        d = datetime(ymd[0], ymd[1], ymd[2], hms[0], hms[1], hms[2])
+                    else:
+                        d = datetime(ymd[0], ymd[1], ymd[2], 12, 00, 00)
+
+                    offset = time.strftime("%z", time.gmtime(time.time()))
+                    time_string = d.strftime('%Y-%m-%dT%H:%M:%S{}'.format(offset))
+                    #2015-10-09T17:11:30-0700
+                    plist.update_key('common/creationDate', time_string)
+                    plist_should_be_written = True
+
+
+            if(plist_should_be_written is True):
+                plist_final = plist_temp.name
+                plist.write_file(plist_final)
+            else:
+                print 'Nothing to update, plist unchanged'
                 return False
 
             # We create a temporary file to save the modified file to.
@@ -262,7 +275,7 @@ class Video(Media):
 
             # We need to block until the child process completes.
             # http://stackoverflow.com/a/5631819/1318758
-            avmetareadwrite_command = '%s -w %s "%s" "%s"' % (avmetareadwrite, plist_written.name, source, temp_movie)
+            avmetareadwrite_command = '%s -a %s "%s" "%s"' % (avmetareadwrite, plist_final, source, temp_movie)
             update_process = subprocess.Popen([avmetareadwrite_command], stdout=subprocess.PIPE, shell=True)
             streamdata = update_process.communicate()[0]
             if(update_process.returncode != 0):
