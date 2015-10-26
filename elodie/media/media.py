@@ -250,7 +250,9 @@ class Media(object):
         if(process_output.returncode != 0):
             return False
 
-        os.remove('%s%s' % (source, '_original'))
+        exiftool_backup_file = '%s%s' % (source, '_original')
+        if(os.path.isfile(exiftool_backup_file) is True):
+            os.remove(exiftool_backup_file)
         return True
 
     @classmethod
