@@ -1,0 +1,23 @@
+{
+  "name": "elodie",
+  "version": "1.0.0",
+  "description": "GUI for Elodie",
+  "main": "app.js",
+  "dependencies": {
+    "menubar": "^2.3.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "electron app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jmathai/elodie"
+  },
+  "author": "Jaisen Mathai",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jmathai/elodie/issues"
+  },
+  "homepage": "https://github.com/jmathai/elodie"
+}
