@@ -44,7 +44,7 @@ My guess is you've got quite a few photos scattered around. The first thing I'll
 Fire up your terminal and run this command which *__copies__* your photos into something a bit more structured.
 
 ```
-./elodie.py --type=photo --source="/where/my/photos/are" --destination="/where/i/want/my/photos/to/go"
+./import.py --type=photo --source="/where/my/photos/are" --destination="/where/i/want/my/photos/to/go"
 ```
 
 I'm pretty fast but depending on how many photos you have you might want to grab a snack. When you run this command I'll `print` out my work as I go along. If you're bored you can open `/where/i/want/my/photos/to/go` in *Finder* and watch as I effortlessly copy your photos there.
