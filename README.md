@@ -8,9 +8,9 @@ You don't love me yet but you will.
 I only do 3 things.
 * Firstly I organize your existing collection of photos.
 * Second I help make it easy for all the photos you haven't taken yet to flow into the exact location they belong.
-* Third but not least I promise to do all this without a yucky propietary database that some colleagues of mine use.
+* Third but not least I promise to do all this without a yucky propietary database that some friends of mine use.
 
-*NOTE: make sure you've installed me and my friends before running the commands below. [Instructions](#install-everything-you-need) at the bottom of this page.*
+*NOTE: make sure you've installed everything I need before running the commands below. [Instructions](#install-everything-you-need) at the bottom of this page.*
 
 ## See me in action
 
@@ -53,7 +53,7 @@ You'll notice that your photos are now organized by date and location. Some phot
 
 Don't fret if your photos don't have much EXIF information. I'll show you how you can fix them up later on but let's walk before we run.
 
-Back to your photos. When I'm done you should see something like this. Notice that I've renamed your files by adding the date and time they were taken. This helps keep them in chronological order when using most viewing applications. You'll can thank me later.
+Back to your photos. When I'm done you should see something like this. Notice that I've renamed your files by adding the date and time they were taken. This helps keep them in chronological order when using most viewing applications. You'll thank me later.
 
 ```
 ├── 2015-06-Jun

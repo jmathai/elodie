@@ -125,7 +125,8 @@ class Media(object):
                         seconds_since_epoch = time.mktime(exif[key].value.timetuple())
                         break;
             except BaseException as e:
-                print e
+                if(constants.debug == True):
+                    print e
                 pass
 
         if(seconds_since_epoch == 0):
@@ -164,13 +165,26 @@ class Media(object):
         process_output = subprocess.Popen(['%s "%s"' % (exiftool, source)], stdout=subprocess.PIPE, shell=True)
         output = process_output.stdout.read()
 
+        # Get album from exiftool output
         album = None
         album_regex = re.search('Album +: +(.+)', output)
         if(album_regex is not None):
             album = album_regex.group(1)
 
+        # Get title from exiftool output
+        title = None
+        for key in ['Displayname', 'Headline', 'Title', 'ImageDescription']:
+            title_regex = re.search('%s +: +(.+)' % key, output)
+            if(title_regex is not None):
+                title_return = title_regex.group(1).strip()
+                if(len(title_return) > 0):
+                    title = title_return
+                    break;
+
+
         self.exiftool_attributes = {
-            'album': album
+            'album': album,
+            'title': title
         }
 
         return self.exiftool_attributes
@@ -205,6 +219,7 @@ class Media(object):
             'latitude': self.get_coordinate('latitude'),
             'longitude': self.get_coordinate('longitude'),
             'album': self.get_album(),
+            'title': self.get_title(),
             'mime_type': self.get_mimetype(),
             'base_name': os.path.splitext(os.path.basename(source))[0],
             'extension': self.get_extension()
@@ -227,6 +242,22 @@ class Media(object):
             return None
 
         return mimetype[0]
+    
+    """
+    Get the title for a photo of video
+
+    @returns, string or None if no title is set or not a valid media type
+    """
+    def get_title(self):
+        if(not self.is_valid()):
+            return None
+
+        exiftool_attributes = self.get_exiftool_attributes()
+
+        if('title' not in exiftool_attributes):
+            return None
+
+        return exiftool_attributes['title']
 
     """
     Set album for a photo
@@ -245,6 +276,8 @@ class Media(object):
 
         source = self.source
         exiftool_config = constants.exiftool_config
+        if(constants.debug == True):
+            print '%s -config "%s" -xmp-elodie:Album="%s" "%s"' % (exiftool, exiftool_config, name, source)
         process_output = subprocess.Popen(['%s -config "%s" -xmp-elodie:Album="%s" "%s"' % (exiftool, exiftool_config, name, source)], stdout=subprocess.PIPE, shell=True)
         streamdata = process_output.communicate()[0]
         if(process_output.returncode != 0):

@@ -8,6 +8,7 @@ import shutil
 import time
 
 from elodie import geolocation
+from elodie import constants
 from elodie.localstorage import Db
 
 """
@@ -59,27 +60,31 @@ class FileSystem:
         return os.getcwd()
 
     """
-    Generate file name for a video using its metadata.
+    Generate file name for a photo or video using its metadata.
     We use an ISO8601-like format for the file name prefix.
     Instead of colons as the separator for hours, minutes and seconds we use a hyphen.
     https://en.wikipedia.org/wiki/ISO_8601#General_principles
 
-    @param, video, Video, A Video instance
-    @returns, string or None for non-videos
+    @param, media, Photo|Video, A Photo or Video instance
+    @returns, string or None for non-photo or non-videos
     """
-    def get_file_name(self, video):
-        if(not video.is_valid()):
+    def get_file_name(self, media):
+        if(not media.is_valid()):
             return None
 
-        metadata = video.get_metadata()
+        metadata = media.get_metadata()
         if(metadata == None):
             return None
 
+# If the file has EXIF title we use that in the file name (i.e. my-favorite-photo-img_1234.jpg)
         # We want to remove the date prefix we add to the name.
         # This helps when re-running the program on file which were already processed. 
         base_name = re.sub('^\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}-', '', metadata['base_name'])
         if(len(base_name) == 0):
             base_name = metadata['base_name']
+        if('title' in metadata and metadata['title'] is not None and len(metadata['title']) > 0):
+            title_sanitized = re.sub('\W+', '-', metadata['title'].strip())
+            base_name = '%s-%s' % (title_sanitized , base_name)
 
         file_name = '%s-%s.%s' % (time.strftime('%Y-%m-%d_%H-%M-%S', metadata['date_taken']), base_name, metadata['extension'])
         return file_name.lower()
@@ -137,12 +142,14 @@ class FileSystem:
         db = Db()
         checksum = db.checksum(_file)
         if(checksum == None):
-            print 'Could not get checksum for %s. Skipping...' % _file
+            if(constants.debug == True):
+                print 'Could not get checksum for %s. Skipping...' % _file
             return
 
         # If duplicates are not allowed and this hash exists in the db then we return
         if(allowDuplicate == False and db.check_hash(checksum) == True):
-            print '%s already exists at %s. Skipping...' % (_file, db.get_hash(checksum))
+            if(constants.debug == True):
+                print '%s already exists at %s. Skipping...' % (_file, db.get_hash(checksum))
             return
 
         self.create_directory(dest_directory)

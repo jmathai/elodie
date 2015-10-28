@@ -96,9 +96,28 @@ class Photo(Media):
         return True
 
     """
+    Set lat/lon for a photo
+
+    @param, latitude, float, Latitude of the file
+    @param, longitude, float, Longitude of the file
+
+    @returns, boolean
+    """
+    def set_title(self, title):
+        if(title is None):
+            return False
+
+        source = self.source
+        exif_metadata = pyexiv2.ImageMetadata(source)
+        exif_metadata.read()
+
+        exif_metadata['Xmp.dc.title'] = title
+
+        exif_metadata.write()
+        return True
+
+    """
     Static method to access static __valid_extensions variable.
-    def set_location(self, latitude, longitude):
-        return None
 
     @returns, tuple
     """

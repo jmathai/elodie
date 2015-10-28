@@ -16,6 +16,7 @@ import shutil
 import subprocess
 import time
 
+from elodie import constants
 from elodie import plist_parser
 from media import Media
 
@@ -124,30 +125,6 @@ class Video(Media):
         return process_output.stdout.read()
 
     """
-    Get a dictionary of metadata for a video.
-    All keys will be present and have a value of None if not obtained.
-
-    @returns, dictionary or None for non-video files
-    """
-    def get_metadata(self):
-        if(not self.is_valid()):
-            return None
-
-        source = self.source
-        metadata = {
-            "date_taken": self.get_date_taken(),
-            "latitude": self.get_coordinate('latitude'),
-            "longitude": self.get_coordinate('longitude'),
-            "album": self.get_album(),
-            #"length": self.get_duration(),
-            "mime_type": self.get_mimetype(),
-            "base_name": os.path.splitext(os.path.basename(source))[0],
-            "extension": self.get_extension()
-        }
-
-        return metadata
-
-    """
     Set the date/time a photo was taken
 
     @param, time, datetime, datetime object of when the photo was taken
@@ -176,6 +153,20 @@ class Video(Media):
         result = self.__update_using_plist(latitude=latitude, longitude=longitude)
         return result
 
+    """
+    Set title for a video
+
+    @param, title, string, Title for the file
+
+    @returns, boolean
+    """
+
+    def set_title(self, title):
+        if(title is None):
+            return False
+
+        result = self.__update_using_plist(title=title)
+        return result
 
     """
     Updates video metadata using avmetareadwrite.
@@ -196,12 +187,14 @@ class Video(Media):
     """
     def __update_using_plist(self, **kwargs):
         if('latitude' not in kwargs and 'longitude' not in kwargs and 'time' not in kwargs):
-            print 'No lat/lon passed into __create_plist'
+            if(constants.debug == True):
+                print 'No lat/lon passed into __create_plist'
             return False
 
         avmetareadwrite = find_executable('avmetareadwrite')
         if(avmetareadwrite is None):
-            print 'Could not find avmetareadwrite'
+            if(constants.debug == True):
+                print 'Could not find avmetareadwrite'
             return False
 
         source = self.source
@@ -214,7 +207,8 @@ class Video(Media):
             write_process = subprocess.Popen([avmetareadwrite_generate_plist_command], stdout=subprocess.PIPE, shell=True)
             streamdata = write_process.communicate()[0]
             if(write_process.returncode != 0):
-                print 'Failed to generate plist file'
+                if(constants.debug == True):
+                    print 'Failed to generate plist file'
                 return False
 
             plist = plist_parser.Plist(plist_temp.name)
@@ -258,12 +252,17 @@ class Video(Media):
                     plist.update_key('common/creationDate', time_string)
                     plist_should_be_written = True
 
+            if('title' in kwargs):
+                if(len(kwargs['title']) > 0):
+                    plist.update_key('common/title', kwargs['title'])
+                    plist_should_be_written = True
 
             if(plist_should_be_written is True):
                 plist_final = plist_temp.name
                 plist.write_file(plist_final)
             else:
-                print 'Nothing to update, plist unchanged'
+                if(constants.debug == True):
+                    print 'Nothing to update, plist unchanged'
                 return False
 
             # We create a temporary file to save the modified file to.
@@ -279,14 +278,16 @@ class Video(Media):
             update_process = subprocess.Popen([avmetareadwrite_command], stdout=subprocess.PIPE, shell=True)
             streamdata = update_process.communicate()[0]
             if(update_process.returncode != 0):
-                print '%s did not complete successfully' % avmetareadwrite_command
+                if(constants.debug == True):
+                    print '%s did not complete successfully' % avmetareadwrite_command
                 return False
 
             # Before we do anything destructive we confirm that the file is in tact.
             check_media = Video(temp_movie)
             check_metadata = check_media.get_metadata()
             if(check_metadata['latitude'] is None or check_metadata['longitude'] is None or check_metadata['date_taken'] is None):
-                print 'Something went wrong updating video metadata'
+                if(constants.debug == True):
+                    print 'Something went wrong updating video metadata'
                 return False
 
             # Copy file information from original source to temporary file before copying back over

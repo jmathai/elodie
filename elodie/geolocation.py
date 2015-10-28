@@ -8,6 +8,8 @@ import requests
 import sys
 import urllib
 
+from elodie import constants
+
 class Fraction(fractions.Fraction):
     """Only create Fractions from floats.
 
@@ -108,11 +110,13 @@ def reverse_lookup(lat, lon):
         r = requests.get('http://open.mapquestapi.com/nominatim/v1/reverse.php?%s' % urllib.urlencode(params))
         return r.json()
     except requests.exceptions.RequestException as e:
-        print e
+        if(constants.debug == True):
+            print e
         return None
     except ValueError as e:
-        print r.text
-        print e
+        if(constants.debug == True):
+            print r.text
+            print e
         return None
 
 def lookup(name):
@@ -123,13 +127,16 @@ def lookup(name):
 
     try:
         params = {'format': 'json', 'key': key, 'location': name}
-        print 'http://open.mapquestapi.com/geocoding/v1/address?%s' % urllib.urlencode(params)
+        if(constants.debug == True):
+            print 'http://open.mapquestapi.com/geocoding/v1/address?%s' % urllib.urlencode(params)
         r = requests.get('http://open.mapquestapi.com/geocoding/v1/address?%s' % urllib.urlencode(params))
         return r.json()
     except requests.exceptions.RequestException as e:
-        print e
+        if(constants.debug == True):
+            print e
         return None
     except ValueError as e:
-        print r.text
-        print e
+        if(constants.debug == True):
+            print r.text
+            print e
         return None
