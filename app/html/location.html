@@ -15,19 +15,36 @@
       <div class="location">
         <label for="location-field"><i class="icon-map"></i>Change geolocation</label>
         <input id="location-field" type="text" placeholder="i.e. Sunnyvale, CA">
-        <button class="push addLocation">Update<i></i></button>
+        <button class="push add-location updatePhotos">Update<i></i></button>
+      </div>
+      <div class="datetime">
+        <label for="datetime-field"><i class="icon-calendar"></i>Change date and time</label>
+        <input id="datetime-field" type="text" placeholder="i.e. 2015-07-31">
+        <button class="push add-datetime updatePhotos">Update<i></i></button>
+      </div>
+      <div class="title">
+        <label for="title-field"><i class="icon-title"></i>Change title</label>
+        <input id="title-field" type="text" placeholder="i.e. Elodie smiling at dinner">
+        <button class="push add-title updatePhotos">Update<i></i></button>
       </div>
       <div class="album">
         <label for="album-field"><i class="icon-book"></i>Create album</label>
-        <input id="album-field" type="text" placeholder="i.e. Elocie's Birthday Party">
-        <button class="push addAlbum">Update<i></i></button>
+        <input id="album-field" type="text" placeholder="i.e. Elodie's Birthday Party">
+        <button class="push add-album updatePhotos">Update<i></i></button>
+      </div>
+      <div class="status">
+        <!--<ul>
+          <li>IMG_6365.JPG <i class="icon-happy"></i><div class="destination" title="/Users/jaisenmathai/Downloads/media/2015-10-Oct/Sunnyvale/2015-10-17_01-03-50-img_6365.jpg">/Users/jaisenmathai/Downloads/media/2015-10-Oct/Sunnyvale/2015-10-17_01-03-50-img_6365.jpg</div></li>
+          <li>IMG_1234.JPG <i class="icon-unhappy"></i><div class="destination" title="/Users/jaisenmathai/Downloads/media/2015-10-Oct/Sunnyvale/2015-10-17_01-03-50-img_6365.jpg">/Users/jaisenmathai/Downloads/media/2015-10-Oct/Sunnyvale/2015-10-17_01-03-50-img_6365.jpg</div></li>
+          </ul>-->
       </div>
       <div class="preview">
         <!--<div class="center-cropped" style="background-image:url('file:///Users/jaisenmathai/Downloads/media/2015-10-Oct/Sunnyvale/2015-10-17_01-03-50-img_6365.jpg');"></div>
         <div class="center-cropped" style="background-image:url('file:///Users/jaisenmathai/Downloads/media/2015-10-Oct/Sunnyvale/2015-10-17_01-03-50-img_6365.jpg');"></div>
         <div class="center-cropped" style="background-image:url('file:///Users/jaisenmathai/Downloads/media/2015-10-Oct/Sunnyvale/2015-10-17_01-03-50-img_6365.jpg');"></div>
         <div class="center-cropped" style="background-image:url('file:///Users/jaisenmathai/Downloads/media/2015-10-Oct/Sunnyvale/2015-10-17_01-03-50-img_6365.jpg');"></div>
-        <div class="center-cropped" style="background-image:url('file:///Users/jaisenmathai/Downloads/media/2015-10-Oct/Sunnyvale/2015-10-17_01-03-50-img_6365.jpg');"></div>
+        <div class="center-cropped video"></div>
+        <div class="center-cropped video"></div>
         <div class="center-cropped" style="background-image:url('file:///Users/jaisenmathai/Downloads/media/2015-10-Oct/Sunnyvale/2015-10-17_01-03-50-img_6365.jpg');"></div>
         <div class="center-cropped" style="background-image:url('file:///Users/jaisenmathai/Downloads/media/2015-10-Oct/Sunnyvale/2015-10-17_01-03-50-img_6365.jpg');"></div>
         <div class="center-cropped" style="background-image:url('file:///Users/jaisenmathai/Downloads/media/2015-10-Oct/Sunnyvale/2015-10-17_01-03-50-img_6365.jpg');"></div>
@@ -38,5 +55,8 @@
         <div class="center-cropped" style="background-image:url('file:///Users/jaisenmathai/Downloads/media/2015-10-Oct/Sunnyvale/2015-10-17_01-03-50-img_6365.jpg');"></div>-->
       </div>
     </div>
+    <script>
+      document.getElementById('location-field').focus();
+    </script>
   </body>
 </html>

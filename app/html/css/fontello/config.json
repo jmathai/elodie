@@ -25,6 +25,18 @@
       "src": "fontelico"
     },
     {
+      "uid": "0f99ab40ab0b4d64a74f2d0deeb03e42",
+      "css": "video",
+      "code": 59397,
+      "src": "fontawesome"
+    },
+    {
+      "uid": "c5845105a87df2ee1999826d90622f6a",
+      "css": "title",
+      "code": 59399,
+      "src": "fontawesome"
+    },
+    {
       "uid": "87d337fee4866c2c28f6082994ce0f41",
       "css": "map",
       "code": 59395,
@@ -35,6 +47,12 @@
       "css": "book",
       "code": 59394,
       "src": "modernpics"
+    },
+    {
+      "uid": "64abb7c56aefca89046bb69f7251d2e2",
+      "css": "calendar",
+      "code": 59398,
+      "src": "elusive"
     }
   ]
 }

@@ -20,6 +20,7 @@ from elodie.localstorage import Db
 
 def parse_arguments(args):
     config = {
+        'title': None,
         'time': None,
         'location': None,
         'album': None,
@@ -107,7 +108,7 @@ def main(config, args):
 
 db = Db()
 filesystem = FileSystem()
-args = arguments.parse(sys.argv[1:], None, ['album=','time=','location=','process='], './update.py --time=<string time> --location=<string location> --process=no file1 file2...fileN')
+args = arguments.parse(sys.argv[1:], None, ['title=','album=','time=','location=','process='], './update.py --time=<string time> --location=<string location> --process=no file1 file2...fileN')
 config = parse_arguments(args)
 
 if __name__ == '__main__':

@@ -22,20 +22,41 @@ body {
 }
 
 .content {
-  padding: 10px;
+  padding: 0 10px 10px 10px;
 }
 
-.content>.location {
-  padding-bottom: 20px;
+.content > div {
   border-bottom: solid 1px #eee;
+  padding: 10px 0;
 }
-.content>.album {
-  padding-top: 15px;
-  padding-bottom: 20px;
-  border-bottom: solid 1px #eee;
+
+.status {
+  display: none;
+}
+
+.status ul {
+  list-style-type:none;
+  padding:0;
+  margin:20px 0 0;
+  font-size:.8em;
+}
+
+.status ul li {
+  padding:0;
+  margin:0 0 10px;
+}
+
+.status ul li .destination {
+  width: 100%;
+  font-size: .75em;
+  padding-top: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .preview {
+  position: relative;
   padding: 20px 0;
 }
 
@@ -43,10 +64,21 @@ body {
   display: inline-block;
   border-radius: 2px;
   border: solid 1px #ddd;
+  margin: 1px;
   width: 42px;
   height: 42px;
   background-position: center center;
   background-size: cover;
+}
+
+.preview .center-cropped.video:before {
+  font-family: "elodie";
+  color: #eee;
+  content: '\e805';
+  position: absolute;
+  margin-top: 6px;
+  margin-left: 8px;
+  font-size: 1.5em;
 }
 
 i {
@@ -74,9 +106,17 @@ input, button {
   border-radius: 3px;
 }
 
+
+input:focus,
+select:focus,
+textarea:focus,
+button:focus {
+    outline: none;
+}
+
 input {
   padding: 4px;
-  width: 300px;
+  width: 250px;
 }
 
 button {

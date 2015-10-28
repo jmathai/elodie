@@ -12,6 +12,9 @@ var menubar = require('menubar'),
 // Once this main process completes the update it will send a 'update-photos-completed' event back to the renderer with information
 //  so a proper response can be displayed.
 ipc.on('update-photos', function(event, args) {
+  var params = args,
+      normalize
+
   console.log('update-photos')
   console.log(args)
   if(typeof(args['files']) === 'undefined' || args['files'].length === 0) {
@@ -19,25 +22,38 @@ ipc.on('update-photos', function(event, args) {
     return;
   }
 
+  normalize = function(files) {
+    for(var i=0; i<files.length; i++) {
+      files[i] = files[i].normalize()
+    }
+    return files
+  }
+  files = normalize(args['files'])
+
   update_command = '/Users/jaisenmathai/dev/tools/elodie/update.py'
   if(typeof(args['location']) !== 'undefined') {
-    update_command += ' --location="' + args['location'] + '" "' + args['files'].join('" "') + '"';
-    console.log(update_command)
-    exec(update_command, function(error, stdout, stderr) {
-      console.log('out ' + stdout)
-      console.log('err ' + stderr)
-    });
-    event.sender.send('update-photos-success', args);
+    update_command += ' --location="' + args['location'] + '" "' + files.join('" "') + '"';
   } else if(typeof(args['album']) !== 'undefined') {
-    update_command += ' --album="' + args['album'] + '" "' + args['files'].join('" "') + '"';
-    console.log(update_command)
-    exec(update_command, function(error, stdout, stderr) {
-      console.log('out ' + stdout)
-      console.log('err ' + stderr)
-    });
-    event.sender.send('update-photos-success', args);
+    update_command += ' --album="' + args['album'] + '" "' + files.join('" "') + '"';
+  } else if(typeof(args['datetime']) !== 'undefined') {
+    update_command += ' --time="' + args['datetime'] + '" "' + files.join('" "') + '"';
+  } else if(typeof(args['title']) !== 'undefined') {
+    update_command += ' --title="' + args['title'] + '" "' + files.join('" "') + '"';
+  } else {
+    return
   }
   
+  console.log(update_command)
+  exec(update_command, function(error, stdout, stderr) {
+    console.log('out ' + stdout)
+    console.log('err ' + stderr)
+    params['error'] = error
+    params['stdout'] = '[' + stdout.replace("\n",',').replace(/\,+$/, '').replace("\n",'') + ']'
+    params['stderr'] = stderr
+    console.log('parsed')
+    console.log(params['stdout'])
+    event.sender.send('update-photos-success', params);
+  });
 })
 
 var mb = menubar(
@@ -49,7 +65,7 @@ var mb = menubar(
           'location': 'location.html'
         },
         width: 400,
-        height: 350
+        height: 500
       }
     )
 

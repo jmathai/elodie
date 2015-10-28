@@ -1,10 +1,10 @@
 @font-face {
   font-family: 'elodie';
-  src: url('../font/elodie.eot?22328268');
-  src: url('../font/elodie.eot?22328268#iefix') format('embedded-opentype'),
-       url('../font/elodie.woff?22328268') format('woff'),
-       url('../font/elodie.ttf?22328268') format('truetype'),
-       url('../font/elodie.svg?22328268#elodie') format('svg');
+  src: url('../font/elodie.eot?4814273');
+  src: url('../font/elodie.eot?4814273#iefix') format('embedded-opentype'),
+       url('../font/elodie.woff?4814273') format('woff'),
+       url('../font/elodie.ttf?4814273') format('truetype'),
+       url('../font/elodie.svg?4814273#elodie') format('svg');
   font-weight: normal;
   font-style: normal;
 }
@@ -14,7 +14,7 @@
 @media screen and (-webkit-min-device-pixel-ratio:0) {
   @font-face {
     font-family: 'elodie';
-    src: url('../font/elodie.svg?22328268#elodie') format('svg');
+    src: url('../font/elodie.svg?4814273#elodie') format('svg');
   }
 }
 */
@@ -59,3 +59,6 @@
 .icon-book:before { content: '\e802'; } /* '' */
 .icon-map:before { content: '\e803'; } /* '' */
 .icon-unhappy:before { content: '\e804'; } /* '' */
+.icon-video:before { content: '\e805'; } /* '' */
+.icon-calendar:before { content: '\e806'; } /* '' */
+.icon-title:before { content: '\e807'; } /* '' */
