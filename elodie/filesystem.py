@@ -26,7 +26,8 @@ class FileSystem:
 
     """
     Delete a directory only if it's empty.
-    Instead of checking first using `len([name for name in os.listdir(directory_path)]) == 0` we catch the OSError exception.
+    Instead of checking first using `len([name for name in os.listdir(directory_path)]) == 0` 
+        we catch the OSError exception.
 
     @param, directory_name, string, A fully qualified path of the directory to delete.
     """
@@ -76,7 +77,7 @@ class FileSystem:
         if(metadata == None):
             return None
 
-# If the file has EXIF title we use that in the file name (i.e. my-favorite-photo-img_1234.jpg)
+        # If the file has EXIF title we use that in the file name (i.e. my-favorite-photo-img_1234.jpg)
         # We want to remove the date prefix we add to the name.
         # This helps when re-running the program on file which were already processed. 
         base_name = re.sub('^\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}-', '', metadata['base_name'])
@@ -84,7 +85,7 @@ class FileSystem:
             base_name = metadata['base_name']
         if('title' in metadata and metadata['title'] is not None and len(metadata['title']) > 0):
             title_sanitized = re.sub('\W+', '-', metadata['title'].strip())
-            base_name = '%s-%s' % (title_sanitized , base_name)
+            base_name = '%s-%s' % (base_name, title_sanitized)
 
         file_name = '%s-%s.%s' % (time.strftime('%Y-%m-%d_%H-%M-%S', metadata['date_taken']), base_name, metadata['extension'])
         return file_name.lower()

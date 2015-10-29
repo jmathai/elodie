@@ -186,7 +186,7 @@ class Video(Media):
     @returns, boolean
     """
     def __update_using_plist(self, **kwargs):
-        if('latitude' not in kwargs and 'longitude' not in kwargs and 'time' not in kwargs):
+        if('latitude' not in kwargs and 'longitude' not in kwargs and 'time' not in kwargs and 'title' not in kwargs):
             if(constants.debug == True):
                 print 'No lat/lon passed into __create_plist'
             return False

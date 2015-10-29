@@ -39,7 +39,13 @@ class Media(object):
             'longitude_ref': 'Exif.GPSInfo.GPSLongitudeRef',
         }
         self.exiftool_attributes = None
+        self.metadata = None
 
+    """
+    Get album from EXIF
+
+    @returns, None or string
+    """
     def get_album(self):
         if(not self.is_valid()):
             return None
@@ -212,9 +218,12 @@ class Media(object):
         if(not self.is_valid()):
             return None
 
+        if(self.metadata is not None):
+            return self.metadata
+
         source = self.source
 
-        metadata = {
+        self.metadata = {
             'date_taken': self.get_date_taken(),
             'latitude': self.get_coordinate('latitude'),
             'longitude': self.get_coordinate('longitude'),
@@ -225,7 +234,7 @@ class Media(object):
             'extension': self.get_extension()
         }
 
-        return metadata
+        return self.metadata
     
     """
     Get the mimetype of the file.
@@ -287,6 +296,18 @@ class Media(object):
         if(os.path.isfile(exiftool_backup_file) is True):
             os.remove(exiftool_backup_file)
         return True
+
+    """
+    Specifically update the basename attribute in the metadata dictionary for this instance.
+    This is used for when we update the EXIF title of a media file.
+    Since that determines the name of a file if we update the title of a file more than once it appends to the file name.
+    I.e. 2015-12-31_00-00-00-my-first-title-my-second-title.jpg
+
+    @param, string, new_basename, New basename of file (with the old title removed
+    """
+    def set_metadata_basename(self, new_basename):
+        self.get_metadata()
+        self.metadata['base_name'] = new_basename
 
     @classmethod
     def get_class_by_file(Media, _file, classes):

@@ -92,12 +92,33 @@ def main(config, args):
             media.set_album(config['album'])
             updated = True
 
+        # Updating a title can be problematic when doing it 2+ times on a file.
+        # You would end up with img_001.jpg -> img_001-first-title.jpg -> img_001-first-title-second-title.jpg.
+        # To resolve that we have to track the prior title (if there was one.
+        # Then we massage the updated_media's metadata['base_name'] to remove the old title.
+        # Since FileSystem.get_file_name() relies on base_name it will properly rename the file by updating the title
+        #     instead of appending it.
+        remove_old_title_from_name = False
         if(config['title'] is not None):
-            media.set_title(config['title'])
+            # We call get_metadata() to cache it before making any changes
+            metadata = media.get_metadata()
+            title_update_status = media.set_title(config['title'])
+            original_title = metadata['title']
+            if(title_update_status and original_title is not None):
+                # @TODO: We should move this to a shared method since FileSystem.get_file_name() does it too.
+                original_title = re.sub('\W+', '-', original_title.lower())
+                original_base_name = metadata['base_name']
+                remove_old_title_from_name = True
             updated = True
                 
         if(updated == True):
-            dest_path = filesystem.process_file(file_path, destination, media, move=True, allowDuplicate=True)
+            updated_media = _class(file_path)
+            # See comments above on why we have to do this when titles get updated.
+            if(remove_old_title_from_name is True and len(original_title) > 0):
+                updated_media.get_metadata()
+                updated_media.set_metadata_basename(original_base_name.replace('-%s' % original_title, ''))
+
+            dest_path = filesystem.process_file(file_path, destination, updated_media, move=True, allowDuplicate=True)
             if(constants.debug == True):
                 print '%s -> %s' % (file_path, dest_path)
 
