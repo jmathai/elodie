@@ -2,3 +2,6 @@
 **/*.pyc
 **/config.ini
 **/node_modules/**
+dist/**
+build/**
+elodie.spec
