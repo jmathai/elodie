@@ -5,7 +5,6 @@ Photo package that handles all photo operations
 
 # load modules
 from datetime import datetime
-from distutils.spawn import find_executable
 from sys import argv
 
 import mimetypes

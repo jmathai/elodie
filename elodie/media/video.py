@@ -34,6 +34,22 @@ class Video(Media):
         super(Video, self).__init__(source)
 
     """
+    Get path to executable avmetareadwrite binary.
+    We wrap this since we call it in a few places and we do a fallback.
+
+    @returns, None or string
+    """
+    def get_avmetareadwrite(self):
+        avmetareadwrite = find_executable('avmetareadwrite')
+        if(avmetareadwrite is None):
+            avmetareadwrite = '/usr/bin/avmetareadwrite'
+            if(not os.path.isfile(avmetareadwrite) or not os.access(avmetareadwrite, os.X_OK)):
+                return None
+
+        return avmetareadwrite
+
+
+    """
     Get latitude or longitude of photo from EXIF
 
     @returns, time object or None for non-video files or 0 timestamp
@@ -116,7 +132,7 @@ class Video(Media):
     @returns, string or None if exiftool is not found
     """
     def get_exif(self):
-        exiftool = find_executable('exiftool')
+        exiftool = self.get_exiftool()
         if(exiftool is None):
             return None
 
@@ -191,7 +207,7 @@ class Video(Media):
                 print 'No lat/lon passed into __create_plist'
             return False
 
-        avmetareadwrite = find_executable('avmetareadwrite')
+        avmetareadwrite = self.get_avmetareadwrite()
         if(avmetareadwrite is None):
             if(constants.debug == True):
                 print 'Could not find avmetareadwrite'

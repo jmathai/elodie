@@ -51,10 +51,27 @@ class Media(object):
             return None
 
         exiftool_attributes = self.get_exiftool_attributes()
-        if('album' not in exiftool_attributes):
+        if(exiftool_attributes is None or 'album' not in exiftool_attributes):
             return None
         
         return exiftool_attributes['album']
+
+    """
+    Get path to executable exiftool binary.
+    We wrap this since we call it in a few places and we do a fallback.
+
+    @returns, None or string
+    """
+    def get_exiftool(self):
+        exiftool = find_executable('exiftool')
+        # If exiftool wasn't found we try to brute force the homebrew location
+        if(exiftool is None):
+            exiftool = '/usr/local/bin/exiftool'
+            if(not os.path.isfile(exiftool) or not os.access(exiftool, os.X_OK)):
+                return None
+
+        return exiftool
+
 
     """
     Get the full path to the video.
@@ -163,7 +180,7 @@ class Media(object):
         if(self.exiftool_attributes is not None):
             return self.exiftool_attributes
 
-        exiftool = find_executable('exiftool')
+        exiftool = self.get_exiftool()
         if(exiftool is None):
             return False
 
@@ -186,7 +203,6 @@ class Media(object):
                 if(len(title_return) > 0):
                     title = title_return
                     break;
-
 
         self.exiftool_attributes = {
             'album': album,
@@ -263,7 +279,7 @@ class Media(object):
 
         exiftool_attributes = self.get_exiftool_attributes()
 
-        if('title' not in exiftool_attributes):
+        if(exiftool_attributes is None or 'title' not in exiftool_attributes):
             return None
 
         return exiftool_attributes['title']
@@ -279,7 +295,7 @@ class Media(object):
         if(name is None):
             return False
 
-        exiftool = find_executable('exiftool')
+        exiftool = self.get_exiftool()
         if(exiftool is None):
             return False
 

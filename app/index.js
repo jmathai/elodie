@@ -30,7 +30,8 @@ ipc.on('update-photos', function(event, args) {
   }
   files = normalize(args['files'])
 
-  update_command = '/Users/jaisenmathai/dev/tools/elodie/update.py'
+  update_command = __dirname + '/../dist/elodie/elodie update'
+  //update_command = __dirname + '/../elodie.py update'
   if(typeof(args['location']) !== 'undefined') {
     update_command += ' --location="' + args['location'] + '" "' + files.join('" "') + '"';
   } else if(typeof(args['album']) !== 'undefined') {
@@ -59,7 +60,7 @@ ipc.on('update-photos', function(event, args) {
 var mb = menubar(
       {
         preloadWindow: true,
-        dir: 'html',
+        dir: __dirname + '/html',
         index: 'location.html',
         pages: {
           'location': 'location.html'
@@ -110,4 +111,3 @@ mb.on('hide', function hide () {
 mb.on('after-hide', function afterHide () {
   console.log('after-hide')
 })
-

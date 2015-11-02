@@ -2,7 +2,7 @@
   "name": "elodie",
   "version": "1.0.0",
   "description": "GUI for Elodie",
-  "main": "app.js",
+  "main": "app/index.js",
   "dependencies": {
     "menubar": "^2.3.0"
   },
