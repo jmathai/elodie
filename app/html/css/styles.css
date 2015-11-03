@@ -1,4 +1,4 @@
-* {
+*, body, div {
   font-family: 'Lato', 'Helvetica';
   font-weight: 300;
   font-size: 1.1em;
@@ -14,20 +14,36 @@ body {
 }
 
 .titlebar {
-  height: 30px;
+  height: 45px;
   padding-top:10px;
   text-align: center;
   background-color: #eee;
   border-bottom: solid 1.5px #aaa;
 }
 
-.content {
+.titlebar a {
+  font-weight: 300;
+  font-size:.9em;
+  float:right;
+  padding-top:3px;
+}
+
+.content, .content-index {
   padding: 0 10px 10px 10px;
+  font-size: 1em;
 }
 
 .content > div {
   border-bottom: solid 1px #eee;
   padding: 10px 0;
+}
+
+.content > p {
+  padding: 10px 0;
+}
+
+.content .import-success, .content .import-success a {
+  font-size:.9em;
 }
 
 .status {
@@ -42,17 +58,18 @@ body {
 }
 
 .status ul li {
+  font-size:.9em;
   padding:0;
   margin:0 0 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .status ul li .destination {
   width: 100%;
   font-size: .75em;
   padding-top: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .preview {
@@ -94,13 +111,16 @@ i.icon-unhappy {
 }
 
 label {
+  font-size: .9em;
+  font-weight: 300;
   display: block;
   padding-bottom:3px;
 }
 
 input, button { 
   font-family: 'Lato', 'Helvetica';
-  font-size: 1.1em;
+  font-weight: 300;
+  font-size: .9em;
   color: #666;
   border: solid 1px #eee;
   border-radius: 3px;
@@ -116,11 +136,23 @@ button:focus {
 
 input {
   padding: 4px;
-  width: 250px;
+  width: 100%;
+}
+
+input[type="file"] {
+  height:0px;
+  width:0px;
+  overflow:hidden;
+  display:none;
 }
 
 button {
+  cursor: pointer;
   background-color: #eee;
   padding: 4px 10px;
-  color:
+  margin-top: 10px;
+}
+
+small {
+  font-size:.7em;
 }

@@ -85,6 +85,7 @@ class FileSystem:
             base_name = metadata['base_name']
         if('title' in metadata and metadata['title'] is not None and len(metadata['title']) > 0):
             title_sanitized = re.sub('\W+', '-', metadata['title'].strip())
+            base_name = base_name.replace('-%s' % title_sanitized, '')
             base_name = '%s-%s' % (base_name, title_sanitized)
 
         file_name = '%s-%s.%s' % (time.strftime('%Y-%m-%d_%H-%M-%S', metadata['date_taken']), base_name, metadata['extension'])

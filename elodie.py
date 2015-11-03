@@ -33,12 +33,12 @@ def _import(params):
     if(params['--source'] is not None):
         source = params['--source']
 
-        for current_file in filesystem.get_all_files(source, media_type.get_valid_extensions()):
+        for current_file in filesystem.get_all_files(source, None):
             media = Media.get_class_by_file(current_file, [Photo, Video])
             if(media is None):
                 continue
 
-            if(media_type.__name__ == 'Video'):
+            if(type(media).__name__ == 'Video'):
                 filesystem.set_date_from_path_video(media)
 
             dest_path = filesystem.process_file(current_file, destination, media, allowDuplicate=False, move=False)

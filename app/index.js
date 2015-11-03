@@ -11,12 +11,46 @@ var menubar = require('menubar'),
 // The web renderer will send the list of photos, type of update and new value to apply
 // Once this main process completes the update it will send a 'update-photos-completed' event back to the renderer with information
 //  so a proper response can be displayed.
+ipc.on('import-photos', function(event, args) {
+  var params = args,
+      normalize;
+
+  console.log('import-photos');
+  console.log(args);
+  if(typeof(args['source']) === 'undefined' || args['source'].length === 0 || typeof(args['destination']) === 'undefined' || args['destination'].length === 0) {
+    console.log('no source or destination passed in to import-photos');
+    return;
+  }
+
+  args['source'] = args['source'].normalize();
+  args['destination'] = args['destination'].normalize();
+
+  update_command = __dirname + '/../dist/elodie/elodie import --source="' + args['source'] +  '" --destination="' + args['destination'] + '"';
+  //update_command = __dirname + '/../elodie.py import --source="' + args['source'] +  '" --destination="' + args['destination'] + '"';
+  
+  console.log(update_command)
+  exec(update_command, function(error, stdout, stderr) {
+    console.log('out ' + stdout)
+    console.log('err ' + stderr)
+    /*params['error'] = error
+    params['stdout'] = '[' + stdout.replace(/\n/g,',').replace(/\,+$/g, '').replace(/\n/g,'') + ']'
+    params['stderr'] = stderr
+    console.log('parsed')
+    console.log(params['stdout'])*/
+    event.sender.send('update-import-success', args);
+  });
+});
+
+// When photos are dragged onto the toolbar and photos are requested to be updated it will fire an 'update-photos' ipc event.
+// The web renderer will send the list of photos, type of update and new value to apply
+// Once this main process completes the update it will send a 'update-photos-completed' event back to the renderer with information
+//  so a proper response can be displayed.
 ipc.on('update-photos', function(event, args) {
   var params = args,
-      normalize
+      normalize;
 
-  console.log('update-photos')
-  console.log(args)
+  console.log('update-photos');
+  console.log(args);
   if(typeof(args['files']) === 'undefined' || args['files'].length === 0) {
     console.log('no files passed in to update-photos');
     return;
@@ -32,36 +66,46 @@ ipc.on('update-photos', function(event, args) {
 
   update_command = __dirname + '/../dist/elodie/elodie update'
   //update_command = __dirname + '/../elodie.py update'
-  if(typeof(args['location']) !== 'undefined') {
-    update_command += ' --location="' + args['location'] + '" "' + files.join('" "') + '"';
-  } else if(typeof(args['album']) !== 'undefined') {
-    update_command += ' --album="' + args['album'] + '" "' + files.join('" "') + '"';
-  } else if(typeof(args['datetime']) !== 'undefined') {
-    update_command += ' --time="' + args['datetime'] + '" "' + files.join('" "') + '"';
-  } else if(typeof(args['title']) !== 'undefined') {
-    update_command += ' --title="' + args['title'] + '" "' + files.join('" "') + '"';
-  } else {
-    return
+  if(args['location'].length > 0) {
+    update_command += ' --location="' + args['location'] + '"';
   }
+  if(args['album'].length > 0) {
+    update_command += ' --album="' + args['album'] + '"';
+  }
+  if(args['datetime'].length > 0) {
+    update_command += ' --time="' + args['datetime'] + '"';
+  }
+  if(args['title'].length > 0) {
+    update_command += ' --title="' + args['title'] + '"';
+  }
+
+  update_command += ' "' + files.join('" "') + '"'
   
   console.log(update_command)
   exec(update_command, function(error, stdout, stderr) {
     console.log('out ' + stdout)
     console.log('err ' + stderr)
     params['error'] = error
-    params['stdout'] = '[' + stdout.replace("\n",',').replace(/\,+$/, '').replace("\n",'') + ']'
+    params['stdout'] = '[' + stdout.replace(/\n/g,',').replace(/\,+$/g, '').replace(/\n/g,'') + ']'
     params['stderr'] = stderr
     console.log('parsed')
     console.log(params['stdout'])
     event.sender.send('update-photos-success', params);
   });
-})
+});
+
+
+ipc.on('launch-finder', function(event, path) {
+  console.log(path);
+  var shell = require('shell');
+  shell.showItemInFolder(path);
+});
 
 var mb = menubar(
       {
         preloadWindow: true,
         dir: __dirname + '/html',
-        index: 'location.html',
+        index: 'index.html',
         pages: {
           'location': 'location.html'
         },
@@ -97,6 +141,7 @@ mb.on('after-create-window', function afterCreateWindow () {
 })
 
 mb.on('show', function show () {
+  //this.window.openDevTools();
   this.window.loadUrl('file://' + this.getOption('dir') + '/' + this.getOption('index'))
 })
 

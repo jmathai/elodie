@@ -1,7 +1,35 @@
 <html>
+  <head>
+    <script src="js/handlers.js"></script>
+    <link href='https://fonts.googleapis.com/css?family=Lato:400,100,300,100italic,300italic' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="css/bootstrap.css"></script>
+    <link rel="stylesheet" href="css/boilerplate.css"></script>
+    <link rel="stylesheet" href="css/styles.css"></script>
+    <link rel="stylesheet" href="css/fontello/css/animation.css"></script>
+    <link rel="stylesheet" href="css/fontello/css/elodie.css"></script>
+  </head>
   <body> 
-    Hi,
-    Lorem ipsum
+    <div class="titlebar">
+      How can I help you? <em>-- Elodie</em><i></i>
+      <a href="index.html"><i class="icon-media-add"></i></a>
+    </div>
+    <form class="importPhotos" action="" method="post">
+      <div class="content">
+        <p>
+          Let me know where your photos are and where you'd like me to put them as I sort them.
+        </p>
+        <div>
+          <label for="source"><i class="icon-folder-open"></i> Choose the folder your photos are in</label>
+          <input type="text" name="source" id="source" placeholder="Path to your photos folder">
+          <small><em>Hint: Right clicking on your folder in Finder, pressing option and clicking "Copy as Pathname" will put the full path on your clipboard</em></small>
+        </div>
+        <div>
+          <label for="destination"><i class="icon-folder-closed"></i> Choose a destination folder</label>
+          <input type="text" name="destination" id="destination" placeholder="Path to your photos folder">
+          <button type="submit" class="push">Start Organizing<i></i></button>
+        </div>
+        <div class="import-success"></div>
+      </div>
+    </form>
   </body>
 </html>
-
