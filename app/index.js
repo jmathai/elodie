@@ -1,7 +1,9 @@
 var menubar = require('menubar'),
+    menu = require("menu"),
     tray = require('tray'),
     ipc = require('ipc'),
-    exec = require('child_process').exec;;
+    exec = require('child_process').exec,
+    loadUrl = null;
 
 /*
  * The main process listens for events from the web renderer.
@@ -19,6 +21,7 @@ ipc.on('import-photos', function(event, args) {
   console.log(args);
   if(typeof(args['source']) === 'undefined' || args['source'].length === 0 || typeof(args['destination']) === 'undefined' || args['destination'].length === 0) {
     console.log('no source or destination passed in to import-photos');
+    event.sender.send('update-import-no-photos', null);
     return;
   }
 
@@ -94,11 +97,16 @@ ipc.on('update-photos', function(event, args) {
   });
 });
 
-
 ipc.on('launch-finder', function(event, path) {
   console.log(path);
   var shell = require('shell');
   shell.showItemInFolder(path);
+});
+
+ipc.on('program-quit', function(event, path) {
+  console.log('program-quit');
+  //mb.tray.destroy();
+  mb.quit();
 });
 
 var mb = menubar(
@@ -107,24 +115,42 @@ var mb = menubar(
         dir: __dirname + '/html',
         index: 'index.html',
         pages: {
+          'blank': 'blank.html',
           'location': 'location.html'
         },
         width: 400,
-        height: 500
+        height: 500,
+        'window-position': 'trayCenter'
       }
-    )
+    );
 
 mb.on('ready', function ready () {
   console.log('app is ready')
+  var template = [{
+    label: "Application",
+    submenu: [
+        { label: "Quit", accelerator: "Command+Q", click: function() { app.quit(); }}
+    ]}, {
+    label: "Edit",
+    submenu: [
+        { label: "Undo", accelerator: "CmdOrCtrl+Z", selector: "undo:" },
+        { label: "Redo", accelerator: "Shift+CmdOrCtrl+Z", selector: "redo:" },
+        { label: "Cut", accelerator: "CmdOrCtrl+X", selector: "cut:" },
+        { label: "Copy", accelerator: "CmdOrCtrl+C", selector: "copy:" },
+        { label: "Paste", accelerator: "CmdOrCtrl+V", selector: "paste:" },
+        { label: "Select All", accelerator: "CmdOrCtrl+A", selector: "selectAll:" }
+    ]}
+  ];
+  menu.setApplicationMenu(menu.buildFromTemplate(template));
+
   this.tray.setToolTip('Drag and drop files here')
-  //this.tray.setImage('img/logo.png')
+  this.tray.setImage(mb.getOption('dir') + '/img/logo@18x22xbw.png')
   this.tray.on('clicked', function clicked () {
     console.log('tray-clicked')
   })
   this.tray.on('drop-files', function dropFiles (ev, files) {
-    mb.showWindow()
-    console.log('window file name ' + mb.window.getRepresentedFilename())
-    mb.window.loadUrl('file://' + mb.getOption('dir') + '/' + mb.getOption('pages')['location'])
+    loadUrl = mb.getOption('pages')['location'];
+    mb.showWindow();
     //mb.window.openDevTools();
     mb.window.webContents.on('did-finish-load', function() {
       mb.window.webContents.send('files', files);
@@ -140,9 +166,14 @@ mb.on('create-window', function createWindow () {
 mb.on('after-create-window', function afterCreateWindow () {
 })
 
+var loaded = false;
 mb.on('show', function show () {
-  //this.window.openDevTools();
-  this.window.loadUrl('file://' + this.getOption('dir') + '/' + this.getOption('index'))
+  if(loadUrl === null) {
+    loadUrl = this.getOption('index');
+  }
+  this.window.loadUrl('file://' + this.getOption('dir') + '/' + loadUrl);
+  loadUrl = null;
+  //mb.window.openDevTools();
 })
 
 mb.on('after-show', function afterShow () {
@@ -155,4 +186,5 @@ mb.on('hide', function hide () {
 
 mb.on('after-hide', function afterHide () {
   console.log('after-hide')
+  this.window.loadUrl('file://' + this.getOption('dir') + '/' + this.getOption('pages')['blank']);
 })

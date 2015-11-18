@@ -71,6 +71,18 @@
       "css": "calendar",
       "code": 59398,
       "src": "elusive"
+    },
+    {
+      "uid": "15739f3032c2aa3df67efc96b3ffef56",
+      "css": "cancel-circle",
+      "code": 59403,
+      "src": "websymbols"
+    },
+    {
+      "uid": "994eaa764b3f30721f3839c64c390ce3",
+      "css": "minus-circle",
+      "code": 59404,
+      "src": "websymbols"
     }
   ]
 }

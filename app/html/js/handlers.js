@@ -18,6 +18,10 @@ if(typeof(require) === 'function') {
     handlers.removeProgressIcons();
     handlers.addSuccessImportMessage(args);
   });
+  ipc.on('update-import-no-photos', function(args) {
+    //var response = JSON.parse(args['stdout']);
+    handlers.removeProgressIcons();
+  });
   ipc.on('update-photos-success', function(args) {
     var response = JSON.parse(args['stdout']);
     handlers.setSuccessTitle();
@@ -58,17 +62,26 @@ function Handlers() {
     ev.preventDefault();
     broadcast.send('launch-finder', tgt);
   };
+  this.click.quitProgram = function(ev) {
+    //ev.preventDefault();
+    console.log('quit');
+    broadcast.send('program-quit');
+  };
   // SUBMIT
   this.submit.importPhotos = function(ev) {
     var el = ev.target,
         cls = el.className,
         params;
     ev.preventDefault();
-    document.querySelector('button.push i').className = 'icon-spin animate-spin';
 
     params = {};
     params['source'] = document.querySelector('input[name="source"]').value
     params['destination'] = document.querySelector('input[name="destination"]').value
+    if(params['destination'].length === 0 || params['source'].length === 0) {
+      return;
+    }
+
+    document.querySelector('button.push i').className = 'icon-spin animate-spin';
     broadcast.send('import-photos', params);
   };
   this.submit.updatePhotos = function(ev) {

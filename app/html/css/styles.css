@@ -1,3 +1,12 @@
+body {
+  -webkit-animation: fadein 1s;
+}
+/* Safari, Chrome and Opera > 12.1 */
+@-webkit-keyframes fadein {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
 *, body, div {
   font-family: 'Lato', 'Helvetica';
   font-weight: 300;
@@ -23,9 +32,30 @@ body {
 
 .titlebar a {
   font-weight: 300;
-  font-size:.9em;
+  font-size:.7em;
+  padding-top:5px;
+}
+
+.titlebar a.right {
   float:right;
-  padding-top:3px;
+}
+
+.titlebar a.left {
+  float:left;
+}
+
+.titlebar a.quit i {
+  color: #ff4136 !important;
+}
+
+.titlebar a.minus i {
+  color: #ffba00 !important;
+}
+
+.x-titlebar em {
+  padding-right: 28px;
+  background: url("../img/logo@18x22.png") no-repeat right 4px;
+  
 }
 
 .content, .content-index {
