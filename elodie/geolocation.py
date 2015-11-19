@@ -74,7 +74,7 @@ def dms_to_decimal(degrees, minutes, seconds, sign=' '):
     )
 
 def get_key():
-    config_file = '%s/config.ini' % path.dirname(path.dirname(path.abspath(__file__)))
+    config_file = '%s/config.ini' % constants.application_directory
     if not path.exists(config_file):
         return None
         

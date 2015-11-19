@@ -24,8 +24,7 @@ from media import Media
 Video class for general video operations
 """
 class Video(Media):
-    # class / static variable accessible through get_valid_extensions()
-    
+    __name__ = 'Video'
 
     """
     @param, source, string, The fully qualified path to the video file

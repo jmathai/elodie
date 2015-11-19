@@ -22,6 +22,15 @@ if(typeof(require) === 'function') {
     //var response = JSON.parse(args['stdout']);
     handlers.removeProgressIcons();
   });
+  ipc.on('update-config-status', function(args) {
+    if(args) {
+      // @TODO: We should really handle this in the nodejs code.
+      handlers.removeProgressIcons();
+      location.href = 'index.html';
+    } else {
+
+    }
+  });
   ipc.on('update-photos-success', function(args) {
     var response = JSON.parse(args['stdout']);
     handlers.setSuccessTitle();
@@ -62,6 +71,12 @@ function Handlers() {
     ev.preventDefault();
     broadcast.send('launch-finder', tgt);
   };
+  this.click.launchUrl = function(ev) {
+    var el = ev.target,
+        tgt = el.dataset.url;
+    ev.preventDefault();
+    broadcast.send('launch-url', tgt);
+  };
   this.click.quitProgram = function(ev) {
     //ev.preventDefault();
     console.log('quit');
@@ -84,6 +99,23 @@ function Handlers() {
     document.querySelector('button.push i').className = 'icon-spin animate-spin';
     broadcast.send('import-photos', params);
   };
+  this.submit.updateConfig = function(ev) {
+    var el = ev.target,
+        cls = el.className,
+        params;
+
+    ev.preventDefault();
+    document.querySelector('button.push i').className = 'icon-spin animate-spin';
+
+    params = {};
+    params['mapQuestKey'] = document.querySelector('input[id="mapquest-api-key-field"]').value;
+
+    if(params['mapQuestKey'].length === 0) {
+      return;
+    }
+
+    broadcast.send('update-config', params);
+  };
   this.submit.updatePhotos = function(ev) {
     var el = ev.target,
         cls = el.className,
@@ -97,8 +129,9 @@ function Handlers() {
     params['album'] = document.querySelector('input[id="album-field"]').value;
     params['title'] = document.querySelector('input[id="title-field"]').value;
 
-    if(params['location'].length === 0 && params['datetime'].length === 0 && params['album'].length === 0 && params['title'].length === 0)
+    if(params['location'].length === 0 && params['datetime'].length === 0 && params['album'].length === 0 && params['title'].length === 0) {
       return;
+    }
 
     params['files'] = __process__.files;
     broadcast.send('update-photos', params);

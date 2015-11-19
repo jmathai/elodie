@@ -38,7 +38,7 @@ def _import(params):
             if(media is None):
                 continue
 
-            if(type(media).__name__ == 'Video'):
+            if(media.__name__ == 'Video'):
                 filesystem.set_date_from_path_video(media)
 
             dest_path = filesystem.process_file(current_file, destination, media, allowDuplicate=False, move=False)
@@ -46,7 +46,7 @@ def _import(params):
                 print '%s -> %s' % (current_file, dest_path)
     elif(params['--file'] is not None):
         current_file = params['--file']
-        media = Media.get_class_by_file(current_file)
+        media = Media.get_class_by_file(current_file, [Photo, Video])
         if(media.__name__ == 'Video'):
             filesystem.set_date_from_path_video(media)
 

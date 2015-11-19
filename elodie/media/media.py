@@ -24,7 +24,7 @@ Media class for general video operations
 class Media(object):
     # class / static variable accessible through get_valid_extensions()
     video_extensions = ('avi','m4v','mov','mp4','3gp')
-    photo_extensions = ('jpg', 'jpeg', 'nef', 'dng')
+    photo_extensions = ('jpg', 'jpeg', 'nef', 'dng', 'gif')
 
     """
     @param, source, string, The fully qualified path to the video file
@@ -335,6 +335,7 @@ class Media(object):
             name = 'Video'
 
         for i in classes:
+            print i.__name__
             if(name == i.__name__):
                 return i(_file)
 

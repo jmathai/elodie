@@ -122,6 +122,7 @@ class FileSystem:
         if(len(path) < 2):
             path.append('Unknown Location')
 
+        #return '/'.join(path[::-1])
         return '/'.join(path)
 
     def process_file(self, _file, destination, media, **kwargs):

@@ -1,6 +1,7 @@
 var exports = module.exports = {};
 
-var exec = require('child_process').exec;
+var exec = require('child_process').exec,
+    config = require('./config.js');
 
 // The main process listens for events from the web renderer.
 // When photos are dragged onto the toolbar and photos are requested to be updated it will fire an 'update-photos' ipc event.
@@ -39,6 +40,16 @@ exports.importPhotos = function(event, args) {
   });
 };
 
+exports.updateConfig = function(event, args) {
+  var params = args,
+      status;
+  status = config.writeConfig(params);
+  if(status) {
+    event.sender.send('update-config-status', true);
+  } else {
+    event.sender.send('update-config-status', false);
+  }
+};
 
 // When photos are dragged onto the toolbar and photos are requested to be updated it will fire an 'update-photos' ipc event.
 // The web renderer will send the list of photos, type of update and new value to apply
@@ -97,6 +108,12 @@ exports.launchFinder = function(event, path) {
   console.log(path);
   var shell = require('shell');
   shell.showItemInFolder(path);
+};
+
+exports.launchUrl = function(event, url) {
+  console.log(url);
+  var shell = require('shell');
+  shell.openExternal(url);
 };
 
 exports.programQuit = function(event, path) {

@@ -21,6 +21,7 @@ from elodie import geolocation
 Photo class for general photo operations
 """
 class Photo(Media):
+    __name__ = 'Photo'
 
     """
     @param, source, string, The fully qualified path to the photo file

@@ -3,6 +3,7 @@ var exports = module.exports = {};
 var menubar = require('menubar'),
     menu = require('menu'),
     tray = require('tray'),
+    config = require('./config.js'),
     loadUrl = null;
 
 exports.app = app = menubar(
@@ -12,6 +13,7 @@ exports.app = app = menubar(
     index: 'index.html',
     pages: {
       'blank': 'blank.html',
+      'config': 'config.html',
       'location': 'location.html'
     },
     width: 400,
@@ -21,7 +23,8 @@ exports.app = app = menubar(
 );
 
 exports.ready = function() {
-  console.log('app is ready')
+  console.log('app is ready');
+
   var template = [{
     label: "Application",
     submenu: [
@@ -65,9 +68,12 @@ exports.afterCreateWindow = function() {
 };
 
 exports.show = function() {
-  if(loadUrl === null) {
+  if(!config.hasConfig()) {
+    loadUrl = this.getOption('pages')['config'];
+  } else if(loadUrl === null) {
     loadUrl = this.getOption('index');
   }
+
   this.window.loadUrl('file://' + this.getOption('dir') + '/' + loadUrl);
   loadUrl = null;
   //app.window.openDevTools();
