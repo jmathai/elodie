@@ -87,22 +87,31 @@ class Video(Media):
             return None
 
         source = self.source
-        seconds_since_epoch = min(os.path.getmtime(source), os.path.getctime(source))
         # We need to parse a string from EXIF into a timestamp.
-        # we use date.strptime -> .timetuple -> time.mktime to do the conversion in the local timezone
+        # We use date.strptime -> .timetuple -> time.mktime to do the conversion in the local timezone
+        # If the time is not found in EXIF we update EXIF
+        seconds_since_epoch = min(os.path.getmtime(source), os.path.getctime(source))
+        time_found_in_exif = False
         exif_data = self.get_exif()
         for key in ['Creation Date', 'Media Create Date']:
             date = re.search('%s +: +([0-9: ]+)' % key, exif_data)
             if(date is not None):
                 date_string = date.group(1)
                 try:
-                    seconds_since_epoch = time.mktime(datetime.strptime(date_string, '%Y:%m:%d %H:%M:%S').timetuple())
-                    break
+                    exif_seconds_since_epoch = time.mktime(datetime.strptime(date_string, '%Y:%m:%d %H:%M:%S').timetuple())
+                    if(exif_seconds_since_epoch < seconds_since_epoch):
+                        seconds_since_epoch = exif_seconds_since_epoch
+                        time_found_in_exif = True
+                        break
                 except:
                     pass
 
         if(seconds_since_epoch == 0):
             return None
+
+        # If the time wasn't found in EXIF we need to add it there since the modified/access times frequently change
+        if(time_found_in_exif == False):
+            self.set_datetime(datetime.fromtimestamp(seconds_since_epoch))
 
         return time.gmtime(seconds_since_epoch)
         
@@ -282,10 +291,11 @@ class Video(Media):
 
             # We create a temporary file to save the modified file to.
             # If the modification is successful we will update the existing file.
-            metadata = self.get_metadata()
+            # We can't call self.get_metadata else we will run into infinite loops
+            # metadata = self.get_metadata()
             temp_movie = None
             with tempfile.NamedTemporaryFile() as temp_file:
-                temp_movie = '%s.%s' % (temp_file.name, metadata['extension'])
+                temp_movie = '%s.%s' % (temp_file.name, self.get_extension())
 
             # We need to block until the child process completes.
             # http://stackoverflow.com/a/5631819/1318758
@@ -300,7 +310,7 @@ class Video(Media):
             # Before we do anything destructive we confirm that the file is in tact.
             check_media = Video(temp_movie)
             check_metadata = check_media.get_metadata()
-            if(check_metadata['latitude'] is None or check_metadata['longitude'] is None or check_metadata['date_taken'] is None):
+            if(('latitude' in kwargs and 'longitude' in kwargs and check_metadata['latitude'] is None and check_metadata['longitude'] is None) or ('time' in kwargs and check_metadata['date_taken'] is None)):
                 if(constants.debug == True):
                     print 'Something went wrong updating video metadata'
                 return False
