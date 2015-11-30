@@ -111,7 +111,7 @@ class Video(Media):
 
         # If the time wasn't found in EXIF we need to add it there since the modified/access times frequently change
         if(time_found_in_exif == False):
-            self.set_datetime(datetime.fromtimestamp(seconds_since_epoch))
+            self.set_date_taken(datetime.fromtimestamp(seconds_since_epoch))
 
         return time.gmtime(seconds_since_epoch)
         
@@ -155,11 +155,16 @@ class Video(Media):
 
     @returns, boolean
     """
-    def set_datetime(self, time):
+    def set_date_taken(self, date_taken_as_datetime):
         if(time is None):
             return False
 
-        result = self.__update_using_plist(time=time)
+        source = self.source
+
+        result = self.__update_using_plist(time=date_taken_as_datetime)
+        if(result == True):
+            os.utime(source, (int(time.time()), time.mktime(date_taken_as_datetime.timetuple())))
+
         return result
 
     """

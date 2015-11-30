@@ -57,7 +57,7 @@ class Photo(Media):
 
     @returns, boolean
     """
-    def set_datetime(self, time):
+    def set_date_taken(self, time):
         if(time is None):
             return False
 

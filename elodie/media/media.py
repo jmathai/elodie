@@ -335,7 +335,6 @@ class Media(object):
             name = 'Video'
 
         for i in classes:
-            print i.__name__
             if(name == i.__name__):
                 return i(_file)
 

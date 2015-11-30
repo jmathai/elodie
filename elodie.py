@@ -98,7 +98,7 @@ def _update(params):
 
             if(time_format is not None):
                 time = datetime.strptime(time_string, time_format)
-                media.set_datetime(time)
+                media.set_date_taken(time)
                 updated = True
 
         if(params['--album'] is not None):

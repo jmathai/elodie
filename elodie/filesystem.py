@@ -158,7 +158,9 @@ class FileSystem:
         self.create_directory(dest_directory)
 
         if(move == True):
+            stat = os.stat(_file)
             shutil.move(_file, dest_path)
+            os.utime(dest_path, (stat.st_atime, stat.st_mtime))
         else:
             shutil.copy2(_file, dest_path)
 
