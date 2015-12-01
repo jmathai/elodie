@@ -300,13 +300,17 @@ class Media(object):
             return False
 
         source = self.source
+        stat = os.stat(source)
         exiftool_config = constants.exiftool_config
         if(constants.debug == True):
             print '%s -config "%s" -xmp-elodie:Album="%s" "%s"' % (exiftool, exiftool_config, name, source)
         process_output = subprocess.Popen(['%s -config "%s" -xmp-elodie:Album="%s" "%s"' % (exiftool, exiftool_config, name, source)], stdout=subprocess.PIPE, shell=True)
         streamdata = process_output.communicate()[0]
+
         if(process_output.returncode != 0):
             return False
+
+        os.utime(source, (stat.st_atime, stat.st_mtime))
 
         exiftool_backup_file = '%s%s' % (source, '_original')
         if(os.path.isfile(exiftool_backup_file) is True):

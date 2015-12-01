@@ -109,10 +109,6 @@ class Video(Media):
         if(seconds_since_epoch == 0):
             return None
 
-        # If the time wasn't found in EXIF we need to add it there since the modified/access times frequently change
-        if(time_found_in_exif == False):
-            self.set_date_taken(datetime.fromtimestamp(seconds_since_epoch))
-
         return time.gmtime(seconds_since_epoch)
         
     """
@@ -322,7 +318,10 @@ class Video(Media):
 
             # Copy file information from original source to temporary file before copying back over
             shutil.copystat(source, temp_movie)
+            stat = os.stat(source)
             shutil.move(temp_movie, source)
+            os.utime(source, (stat.st_atime, stat.st_mtime))
+
             return True
 
     """
