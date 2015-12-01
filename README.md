@@ -44,7 +44,7 @@ My guess is you've got quite a few photos scattered around. The first thing I'll
 Fire up your terminal and run this command which *__copies__* your photos into something a bit more structured.
 
 ```
-./import.py --type=photo --source="/where/my/photos/are" --destination="/where/i/want/my/photos/to/go"
+./elodie.py import --source="/where/my/photos/are" --destination="/where/i/want/my/photos/to/go"
 ```
 
 I'm pretty fast but depending on how many photos you have you might want to grab a snack. When you run this command I'll `print` out my work as I go along. If you're bored you can open `/where/i/want/my/photos/to/go` in *Finder* and watch as I effortlessly copy your photos there.
@@ -82,7 +82,7 @@ If you notice some photos were incorrectly organized you should definitely let m
 Run the command below if you want to tell me the photos were taken in Las Vegas. You don't have to type all that in though. It's easier to just type `./update.py --location="Las Vegas, NV" ` and select and drag the files from *OS X Finder* into the terminal.
 
 ```
-./update.py --location="Las Vegas, NV" /where/i/want/my/photos/to/go/2015-09-Sep/Unknown\ Location/2015-09-27_01-41-38-_dsc8705.dng /where/i/want/my/photos/to/go/2015-09-Sep/Unknown\ Location/2015-09-27_01-41-38-_dsc8705.nef
+./elodie.py update --location="Las Vegas, NV" /where/i/want/my/photos/to/go/2015-09-Sep/Unknown\ Location/2015-09-27_01-41-38-_dsc8705.dng /where/i/want/my/photos/to/go/2015-09-Sep/Unknown\ Location/2015-09-27_01-41-38-_dsc8705.nef
 ```
 
 You should see this after running that command.
@@ -98,7 +98,7 @@ You should see this after running that command.
 Run the command below if I got the date wrong when organizing your photos. Similarly to the above command you can drag files from *Finder* into your terminal.
 
 ```
-./update.py --time="2015-04-15" /where/i/want/my/photos/to/go/2015-09-Sep/Unknown\ Location/2015-09-27_01-41-38-_dsc8705.dng /where/i/want/my/photos/to/go/2015-09-Sep/Unknown\ Location/2015-09-27_01-41-38-_dsc8705.nef
+./elodie.py update --time="2015-04-15" /where/i/want/my/photos/to/go/2015-09-Sep/Unknown\ Location/2015-09-27_01-41-38-_dsc8705.dng /where/i/want/my/photos/to/go/2015-09-Sep/Unknown\ Location/2015-09-27_01-41-38-_dsc8705.nef
 ```
 
 That will change the date folder like so.
@@ -113,7 +113,7 @@ That will change the date folder like so.
 You can, of course, ask me to change the location and time. I'll happily update the photos and move them around accordingly.
 
 ```
-./update.py --location="Las Vegas, NV" --time="2015-04-15" /where/i/want/my/photos/to/go/2015-09-Sep/Unknown\ Location/2015-09-27_01-41-38-_dsc8705.dng /where/i/want/my/photos/to/go/2015-09-Sep/Unknown\ Location/2015-09-27_01-41-38-_dsc8705.nef
+./elodie.py update --location="Las Vegas, NV" --time="2015-04-15" /where/i/want/my/photos/to/go/2015-09-Sep/Unknown\ Location/2015-09-27_01-41-38-_dsc8705.dng /where/i/want/my/photos/to/go/2015-09-Sep/Unknown\ Location/2015-09-27_01-41-38-_dsc8705.nef
 ```
 
 ## What about photos I take in the future?
