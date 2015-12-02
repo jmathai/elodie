@@ -28,10 +28,10 @@ def usage():
        """
 
 def _import(params):
-    destination = params['--destination']
+    destination = os.path.expanduser(params['--destination'])
 
     if(params['--source'] is not None):
-        source = params['--source']
+        source = os.path.expanduser(params['--source'])
 
         for current_file in filesystem.get_all_files(source, None):
             media = Media.get_class_by_file(current_file, [Photo, Video])
@@ -45,7 +45,7 @@ def _import(params):
             if(dest_path is not None):
                 print '%s -> %s' % (current_file, dest_path)
     elif(params['--file'] is not None):
-        current_file = params['--file']
+        current_file = os.path.expanduser(params['--file'])
         media = Media.get_class_by_file(current_file, [Photo, Video])
         if(media.__name__ == 'Video'):
             filesystem.set_date_from_path_video(media)
@@ -63,8 +63,9 @@ def _update(params):
             print '{"source":"%s", "error_msg":"Could not find %s"}' % (file_path, file_path)
             continue
 
-        destination = os.path.dirname(os.path.dirname(os.path.dirname(file_path)))
-        
+        file_path = os.path.expanduser(file_path)
+        destination = os.path.expanduser(os.path.dirname(os.path.dirname(os.path.dirname(file_path))))
+
         media = Media.get_class_by_file(file_path, [Photo, Video])
         if(media is None):
             continue
