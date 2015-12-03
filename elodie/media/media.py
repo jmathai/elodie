@@ -237,11 +237,11 @@ class Media(object):
 
     @returns, dictionary or None for non-photo files
     """
-    def get_metadata(self):
+    def get_metadata(self, update_cache=False):
         if(not self.is_valid()):
             return None
 
-        if(self.metadata is not None):
+        if(self.metadata is not None and update_cache == False):
             return self.metadata
 
         source = self.source
@@ -254,7 +254,8 @@ class Media(object):
             'title': self.get_title(),
             'mime_type': self.get_mimetype(),
             'base_name': os.path.splitext(os.path.basename(source))[0],
-            'extension': self.get_extension()
+            'extension': self.get_extension(),
+            'directory_path': os.path.dirname(source)
         }
 
         return self.metadata
@@ -322,7 +323,27 @@ class Media(object):
         exiftool_backup_file = '%s%s' % (source, '_original')
         if(os.path.isfile(exiftool_backup_file) is True):
             os.remove(exiftool_backup_file)
+
+        self.set_metadata(album=name)
         return True
+
+    def set_album_from_folder(self):
+        metadata = self.get_metadata()
+
+        print 'huh/'
+
+        # If this file has an album already set we do not overwrite EXIF
+        if(metadata['album'] is not None):
+            return False
+
+        folder = os.path.basename(metadata['directory_path'])
+        # If folder is empty we skip
+        if(len(folder) == 0):
+            return False
+
+        self.set_album(folder)
+        return True
+
 
     """
     Specifically update the basename attribute in the metadata dictionary for this instance.
@@ -335,6 +356,17 @@ class Media(object):
     def set_metadata_basename(self, new_basename):
         self.get_metadata()
         self.metadata['base_name'] = new_basename
+
+    """
+    Method to manually update attributes in metadata.
+
+    @params, named paramaters
+    """
+    def set_metadata(self, **kwargs):
+        metadata = self.get_metadata()
+        for key in kwargs:
+            if(key in metadata):
+                self.metadata[key] = kwargs[key]
 
     @classmethod
     def get_class_by_file(Media, _file, classes):

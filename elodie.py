@@ -20,9 +20,9 @@ from elodie.filesystem import FileSystem
 from elodie.localstorage import Db
 
 def usage():
-    return """Usage: main.py import --source=<s> --destination=<d>
-       main.py import --file=<f> --destination=<d>
-       main.py update [--time=<t>] [--location=<l>] [--album=<a>] [--title=<t>] INPUT ...
+    return """Usage: elodie.py import --source=<s> --destination=<d> [--album-from-folder]
+       elodie.py import --file=<f> --destination=<d> [--album-from-folder]
+       elodie.py update [--time=<t>] [--location=<l>] [--album=<a>] [--title=<t>] INPUT ...
 
        -h --help    show this
        """
@@ -41,6 +41,9 @@ def _import(params):
             if(media.__name__ == 'Video'):
                 filesystem.set_date_from_path_video(media)
 
+            if(params['--album-from-folder'] == True):
+                media.set_album_from_folder()
+
             dest_path = filesystem.process_file(current_file, destination, media, allowDuplicate=False, move=False)
             if(dest_path is not None):
                 print '%s -> %s' % (current_file, dest_path)
@@ -49,6 +52,9 @@ def _import(params):
         media = Media.get_class_by_file(current_file, [Photo, Video])
         if(media.__name__ == 'Video'):
             filesystem.set_date_from_path_video(media)
+
+        if(params['--album-from-folder'] == True):
+            media.set_album_from_folder()
 
         dest_path = filesystem.process_file(current_file, destination, media, allowDuplicate=False, move=False)
         if(dest_path is not None):
