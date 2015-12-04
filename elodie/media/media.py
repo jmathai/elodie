@@ -17,6 +17,7 @@ import pyexiv2
 import re
 import subprocess
 import time
+import imghdr
 
 """
 Media class for general video operations
@@ -88,6 +89,12 @@ class Media(object):
     """
     def is_valid(self):
         source = self.source
+
+        # gh-4 This checks if the source file is an image.
+        # It doesn't validate against the list of supported types.
+        if(self.__name__ == 'Photo' and imghdr.what(source) is None):
+            return False;
+
         # we can't use self.__get_extension else we'll endlessly recurse
         return os.path.splitext(source)[1][1:].lower() in self.get_valid_extensions()
 
