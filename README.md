@@ -1,6 +1,8 @@
 # Hello, I'm Elodie
 ~~ *Your Personal EXIF-based Photo Assistant* ~~
 
+[![Build Status](https://travis-ci.org/jmathai/elodie.svg?branch=master)](https://travis-ci.org/jmathai/elodie)
+
 I work tirelessly to make sure your photos are always sorted and organized so you can focus on more important things. By photos I mean JPEG, DNG, NEF and common video files.
 
 You don't love me yet but you will.

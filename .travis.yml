@@ -1,0 +1,12 @@
+language: python
+python:
+  - "2.7"
+virtualenv:
+  system_site_packages: true
+before_install:
+  - "sudo apt-get update -qq"
+  - "sudo apt-get install python-dev python-pip python-pyexiv2 -y"
+install:
+  - "sudo pip install docopt LatLon nose requests"
+# command to run tests
+script: "nosetests elodie/tests/*.py"
