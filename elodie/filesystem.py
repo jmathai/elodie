@@ -21,8 +21,17 @@ class FileSystem:
     @param, directory_name, string, A fully qualified path of the directory to create.
     """
     def create_directory(self, directory_path):
-        if not os.path.exists(directory_path):
-            os.makedirs(directory_path)
+        try:
+            if os.path.exists(directory_path):
+                return True
+            else:
+                os.makedirs(directory_path)
+                return True
+        except OSError:
+            # OSError is thrown for cases like no permission
+            pass
+
+        return False
 
     """
     Delete a directory only if it's empty.
