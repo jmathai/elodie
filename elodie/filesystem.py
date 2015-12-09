@@ -43,8 +43,11 @@ class FileSystem:
     def delete_directory_if_empty(self, directory_path):
         try:
             os.rmdir(directory_path)
+            return True
         except OSError:
             pass
+
+        return False
 
     """
     Recursively get all files which match a path and extension.

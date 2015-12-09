@@ -1,6 +1,6 @@
 from os import path
 
-debug = False
+debug = True
 application_directory = '{}/.elodie'.format(path.expanduser('~'))
 hash_db = '{}/hash.json'.format(application_directory)
 script_directory = path.dirname(path.dirname(path.abspath(__file__)))
