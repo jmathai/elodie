@@ -2,6 +2,7 @@
 import os
 import sys
 
+import hashlib
 import random
 import re
 import shutil
@@ -170,9 +171,14 @@ def test_process_file_plain():
     media = Photo(origin)
     destination = filesystem.process_file(origin, temporary_folder, media, allowDuplicate=True)
 
+    origin_checksum = checksum(origin)
+    destination_checksum = checksum(destination)
+
     shutil.rmtree(folder)
     shutil.rmtree(os.path.dirname(os.path.dirname(destination)))
 
+    assert origin_checksum is not None
+    assert origin_checksum == destination_checksum
     assert '2015-12-Dec/Unknown Location/2015-12-05_00-59-26-plain.jpg' in destination
 
 def test_process_file_with_title():
@@ -186,9 +192,14 @@ def test_process_file_with_title():
     media = Photo(origin)
     destination = filesystem.process_file(origin, temporary_folder, media, allowDuplicate=True)
 
+    origin_checksum = checksum(origin)
+    destination_checksum = checksum(destination)
+
     shutil.rmtree(folder)
     shutil.rmtree(os.path.dirname(os.path.dirname(destination)))
 
+    assert origin_checksum is not None
+    assert origin_checksum == destination_checksum
     assert '2015-12-Dec/Unknown Location/2015-12-05_00-59-26-plain-some-title.jpg' in destination
 
 def test_process_file_with_location():
@@ -202,9 +213,14 @@ def test_process_file_with_location():
     media = Photo(origin)
     destination = filesystem.process_file(origin, temporary_folder, media, allowDuplicate=True)
 
+    origin_checksum = checksum(origin)
+    destination_checksum = checksum(destination)
+
     shutil.rmtree(folder)
     shutil.rmtree(os.path.dirname(os.path.dirname(destination)))
 
+    assert origin_checksum is not None
+    assert origin_checksum == destination_checksum
     assert '2015-12-Dec/Sunnyvale/2015-12-05_00-59-26-plain.jpg' in destination
 
 def test_process_file_with_location_and_title():
@@ -218,10 +234,30 @@ def test_process_file_with_location_and_title():
     media = Photo(origin)
     destination = filesystem.process_file(origin, temporary_folder, media, allowDuplicate=True)
 
+    origin_checksum = checksum(origin)
+    destination_checksum = checksum(destination)
+
     shutil.rmtree(folder)
     shutil.rmtree(os.path.dirname(os.path.dirname(destination)))
 
+    assert origin_checksum is not None
+    assert origin_checksum == destination_checksum
     assert '2015-12-Dec/Sunnyvale/2015-12-05_00-59-26-plain-some-title.jpg' in destination
+
+def checksum(file_path, blocksize=65536):
+    hasher = hashlib.sha256()
+    with open(file_path, 'r') as f:
+        buf = f.read(blocksize)
+
+        while len(buf) > 0:
+            hasher.update(buf)
+            buf = f.read(blocksize)
+        return hasher.hexdigest()
+    return None
+
+def get_file(name):
+    current_folder = os.path.dirname(os.path.realpath(__file__))
+    return '%s/files/%s' % (current_folder, name)
 
 def populate_folder(number_of_files):
     folder = '%s/%s' % (tempfile.gettempdir(), random_string(10))
@@ -234,10 +270,6 @@ def populate_folder(number_of_files):
             os.utime(fname, None)
 
     return folder
-
-def get_file(name):
-    current_folder = os.path.dirname(os.path.realpath(__file__))
-    return '%s/files/%s' % (current_folder, name)
 
 def random_string(length):
     return ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(length))
