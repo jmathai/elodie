@@ -1,3 +1,4 @@
+# -*- coding: utf-8
 # Project imports
 import os
 import sys
@@ -153,3 +154,28 @@ def test_set_title():
     shutil.rmtree(folder)
 
     assert metadata['title'] == 'my photo title', metadata['title']
+
+def test_set_title_non_ascii():
+    raise SkipTest('gh-27, non-ascii characters')
+    temporary_folder, folder = helper.create_working_folder()
+
+    origin = '%s/photo.jpg' % folder
+    shutil.copyfile(helper.get_file('plain.jpg'), origin)
+
+    photo = Photo(origin)
+    origin_metadata = photo.get_metadata()
+
+    # Verify that original photo has no location information
+    assert origin_metadata['latitude'] is None, origin_metadata['latitude']
+    assert origin_metadata['longitude'] is None, origin_metadata['longitude']
+
+    status = photo.set_title('形声字 / 形聲字')
+
+    assert status == True, status
+
+    photo_new = Photo(origin)
+    metadata = photo_new.get_metadata()
+
+    shutil.rmtree(folder)
+
+    assert metadata['title'] == '形声字 / 形聲字', metadata['title']
