@@ -10,20 +10,19 @@ from elodie import constants
 from fractions import Fraction
 from sys import argv
 
-import LatLon
 import mimetypes
 import os
 import pyexiv2
 import re
 import subprocess
 import time
-import imghdr
 
 """
 Media class for general video operations
 """
 class Media(object):
     # class / static variable accessible through get_valid_extensions()
+    __name__ = 'Media'
     video_extensions = ('avi','m4v','mov','mp4','3gp')
     photo_extensions = ('jpg', 'jpeg', 'nef', 'dng', 'gif')
 
@@ -83,52 +82,12 @@ class Media(object):
         return self.source
 
     """
-    Check the file extension against valid file extensions as returned by get_valid_extensions()
-    
-    @returns, boolean
+    Define is_valid to always return false.
+    This should be overridden in a child class.
     """
     def is_valid(self):
-        source = self.source
+        return False
 
-        # gh-4 This checks if the source file is an image.
-        # It doesn't validate against the list of supported types.
-        if(self.__name__ == 'Photo' and imghdr.what(source) is None):
-            return False;
-
-        # we can't use self.__get_extension else we'll endlessly recurse
-        return os.path.splitext(source)[1][1:].lower() in self.get_valid_extensions()
-
-    """
-    Get latitude or longitude of photo from EXIF
-
-    @returns, float or None if not present in EXIF or a non-photo file
-    """
-    def get_coordinate(self, type='latitude'):
-        if(not self.is_valid()):
-            return None
-
-        key = self.exif_map['longitude'] if type == 'longitude' else self.exif_map['latitude']
-        exif = self.get_exif()
-
-        if(key not in exif):
-            return None
-
-        try:
-            # this is a hack to get the proper direction by negating the values for S and W
-            latdir = 1
-            if(key == self.exif_map['latitude'] and str(exif[self.exif_map['latitude_ref']].value) == 'S'):
-                latdir = -1
-            londir = 1
-            if(key == self.exif_map['longitude'] and str(exif[self.exif_map['longitude_ref']].value) == 'W'):
-                londir = -1
-
-            coords = exif[key].value
-            if(key == 'latitude'):
-                return float(str(LatLon.Latitude(degree=coords[0], minute=coords[1], second=coords[2]))) * latdir
-            else:
-                return float(str(LatLon.Longitude(degree=coords[0], minute=coords[1], second=coords[2]))) * londir
-        except KeyError:
-            return None
 
     """
     Get the date which the photo was taken.
