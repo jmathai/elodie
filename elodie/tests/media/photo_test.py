@@ -106,6 +106,7 @@ def test_set_date_taken():
     assert date_taken == (2013, 9, 30, 7, 6, 5, 0, 273, 0), metadata['date_taken']
 
 def test_set_location():
+    raise SkipTest('gh-31, precision is lost in conversion from decimal to dms')
     temporary_folder, folder = helper.create_working_folder()
 
     origin = '%s/photo.jpg' % folder
@@ -128,8 +129,8 @@ def test_set_location():
     shutil.rmtree(folder)
 
     # @TODO: understand why the decimal to degree conversion loses accuracy
-    assert metadata['latitude'] == 11.1001851852, metadata['latitude']
-    assert metadata['longitude'] == 99.9836111111, metadata['longitude']
+    assert metadata['latitude'] == 11.1111111111, metadata['latitude']
+    assert metadata['longitude'] == 99.9999999999, metadata['longitude']
 
 def test_set_title():
     temporary_folder, folder = helper.create_working_folder()
