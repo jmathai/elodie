@@ -7,7 +7,9 @@ Photo package that handles all photo operations
 from datetime import datetime
 from sys import argv
 
+import imghdr
 import mimetypes
+import LatLon
 import os
 import pyexiv2
 import re
@@ -22,6 +24,7 @@ Photo class for general photo operations
 """
 class Photo(Media):
     __name__ = 'Photo'
+    extensions = ('jpg', 'jpeg', 'nef', 'dng', 'gif')
 
     """
     @param, source, string, The fully qualified path to the photo file
@@ -49,6 +52,54 @@ class Photo(Media):
             if 'Duration' in key:
                 return re.search('(\d{2}:\d{2}.\d{2})', key).group(1).replace('.', ':')
         return None
+
+    """
+    Get latitude or longitude of photo from EXIF
+
+    @returns, float or None if not present in EXIF or a non-photo file
+    """
+    def get_coordinate(self, type='latitude'):
+        if(not self.is_valid()):
+            return None
+
+        key = self.exif_map['longitude'] if type == 'longitude' else self.exif_map['latitude']
+        exif = self.get_exif()
+
+        if(key not in exif):
+            return None
+
+        try:
+            # this is a hack to get the proper direction by negating the values for S and W
+            latdir = 1
+            if(key == self.exif_map['latitude'] and str(exif[self.exif_map['latitude_ref']].value) == 'S'):
+                latdir = -1
+            londir = 1
+            if(key == self.exif_map['longitude'] and str(exif[self.exif_map['longitude_ref']].value) == 'W'):
+                londir = -1
+
+            coords = exif[key].value
+            if(key == 'latitude'):
+                return float(str(LatLon.Latitude(degree=coords[0], minute=coords[1], second=coords[2]))) * latdir
+            else:
+                return float(str(LatLon.Longitude(degree=coords[0], minute=coords[1], second=coords[2]))) * londir
+        except KeyError:
+            return None
+
+    """
+    Check the file extension against valid file extensions as returned by get_valid_extensions()
+    
+    @returns, boolean
+    """
+    def is_valid(self):
+        source = self.source
+
+        # gh-4 This checks if the source file is an image.
+        # It doesn't validate against the list of supported types.
+        if(imghdr.what(source) is None):
+            return False;
+
+        # we can't use self.__get_extension else we'll endlessly recurse
+        return os.path.splitext(source)[1][1:].lower() in self.extensions
 
     """
     Set the date/time a photo was taken
@@ -96,7 +147,7 @@ class Photo(Media):
         return True
 
     """
-    Set lat/lon for a photo
+    Set title for a photo
 
     @param, latitude, float, Latitude of the file
     @param, longitude, float, Longitude of the file
