@@ -23,8 +23,6 @@ Media class for general video operations
 class Media(object):
     # class / static variable accessible through get_valid_extensions()
     __name__ = 'Media'
-    video_extensions = ('avi','m4v','mov','mp4','3gp')
-    photo_extensions = ('jpg', 'jpeg', 'nef', 'dng', 'gif')
 
     """
     @param, source, string, The fully qualified path to the video file
@@ -87,41 +85,6 @@ class Media(object):
     """
     def is_valid(self):
         return False
-
-
-    """
-    Get the date which the photo was taken.
-    The date value returned is defined by the min() of mtime and ctime.
-
-    @returns, time object or None for non-photo files or 0 timestamp
-    """
-    def get_date_taken(self):
-        if(not self.is_valid()):
-            return None
-
-        source = self.source
-        seconds_since_epoch = min(os.path.getmtime(source), os.path.getctime(source))
-        # We need to parse a string from EXIF into a timestamp.
-        # EXIF DateTimeOriginal and EXIF DateTime are both stored in %Y:%m:%d %H:%M:%S format
-        # we use date.strptime -> .timetuple -> time.mktime to do the conversion in the local timezone
-        # EXIF DateTime is already stored as a timestamp
-        # Sourced from https://github.com/photo/frontend/blob/master/src/libraries/models/Photo.php#L500
-        exif = self.get_exif()
-        for key in self.exif_map['date_taken']:
-            try:
-                if(key in exif):
-                    if(re.match('\d{4}(-|:)\d{2}(-|:)\d{2}', str(exif[key].value)) is not None):
-                        seconds_since_epoch = time.mktime(exif[key].value.timetuple())
-                        break;
-            except BaseException as e:
-                if(constants.debug == True):
-                    print e
-                pass
-
-        if(seconds_since_epoch == 0):
-            return None
-
-        return time.gmtime(seconds_since_epoch)
 
     """
     Read EXIF from a photo file.

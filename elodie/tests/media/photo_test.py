@@ -3,14 +3,10 @@
 import os
 import sys
 
-import hashlib
-import random
-import re
+import datetime
 import shutil
-import string
 import tempfile
 import time
-import datetime
 
 from nose.plugins.skip import SkipTest
 
@@ -25,7 +21,7 @@ os.environ['TZ'] = 'GMT'
 
 def test_photo_extensions():
     photo = Photo()
-    extensions = photo.photo_extensions
+    extensions = photo.extensions
 
     assert 'jpg' in extensions
     assert 'jpeg' in extensions
@@ -74,6 +70,29 @@ def test_get_coordinate_longitude():
     coordinate = photo.get_coordinate('longitude')
 
     assert coordinate == -122.033383611, coordinate
+
+def test_get_coordinates_without_exif():
+    photo = Photo(helper.get_file('no-exif.jpg'))
+    latitude = photo.get_coordinate('latitude')
+    longitude = photo.get_coordinate('longitude')
+
+    assert latitude is None, latitude
+    assert longitude is None, longitude
+
+def test_get_date_taken():
+    photo = Photo(helper.get_file('plain.jpg'))
+    date_taken = photo.get_date_taken()
+
+    assert date_taken == (2015, 12, 5, 0, 59, 26, 5, 339, 0), date_taken
+
+def test_get_date_taken_without_exif():
+    source = helper.get_file('no-exif.jpg')
+    photo = Photo(source)
+    date_taken = photo.get_date_taken()
+
+    date_taken_from_file = time.gmtime(min(os.path.getmtime(source), os.path.getctime(source)))
+
+    assert date_taken == date_taken_from_file, date_taken
 
 def test_is_valid():
     photo = Photo(helper.get_file('with-location.jpg'))
@@ -141,10 +160,6 @@ def test_set_title():
     photo = Photo(origin)
     origin_metadata = photo.get_metadata()
 
-    # Verify that original photo has no location information
-    assert origin_metadata['latitude'] is None, origin_metadata['latitude']
-    assert origin_metadata['longitude'] is None, origin_metadata['longitude']
-
     status = photo.set_title('my photo title')
 
     assert status == True, status
@@ -165,10 +180,6 @@ def test_set_title_non_ascii():
 
     photo = Photo(origin)
     origin_metadata = photo.get_metadata()
-
-    # Verify that original photo has no location information
-    assert origin_metadata['latitude'] is None, origin_metadata['latitude']
-    assert origin_metadata['longitude'] is None, origin_metadata['longitude']
 
     status = photo.set_title('形声字 / 形聲字')
 

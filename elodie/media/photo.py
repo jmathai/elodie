@@ -86,7 +86,41 @@ class Photo(Media):
             return None
 
     """
-    Check the file extension against valid file extensions as returned by get_valid_extensions()
+    Get the date which the photo was taken.
+    The date value returned is defined by the min() of mtime and ctime.
+
+    @returns, time object or None for non-photo files or 0 timestamp
+    """
+    def get_date_taken(self):
+        if(not self.is_valid()):
+            return None
+
+        source = self.source
+        seconds_since_epoch = min(os.path.getmtime(source), os.path.getctime(source))
+        # We need to parse a string from EXIF into a timestamp.
+        # EXIF DateTimeOriginal and EXIF DateTime are both stored in %Y:%m:%d %H:%M:%S format
+        # we use date.strptime -> .timetuple -> time.mktime to do the conversion in the local timezone
+        # EXIF DateTime is already stored as a timestamp
+        # Sourced from https://github.com/photo/frontend/blob/master/src/libraries/models/Photo.php#L500
+        exif = self.get_exif()
+        for key in self.exif_map['date_taken']:
+            try:
+                if(key in exif):
+                    if(re.match('\d{4}(-|:)\d{2}(-|:)\d{2}', str(exif[key].value)) is not None):
+                        seconds_since_epoch = time.mktime(exif[key].value.timetuple())
+                        break;
+            except BaseException as e:
+                if(constants.debug == True):
+                    print e
+                pass
+
+        if(seconds_since_epoch == 0):
+            return None
+
+        return time.gmtime(seconds_since_epoch)
+
+    """
+    Check the file extension against valid file extensions as returned by self.extensions
     
     @returns, boolean
     """
@@ -98,7 +132,6 @@ class Photo(Media):
         if(imghdr.what(source) is None):
             return False;
 
-        # we can't use self.__get_extension else we'll endlessly recurse
         return os.path.splitext(source)[1][1:].lower() in self.extensions
 
     """
@@ -174,4 +207,4 @@ class Photo(Media):
     """
     @classmethod
     def get_valid_extensions(Photo):
-        return Media.photo_extensions
+        return Photo.extensions
