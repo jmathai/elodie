@@ -25,6 +25,7 @@ Video class for general video operations
 """
 class Video(Media):
     __name__ = 'Video'
+    extensions = ('avi','m4v','mov','mp4','3gp')
 
     """
     @param, source, string, The fully qualified path to the video file
@@ -143,6 +144,15 @@ class Video(Media):
         source = self.source
         process_output = subprocess.Popen(['%s "%s"' % (exiftool, source)], stdout=subprocess.PIPE, shell=True)
         return process_output.stdout.read()
+
+    """
+    Check the file extension against valid file extensions as returned by self.extensions
+    
+    @returns, boolean
+    """
+    def is_valid(self):
+        source = self.source
+        return os.path.splitext(source)[1][1:].lower() in self.extensions
 
     """
     Set the date/time a photo was taken
@@ -331,7 +341,7 @@ class Video(Media):
     """
     @classmethod
     def get_valid_extensions(Video):
-        return Media.video_extensions
+        return Video.extensions
 
 class Transcode(object):
     # Constructor takes a video object as it's parameter
