@@ -91,7 +91,8 @@ def test_get_all_files_success():
     files = filesystem.get_all_files(folder)
     shutil.rmtree(folder)
 
-    assert len(files) == 5
+    length = len(files)
+    assert length == 5, length
 
 
 def test_get_all_files_by_extension():
@@ -99,16 +100,20 @@ def test_get_all_files_by_extension():
     folder = helper.populate_folder(5)
 
     files = filesystem.get_all_files(folder)
-    assert len(files) == 5
+    length = len(files)
+    assert length == 5, length
 
     files = filesystem.get_all_files(folder, 'jpg')
-    assert len(files) == 3
+    length = len(files)
+    assert length == 3, length
 
     files = filesystem.get_all_files(folder, 'txt')
-    assert len(files) == 2
+    length = len(files)
+    assert length == 2, length
 
     files = filesystem.get_all_files(folder, 'gif')
-    assert len(files) == 0
+    length = len(files)
+    assert length == 0, length
 
     shutil.rmtree(folder)
 
@@ -121,54 +126,54 @@ def test_get_file_name_plain():
     media = Photo(helper.get_file('plain.jpg'))
     file_name = filesystem.get_file_name(media)
 
-    assert file_name == '2015-12-05_00-59-26-plain.jpg'
+    assert file_name == '2015-12-05_00-59-26-plain.jpg', file_name
 
 def test_get_file_name_with_title():
     filesystem = FileSystem()
     media = Photo(helper.get_file('with-title.jpg'))
     file_name = filesystem.get_file_name(media)
 
-    assert file_name == '2015-12-05_00-59-26-with-title-some-title.jpg'
+    assert file_name == '2015-12-05_00-59-26-with-title-some-title.jpg', file_name
 
 def test_get_folder_name_by_date():
     filesystem = FileSystem()
     time_tuple = (2010, 4, 15, 1, 2, 3, 0, 0, 0)
     folder_name = filesystem.get_folder_name_by_date(time_tuple)
 
-    assert folder_name == '2010-04-Apr'
+    assert folder_name == '2010-04-Apr', folder_name
 
     time_tuple = (2010, 9, 15, 1, 2, 3, 0, 0, 0)
     folder_name = filesystem.get_folder_name_by_date(time_tuple)
 
-    assert folder_name == '2010-09-Sep'
+    assert folder_name == '2010-09-Sep', folder_name
 
 def test_get_folder_path_plain():
     filesystem = FileSystem()
     media = Photo(helper.get_file('plain.jpg'))
     path = filesystem.get_folder_path(media.get_metadata())
 
-    assert path == '2015-12-Dec/Unknown Location'
+    assert path == '2015-12-Dec/Unknown Location', path
 
 def test_get_folder_path_with_title():
     filesystem = FileSystem()
     media = Photo(helper.get_file('with-title.jpg'))
     path = filesystem.get_folder_path(media.get_metadata())
 
-    assert path == '2015-12-Dec/Unknown Location'
+    assert path == '2015-12-Dec/Unknown Location', path
 
 def test_get_folder_path_with_location():
     filesystem = FileSystem()
     media = Photo(helper.get_file('with-location.jpg'))
     path = filesystem.get_folder_path(media.get_metadata())
 
-    assert path == '2015-12-Dec/Sunnyvale'
+    assert path == '2015-12-Dec/Sunnyvale', path
 
 def test_get_folder_path_with_location_and_title():
     filesystem = FileSystem()
     media = Photo(helper.get_file('with-location-and-title.jpg'))
     path = filesystem.get_folder_path(media.get_metadata())
 
-    assert path == '2015-12-Dec/Sunnyvale'
+    assert path == '2015-12-Dec/Sunnyvale', path
 
 def test_process_file_plain():
     filesystem = FileSystem()
@@ -186,9 +191,9 @@ def test_process_file_plain():
     shutil.rmtree(folder)
     shutil.rmtree(os.path.dirname(os.path.dirname(destination)))
 
-    assert origin_checksum is not None
-    assert origin_checksum == destination_checksum
-    assert '2015-12-Dec/Unknown Location/2015-12-05_00-59-26-photo.jpg' in destination
+    assert origin_checksum is not None, origin_checksum
+    assert origin_checksum == destination_checksum, destination_checksum
+    assert '2015-12-Dec/Unknown Location/2015-12-05_00-59-26-photo.jpg' in destination, destination
 
 def test_process_file_with_title():
     filesystem = FileSystem()
@@ -206,9 +211,9 @@ def test_process_file_with_title():
     shutil.rmtree(folder)
     shutil.rmtree(os.path.dirname(os.path.dirname(destination)))
 
-    assert origin_checksum is not None
-    assert origin_checksum == destination_checksum
-    assert '2015-12-Dec/Unknown Location/2015-12-05_00-59-26-photo-some-title.jpg' in destination
+    assert origin_checksum is not None, origin_checksum
+    assert origin_checksum == destination_checksum, destination_checksum
+    assert '2015-12-Dec/Unknown Location/2015-12-05_00-59-26-photo-some-title.jpg' in destination, destination
 
 def test_process_file_with_location():
     filesystem = FileSystem()
@@ -226,9 +231,9 @@ def test_process_file_with_location():
     shutil.rmtree(folder)
     shutil.rmtree(os.path.dirname(os.path.dirname(destination)))
 
-    assert origin_checksum is not None
-    assert origin_checksum == destination_checksum
-    assert '2015-12-Dec/Sunnyvale/2015-12-05_00-59-26-photo.jpg' in destination
+    assert origin_checksum is not None, origin_checksum
+    assert origin_checksum == destination_checksum, destination_checksum
+    assert '2015-12-Dec/Sunnyvale/2015-12-05_00-59-26-photo.jpg' in destination, destination
 
 def test_process_file_with_location_and_title():
     filesystem = FileSystem()
@@ -246,9 +251,9 @@ def test_process_file_with_location_and_title():
     shutil.rmtree(folder)
     shutil.rmtree(os.path.dirname(os.path.dirname(destination)))
 
-    assert origin_checksum is not None
-    assert origin_checksum == destination_checksum
-    assert '2015-12-Dec/Sunnyvale/2015-12-05_00-59-26-photo-some-title.jpg' in destination
+    assert origin_checksum is not None, origin_checksum
+    assert origin_checksum == destination_checksum, destination_checksum
+    assert '2015-12-Dec/Sunnyvale/2015-12-05_00-59-26-photo-some-title.jpg' in destination, destination
 
 def test_process_file_with_album():
     filesystem = FileSystem()
@@ -266,9 +271,9 @@ def test_process_file_with_album():
     shutil.rmtree(folder)
     shutil.rmtree(os.path.dirname(os.path.dirname(destination)))
 
-    assert origin_checksum is not None
-    assert origin_checksum == destination_checksum
-    assert '2015-12-Dec/Test Album/2015-12-05_00-59-26-photo.jpg' in destination
+    assert origin_checksum is not None, origin_checksum
+    assert origin_checksum == destination_checksum, destination_checksum
+    assert '2015-12-Dec/Test Album/2015-12-05_00-59-26-photo.jpg' in destination, destination
 
 def test_process_file_with_album_and_title():
     filesystem = FileSystem()
@@ -286,9 +291,9 @@ def test_process_file_with_album_and_title():
     shutil.rmtree(folder)
     shutil.rmtree(os.path.dirname(os.path.dirname(destination)))
 
-    assert origin_checksum is not None
-    assert origin_checksum == destination_checksum
-    assert '2015-12-Dec/Test Album/2015-12-05_00-59-26-photo-some-title.jpg' in destination
+    assert origin_checksum is not None, origin_checksum
+    assert origin_checksum == destination_checksum, destination_checksum
+    assert '2015-12-Dec/Test Album/2015-12-05_00-59-26-photo-some-title.jpg' in destination, destination
 
 def test_process_file_with_album_and_title_and_location():
     filesystem = FileSystem()
@@ -306,6 +311,6 @@ def test_process_file_with_album_and_title_and_location():
     shutil.rmtree(folder)
     shutil.rmtree(os.path.dirname(os.path.dirname(destination)))
 
-    assert origin_checksum is not None
-    assert origin_checksum == destination_checksum
-    assert '2015-12-Dec/Test Album/2015-12-05_00-59-26-photo-some-title.jpg' in destination
+    assert origin_checksum is not None, origin_checksum
+    assert origin_checksum == destination_checksum, destination_checksum
+    assert '2015-12-Dec/Test Album/2015-12-05_00-59-26-photo-some-title.jpg' in destination, destination
