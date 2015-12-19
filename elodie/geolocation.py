@@ -54,10 +54,12 @@ def decimal_to_dms(decimal):
     >>> decimal_to_dms(-125.976893)
     [Fraction(125, 1), Fraction(58, 1), Fraction(92037, 2500)]
     """
-    remainder, degrees = math.modf(abs(decimal))
-    remainder, minutes = math.modf(remainder * 60)
     # @TODO figure out a better and more proper way to do seconds
-    return (pyexiv2.Rational(degrees, 1), pyexiv2.Rational(minutes, 1), pyexiv2.Rational(int(remainder*1000000000), 1000000000))
+    degrees = int(decimal)
+    subminutes = abs((decimal - int(decimal)) * 60)
+    minutes = int(subminutes)
+    subseconds = abs((subminutes - int(subminutes)) * 60)
+    return (pyexiv2.Rational(degrees, 1), pyexiv2.Rational(minutes, 1), pyexiv2.Rational(subseconds, 1))
 
 def dms_to_decimal(degrees, minutes, seconds, sign=' '):
     """Convert degrees, minutes, seconds into decimal degrees.
