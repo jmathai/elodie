@@ -155,7 +155,7 @@ I don't do anything else so don't bother asking.
 You'll need to clone this repository and install a few dependencies. Let's start by cloning.
 
 ```
-git clone git@github.com:jmathai/elodie.git
+git clone https://github.com/jmathai/elodie.git
 ```
 
 The commands on this page assume you're running them from the root of this repository. I don't have any submodules but you'll need to install the following packages.
