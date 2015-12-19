@@ -293,14 +293,9 @@ class Media(object):
     @classmethod
     def get_class_by_file(Media, _file, classes):
         extension = os.path.splitext(_file)[1][1:].lower()
-        name = None
-        if(extension in Media.photo_extensions):
-            name = 'Photo'
-        elif(extension in Media.video_extensions):
-            name = 'Video'
 
         for i in classes:
-            if(name == i.__name__):
+            if(extension in i.extensions):
                 return i(_file)
 
         return None

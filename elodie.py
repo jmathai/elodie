@@ -50,6 +50,13 @@ def _import(params):
     elif(params['--file'] is not None):
         current_file = os.path.expanduser(params['--file'])
         media = Media.get_class_by_file(current_file, [Photo, Video])
+
+        if(media is None):
+            if(constants.debug == True):
+                print 'Not a supported file (%s)' % current_file
+            print '{"source":"%s", "error_msg":"Not a supported file"}' % current_file
+            return
+
         if(media.__name__ == 'Video'):
             filesystem.set_date_from_path_video(media)
 

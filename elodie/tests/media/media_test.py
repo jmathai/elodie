@@ -32,6 +32,21 @@ def test_get_file_path():
 
     assert 'plain.jpg' in path, path
 
+def test_get_class_by_file_photo():
+    media = Media.get_class_by_file(helper.get_file('plain.jpg'), [Photo, Video])
+
+    assert media.__name__ == 'Photo'
+
+def test_get_class_by_file_video():
+    media = Media.get_class_by_file(helper.get_file('video.mov'), [Photo, Video])
+
+    assert media.__name__ == 'Video'
+
+def test_get_class_by_file_unsupported():
+    media = Media.get_class_by_file(helper.get_file('text.txt'), [Photo, Video])
+
+    assert media is None
+
 def is_valid():
     media = Media()
 
