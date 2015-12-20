@@ -175,6 +175,13 @@ brew install boost --build-from-source
 brew install pyexiv2
 ```
 
+On Debian and Ubuntu you can install dependencies using `apt-get`.
+
+```
+apt-get install libimage-exiftool-perl
+apt-get install python-pyexiv2
+```
+
 If you have problems you can run the following commands which the fine folks at StackOverflow [suggested to me once](http://stackoverflow.com/a/18817419/1318758).
 
 ### Using OpenStreetMap data from MapQuest
