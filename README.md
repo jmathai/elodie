@@ -184,6 +184,11 @@ apt-get install python-pyexiv2
 
 If you have problems you can run the following commands which the fine folks at StackOverflow [suggested to me once](http://stackoverflow.com/a/18817419/1318758).
 
+On Debian and Ubuntu, try:
+```
+apt-get install python-pyexiv2
+```
+
 ### Using OpenStreetMap data from MapQuest
 
 I use MapQuest to help me organize your photos by location. You'll need to sign up for a [free developer account](https://developer.mapquest.com/plan_purchase/steps/business_edition/business_edition_free) and get an API key. They give you 15,000 calls per month so I can't do any more than that unless you shell out some big bucks to them. Once I hit my limit the best I'll be able to do is *Unknown Location* until the following month.
