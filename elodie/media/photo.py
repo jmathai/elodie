@@ -16,6 +16,7 @@ import re
 import subprocess
 import time
 
+from elodie import constants
 from media import Media
 from elodie import geolocation
 
