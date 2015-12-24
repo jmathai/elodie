@@ -1,7 +1,7 @@
 import hashlib
 import json
 import os
-
+from math import radians, cos, sqrt
 from elodie import constants
 
 class Db(object):
@@ -24,7 +24,22 @@ class Db(object):
                 self.hash_db = json.load(f)
             except ValueError:
                 pass
-        
+
+        # If the location db doesn't exist we create it.
+        # Otherwise we only open for reading
+        if not os.path.isfile(constants.location_db):
+            with open(constants.location_db, 'a'):
+                os.utime(constants.location_db, None)
+
+        self.location_db = []
+
+        # We know from above that this file exists so we open it for reading only.
+        with open(constants.location_db, 'r') as f:
+            try:
+                self.location_db = json.load(f)
+            except ValueError:
+                pass
+
     def add_hash(self, key, value, write=False):
         self.hash_db[key] = value
         if(write == True):
@@ -55,3 +70,44 @@ class Db(object):
                 buf = f.read(blocksize)
             return hasher.hexdigest()
         return None
+
+    # Location database
+    # Currently quite simple just a list of long/lat pairs with a name
+    # If it gets many entryes a lookup might takt to long and a better
+    # structure might be needed. Some speed up ideas:
+    # - Sort it and inter-half method can be used
+    # - Use integer part of long or lat as key to get a lower search list
+    # - Cache a smal number of lookups, photos is likey to be taken i clusters
+    #   around a spot during import.
+
+    def add_location(self, latitude, longitude, place, write=False):
+        data = {}
+        data['lat'] = latitude
+        data['long'] = longitude
+        data['name'] = place
+        self.location_db.append(data)
+        if(write == True):
+            self.update_location_db()
+
+    def get_location_name(self, latitude, longitude,threshold_m):
+        for data in self.location_db:
+            # As threshold is quite smal use simple math
+            # From http://stackoverflow.com/questions/15736995/how-can-i-quickly-estimate-the-distance-between-two-latitude-longitude-points
+            # convert decimal degrees to radians
+
+            lon1, lat1, lon2, lat2 = map(radians, [longitude, latitude, data['long'], data['lat']])
+
+            R = 6371000  # radius of the earth in m
+            x = (lon2 - lon1) * cos( 0.5*(lat2+lat1) )
+            y = lat2 - lat1
+            d = R * sqrt( x*x + y*y )
+            # Use if closer then threshold_km reuse lookup
+            if(d<=threshold_m):
+                #print "Found in cached location dist: %d m" % d
+                return data['name'];
+        return None
+
+
+    def update_location_db(self):
+        with open(constants.location_db, 'w') as f:
+            json.dump(self.location_db, f)
