@@ -79,7 +79,7 @@ class Photo(Media):
                 londir = -1
 
             coords = exif[key].value
-            if(key == 'latitude'):
+            if(type == 'latitude'):
                 return float(str(LatLon.Latitude(degree=coords[0], minute=coords[1], second=coords[2]))) * latdir
             else:
                 return float(str(LatLon.Longitude(degree=coords[0], minute=coords[1], second=coords[2]))) * londir
