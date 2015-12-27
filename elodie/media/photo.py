@@ -72,10 +72,10 @@ class Photo(Media):
         try:
             # this is a hack to get the proper direction by negating the values for S and W
             latdir = 1
-            if(key == self.exif_map['latitude'] and str(exif[self.exif_map['latitude_ref']].value) == 'S'):
+            if(type == 'latitude' and str(exif[self.exif_map['latitude_ref']].value) == 'S'):
                 latdir = -1
             londir = 1
-            if(key == self.exif_map['longitude'] and str(exif[self.exif_map['longitude_ref']].value) == 'W'):
+            if(type =='longitude' and str(exif[self.exif_map['longitude_ref']].value) == 'W'):
                 londir = -1
 
             coords = exif[key].value
