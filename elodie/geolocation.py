@@ -44,18 +44,24 @@ def coordinates_by_name(name):
                     
     return None
 
-def decimal_to_dms(decimal):
+def decimal_to_dms(decimal, signed=True):
     # if decimal is negative we need to make the degrees and minutes negative also
     sign = 1
     if(decimal < 0):
         sign = -1
 
-
+    # http://anothergisblog.blogspot.com/2011/11/convert-decimal-degree-to-degrees.html
     degrees = int(decimal)
     subminutes = abs((decimal - int(decimal)) * 60)
     minutes = int(subminutes) * sign
     subseconds = abs((subminutes - int(subminutes)) * 60) * sign
     subseconds_fraction = Fraction(subseconds)
+
+    if(signed == False):
+        degrees = abs(degrees)
+        minutes = abs(minutes)
+        subseconds_fraction = Fraction(abs(subseconds))
+
     return (pyexiv2.Rational(degrees, 1), pyexiv2.Rational(minutes, 1), pyexiv2.Rational(subseconds_fraction.numerator, subseconds_fraction.denominator))
 
 def dms_to_decimal(degrees, minutes, seconds, sign=' '):
