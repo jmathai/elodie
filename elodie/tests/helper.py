@@ -27,6 +27,9 @@ def get_file(name):
     current_folder = os.path.dirname(os.path.realpath(__file__))
     return '%s/files/%s' % (current_folder, name)
 
+def get_test_location():
+    return (61.013710, 99.196656, 'Siberia')
+
 def populate_folder(number_of_files):
     folder = '%s/%s' % (tempfile.gettempdir(), random_string(10))
     os.makedirs(folder)
@@ -41,6 +44,13 @@ def populate_folder(number_of_files):
 
 def random_string(length):
     return ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(length))
+
+def random_decimal():
+    return random.random()
+
+def random_coordinate(coordinate, precision):
+    # Here we add to the decimal section of the coordinate by a given precision
+    return coordinate + ((10.0 / (10.0**precision)) * random_decimal())
 
 def temp_dir():
     return tempfile.gettempdir()
