@@ -23,6 +23,16 @@ class Fraction(fractions.Fraction):
         return fractions.Fraction.from_float(value).limit_denominator(99999)
 
 def coordinates_by_name(name):
+    # Try to get cached location first
+    db = Db()
+    cached_coordinates = db.get_location_coordinates(name)
+    if(cached_coordinates is not None):
+        return {
+                'latitude': cached_coordinates[0],
+                'longitude': cached_coordinates[1]
+        }
+
+    # If the name is not cached then we go ahead with an API lookup
     geolocation_info = lookup(name)
 
     if(geolocation_info is not None):

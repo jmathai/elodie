@@ -1,7 +1,9 @@
 import hashlib
 import json
-import os
 from math import radians, cos, sqrt
+import os
+import sys
+
 from elodie import constants
 
 class Db(object):
@@ -90,6 +92,8 @@ class Db(object):
             self.update_location_db()
 
     def get_location_name(self, latitude, longitude,threshold_m):
+        last_d = sys.maxint
+        name = None
         for data in self.location_db:
             # As threshold is quite smal use simple math
             # From http://stackoverflow.com/questions/15736995/how-can-i-quickly-estimate-the-distance-between-two-latitude-longitude-points
@@ -102,11 +106,19 @@ class Db(object):
             y = lat2 - lat1
             d = R * sqrt( x*x + y*y )
             # Use if closer then threshold_km reuse lookup
-            if(d<=threshold_m):
+            if(d <= threshold_m and d < last_d):
                 #print "Found in cached location dist: %d m" % d
-                return data['name'];
-        return None
+                name = data['name'];
+            last_d = d
 
+        return name
+
+    def get_location_coordinates(self, name):
+        for data in self.location_db:
+            if data['name'] == name:
+                return (data['lat'], data['long'])
+
+        return None
 
     def update_location_db(self):
         with open(constants.location_db, 'w') as f:

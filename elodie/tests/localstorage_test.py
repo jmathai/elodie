@@ -177,3 +177,33 @@ def test_get_location_name_outside_threshold():
     retrieved_name = db.get_location_name(new_latitude, new_longitude, 800)
 
     assert retrieved_name is None
+
+def test_get_location_coordinates_exists():
+    db = Db()
+    
+    latitude, longitude, name = helper.get_test_location()
+
+    name = '%s-%s' % (name, helper.random_string(10))
+    latitude = helper.random_coordinate(latitude, 1)
+    longitude = helper.random_coordinate(longitude, 1)
+
+    db.add_location(latitude, longitude, name)
+
+    location = db.get_location_coordinates(name)
+
+    assert location is not None
+    assert location[0] == latitude
+    assert location[1] == longitude
+
+def test_get_location_coordinates_does_not_exists():
+    db = Db()
+    
+    latitude, longitude, name = helper.get_test_location()
+
+    name = '%s-%s' % (name, helper.random_string(10))
+    latitude = helper.random_coordinate(latitude, 1)
+    longitude = helper.random_coordinate(longitude, 1)
+
+    location = db.get_location_coordinates(name)
+
+    assert location is None
