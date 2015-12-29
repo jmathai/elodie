@@ -188,4 +188,4 @@ If you have problems you can run the following commands which the fine folks at 
 
 I use MapQuest to help me organize your photos by location. You'll need to sign up for a [free developer account](https://developer.mapquest.com/plan_purchase/steps/business_edition/business_edition_free) and get an API key. They give you 15,000 calls per month so I can't do any more than that unless you shell out some big bucks to them. Once I hit my limit the best I'll be able to do is *Unknown Location* until the following month.
 
-Once you sign up you'll have to get an API key and copy it into a file named `config.ini` at the root of the repository. I've included a `config.ini-sample` file which you can copy to `config.ini`.
+Once you sign up you'll have to get an API key and copy it into a file named `~/.elodie/config.ini`. I've included a `config.ini-sample` file which you can copy to `config.ini`.
