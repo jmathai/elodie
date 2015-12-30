@@ -130,7 +130,14 @@ class FileSystem:
             path.append(metadata['album'])
         elif metadata['latitude'] and metadata['longitude']:
             place_name = geolocation.place_name(metadata['latitude'], metadata['longitude'])
-            if(place_name is not None):
+            if place_name:
+                if place_name not in self.place_names_accepted:
+                    go = raw_input("Use '%s' as place name [Y]?" %
+                                    place_name) or 'Y'
+                    if go != 'Y':
+                        exit(1)
+                    else:
+                        self.place_names_accepted.append(place_name)
                 path.append(place_name)
 
         # if we don't have a 2nd level directory we use 'Unknown Location'
