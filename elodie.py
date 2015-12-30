@@ -15,6 +15,7 @@ from elodie.media.video import Video
 from elodie.filesystem import FileSystem
 from elodie.localstorage import Db
 
+
 def usage():
     return """Usage: elodie.py import --source=<s> --destination=<d> [--album-from-folder]
        elodie.py import --file=<f> --destination=<d> [--album-from-folder]
@@ -23,45 +24,39 @@ def usage():
        -h --help    show this
        """
 
+
+def import_file(_file, destination):
+    media = Media.get_class_by_file(_file, (Photo, Video))
+    if not media:
+        if constants.debug:
+            print 'Not a supported file (%s)' % _file
+        print '{"source":"%s", "error_msg":"Not a supported file"}' % _file
+        return
+
+    if media.__name__ == 'Video':
+        filesystem.set_date_from_path_video(media)
+
+    if params['--album-from-folder']:
+        media.set_album_from_folder()
+
+    dest_path = filesystem.process_file(_file, destination,
+        media, allowDuplicate=False, move=False)
+    if dest_path:
+        print '%s -> %s' % (_file, dest_path)
+
+
 def _import(params):
     destination = os.path.expanduser(params['--destination'])
 
-    if(params['--source'] is not None):
+    if params['--source']:
         source = os.path.expanduser(params['--source'])
+        files = filesystem.get_all_files(source, None)
+    elif params['--file']:
+        files = [os.path.expanduser(params['--file'])]
 
-        for current_file in filesystem.get_all_files(source, None):
-            media = Media.get_class_by_file(current_file, [Photo, Video])
-            if(media is None):
-                continue
+    for current_file in files:
+        import_file(current_file, destination)
 
-            if(media.__name__ == 'Video'):
-                filesystem.set_date_from_path_video(media)
-
-            if(params['--album-from-folder'] == True):
-                media.set_album_from_folder()
-
-            dest_path = filesystem.process_file(current_file, destination, media, allowDuplicate=False, move=False)
-            if(dest_path is not None):
-                print '%s -> %s' % (current_file, dest_path)
-    elif(params['--file'] is not None):
-        current_file = os.path.expanduser(params['--file'])
-        media = Media.get_class_by_file(current_file, [Photo, Video])
-
-        if(media is None):
-            if(constants.debug == True):
-                print 'Not a supported file (%s)' % current_file
-            print '{"source":"%s", "error_msg":"Not a supported file"}' % current_file
-            return
-
-        if(media.__name__ == 'Video'):
-            filesystem.set_date_from_path_video(media)
-
-        if(params['--album-from-folder'] == True):
-            media.set_album_from_folder()
-
-        dest_path = filesystem.process_file(current_file, destination, media, allowDuplicate=False, move=False)
-        if(dest_path is not None):
-            print '%s -> %s' % (current_file, dest_path)
 
 def _update(params):
     location_coords = None
