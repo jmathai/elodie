@@ -96,19 +96,18 @@ def _update(params):
         if params['--time']:
             time_string = params['--time']
             time_format = '%Y-%m-%d %H:%M:%S'
-            if(re.match('^\d{4}-\d{2}-\d{2}$', time_string)):
+            if re.match('^\d{4}-\d{2}-\d{2}$', time_string):
                 time_string = '%s 00:00:00' % time_string
 
-            if(re.match('^\d{4}-\d{2}-\d{2}$', time_string) is None and re.match('^\d{4}-\d{2}-\d{2} \d{2}:\d{2}\d{2}$', time_string)):
-                if(constants.debug == True):
+            elif re.match('^\d{4}-\d{2}-\d{2} \d{2}:\d{2}\d{2}$', time_string):
+                if constants.debug:
                     print 'Invalid time format. Use YYYY-mm-dd hh:ii:ss or YYYY-mm-dd'
                 print '{"source":"%s", "error_msg":"Invalid time format. Use YYYY-mm-dd hh:ii:ss or YYYY-mm-dd"}' % file_path
                 sys.exit(1)
 
-            if(time_format is not None):
-                time = datetime.strptime(time_string, time_format)
-                media.set_date_taken(time)
-                updated = True
+            time = datetime.strptime(time_string, time_format)
+            media.set_date_taken(time)
+            updated = True
 
         if params['--album']:
             media.set_album(params['--album'])
@@ -146,6 +145,7 @@ def _update(params):
             dest_path = filesystem.process_file(file_path, destination,
                 updated_media, move=True, allowDuplicate=True)
             if constants.debug:
+                print u'%s -> %s' % (file_path, dest_path)
             print '{"source":"%s", "destination":"%s"}' % (file_path, dest_path)
             # If the folder we moved the file out of or its parent are empty we delete it.
             filesystem.delete_directory_if_empty(os.path.dirname(file_path))
@@ -157,8 +157,8 @@ filesystem = FileSystem()
 
 if __name__ == '__main__':
     params = docopt(usage())
-    if(params['import'] == True):
+    if params['import']:
         _import(params)
-    elif(params['update'] == True):
+    elif params['update']:
         _update(params)
     sys.exit(0)
