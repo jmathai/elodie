@@ -56,10 +56,45 @@ def _import(params):
 
     for current_file in files:
         import_file(current_file, destination)
+def update_location(media, file_path, location_name):
+    """Update location exif metadata of media.
+    """
+    location_coords = geolocation.coordinates_by_name(location_name)
+
+    if location_coords and 'latitude' in location_coords and \
+            'longitude' in location_coords:
+        location_status = media.set_location(location_coords[
+            'latitude'], location_coords['longitude'])
+        if not location_status:
+            if constants.debug:
+                print 'Failed to update location'
+            print ('{"source":"%s",' % file_path,
+                '"error_msg":"Failed to update location"}')
+            sys.exit(1)
+    return True
+
+
+def update_time(media, file_path, time_string):
+    """Update time exif metadata of media.
+    """
+    time_format = '%Y-%m-%d %H:%M:%S'
+    if re.match(r'^\d{4}-\d{2}-\d{2}$', time_string):
+        time_string = '%s 00:00:00' % time_string
+    elif re.match(r'^\d{4}-\d{2}-\d{2} \d{2}:\d{2}\d{2}$', time_string):
+        msg = ('Invalid time format. Use YYYY-mm-dd hh:ii:ss or YYYY-mm-dd')
+        if constants.debug:
+            print msg
+        print '{"source":"%s", "error_msg":"%s"}' % (file_path, msg)
+        sys.exit(1)
+
+    time = datetime.strptime(time_string, time_format)
+    media.set_date_taken(time)
+    return True
 
 
 def _update(params):
-    location_coords = None
+    """Update files.
+    """
     for file_path in params['INPUT']:
         if not os.path.exists(file_path):
             if constants.debug:
@@ -78,37 +113,9 @@ def _update(params):
 
         updated = False
         if params['--location']:
-            if not location_coords:
-                location_coords = geolocation.coordinates_by_name(
-                    params['--location'])
-
-            if location_coords and 'latitude' in location_coords and \
-                    'longitude' in location_coords:
-                location_status = media.set_location(location_coords[
-                    'latitude'], location_coords['longitude'])
-                if not location_status:
-                    if constants.debug:
-                        print 'Failed to update location'
-                    print '{"source":"%s","error_msg":"Failed to update location"}' % file_path
-                    sys.exit(1)
-                updated = True
-
+            updated = update_location(media, file_path, params['--location'])
         if params['--time']:
-            time_string = params['--time']
-            time_format = '%Y-%m-%d %H:%M:%S'
-            if re.match('^\d{4}-\d{2}-\d{2}$', time_string):
-                time_string = '%s 00:00:00' % time_string
-
-            elif re.match('^\d{4}-\d{2}-\d{2} \d{2}:\d{2}\d{2}$', time_string):
-                if constants.debug:
-                    print 'Invalid time format. Use YYYY-mm-dd hh:ii:ss or YYYY-mm-dd'
-                print '{"source":"%s", "error_msg":"Invalid time format. Use YYYY-mm-dd hh:ii:ss or YYYY-mm-dd"}' % file_path
-                sys.exit(1)
-
-            time = datetime.strptime(time_string, time_format)
-            media.set_date_taken(time)
-            updated = True
-
+            updated = update_time(media, file_path, params['--time'])
         if params['--album']:
             media.set_album(params['--album'])
             updated = True
