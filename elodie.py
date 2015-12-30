@@ -17,15 +17,23 @@ from elodie.localstorage import Db
 
 
 def usage():
-    return """Usage: elodie.py import --source=<s> --destination=<d> [--album-from-folder]
+    """Return usage message
+    """
+    return """
+Usage: elodie.py import --source=<s> --destination=<d> [--album-from-folder]
        elodie.py import --file=<f> --destination=<d> [--album-from-folder]
        elodie.py update [--time=<t>] [--location=<l>] [--album=<a>] [--title=<t>] INPUT ...
 
        -h --help    show this
-       """
+"""
+
+DB = Db()
+FILESYSTEM = FileSystem()
 
 
-def import_file(_file, destination):
+def import_file(_file, destination, album_from_folder):
+    """Set file metadata and move it to destination.
+    """
     media = Media.get_class_by_file(_file, (Photo, Video))
     if not media:
         if constants.debug:
@@ -34,28 +42,32 @@ def import_file(_file, destination):
         return
 
     if media.__name__ == 'Video':
-        filesystem.set_date_from_path_video(media)
+        FILESYSTEM.set_date_from_path_video(media)
 
-    if params['--album-from-folder']:
+    if album_from_folder:
         media.set_album_from_folder()
 
-    dest_path = filesystem.process_file(_file, destination,
+    dest_path = FILESYSTEM.process_file(_file, destination,
         media, allowDuplicate=False, move=False)
     if dest_path:
         print '%s -> %s' % (_file, dest_path)
 
 
 def _import(params):
+    """Import files.
+    """
     destination = os.path.expanduser(params['--destination'])
 
     if params['--source']:
         source = os.path.expanduser(params['--source'])
-        files = filesystem.get_all_files(source, None)
+        files = FILESYSTEM.get_all_files(source, None)
     elif params['--file']:
         files = [os.path.expanduser(params['--file'])]
 
     for current_file in files:
-        import_file(current_file, destination)
+        import_file(current_file, destination, params['--album-from-folder'])
+
+
 def update_location(media, file_path, location_name):
     """Update location exif metadata of media.
     """
@@ -135,37 +147,47 @@ def _update(params):
             title_update_status = media.set_title(params['--title'])
             original_title = metadata['title']
             if title_update_status and original_title:
-                # @TODO: We should move this to a shared method since FileSystem.get_file_name() does it too.
-                original_title = re.sub('\W+', '-', original_title.lower())
+                # @TODO: We should move this to a shared method since
+                # FileSystem.get_file_name() does it too.
+                original_title = re.sub(r'\W+', '-', original_title.lower())
                 original_base_name = metadata['base_name']
                 remove_old_title_from_name = True
             updated = True
 
         if updated:
             updated_media = Media.get_class_by_file(file_path, (Photo, Video))
-            # See comments above on why we have to do this when titles get updated.
+            # See comments above on why we have to do this when titles
+            # get updated.
             if remove_old_title_from_name and len(original_title) > 0:
                 updated_media.get_metadata()
                 updated_media.set_metadata_basename(
                     original_base_name.replace('-%s' % original_title, ''))
 
-            dest_path = filesystem.process_file(file_path, destination,
+            dest_path = FILESYSTEM.process_file(file_path, destination,
                 updated_media, move=True, allowDuplicate=True)
             if constants.debug:
                 print u'%s -> %s' % (file_path, dest_path)
-            print '{"source":"%s", "destination":"%s"}' % (file_path, dest_path)
-            # If the folder we moved the file out of or its parent are empty we delete it.
-            filesystem.delete_directory_if_empty(os.path.dirname(file_path))
-            filesystem.delete_directory_if_empty(os.path.dirname(os.path.dirname(file_path)))
+            print '{"source":"%s", "destination":"%s"}' % (file_path,
+                dest_path)
+            # If the folder we moved the file out of or its parent are empty
+            # we delete it.
+            FILESYSTEM.delete_directory_if_empty(os.path.dirname(file_path))
+            FILESYSTEM.delete_directory_if_empty(
+                os.path.dirname(os.path.dirname(file_path)))
 
 
-db = Db()
-filesystem = FileSystem()
-
-if __name__ == '__main__':
+def main(argv=None):
+    """Main function call elodie subcommand on files.
+    """
+    if argv is None:
+        argv = sys.argv
     params = docopt(usage())
     if params['import']:
         _import(params)
     elif params['update']:
         _update(params)
     sys.exit(0)
+
+
+if __name__ == '__main__':
+    sys.exit(main())
