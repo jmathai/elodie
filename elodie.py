@@ -1,16 +1,12 @@
 #!/usr/bin/env python
 
 import os
-import pyexiv2
 import re
-import shutil
 import sys
-import time
 
 from datetime import datetime
 from docopt import docopt
 
-from elodie import arguments
 from elodie import constants
 from elodie import geolocation
 from elodie.media.photo import Media
