@@ -11,10 +11,13 @@ from elodie import geolocation
 from elodie import constants
 from elodie.localstorage import Db
 
-"""
-General file system methods
-"""
+
 class FileSystem:
+    """
+    General file system methods
+    """
+    place_names_accepted = []
+
     """
     Create a directory if it does not already exist..
 
@@ -35,7 +38,7 @@ class FileSystem:
 
     """
     Delete a directory only if it's empty.
-    Instead of checking first using `len([name for name in os.listdir(directory_path)]) == 0` 
+    Instead of checking first using `len([name for name in os.listdir(directory_path)]) == 0`
         we catch the OSError exception.
 
     @param, directory_name, string, A fully qualified path of the directory to delete.
@@ -60,7 +63,7 @@ class FileSystem:
         for dirname, dirnames, filenames in os.walk(path):
             # print path to all filenames.
             for filename in filenames:
-                if(extensions == None or filename.lower().endswith(extensions)):
+                if not extensions or filename.lower().endswith(extensions):
                     files.append('%s/%s' % (dirname, filename))
         return files
 
@@ -86,12 +89,12 @@ class FileSystem:
             return None
 
         metadata = media.get_metadata()
-        if(metadata == None):
+        if not metadata:
             return None
 
         # If the file has EXIF title we use that in the file name (i.e. my-favorite-photo-img_1234.jpg)
         # We want to remove the date prefix we add to the name.
-        # This helps when re-running the program on file which were already processed. 
+        # This helps when re-running the program on file which were already processed.
         base_name = re.sub('^\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}-', '', metadata['base_name'])
         if(len(base_name) == 0):
             base_name = metadata['base_name']
@@ -125,7 +128,7 @@ class FileSystem:
 
         if(metadata['album'] is not None):
             path.append(metadata['album'])
-        elif(metadata['latitude'] is not None and metadata['longitude'] is not None):
+        elif metadata['latitude'] and metadata['longitude']:
             place_name = geolocation.place_name(metadata['latitude'], metadata['longitude'])
             if(place_name is not None):
                 path.append(place_name)
@@ -208,5 +211,5 @@ class FileSystem:
                 date_taken = time.strptime('{}-{}-{}'.format(year, month, day), '%Y-%m-%d')
             else:
                 date_taken = time.strptime('{}-{}'.format(year, month), '%Y-%m')
-            
+
             os.utime(video_file_path, (time.time(), time.mktime(date_taken)))
