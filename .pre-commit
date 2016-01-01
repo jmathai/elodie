@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+nosetests -w elodie/tests
