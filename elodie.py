@@ -9,7 +9,7 @@ from docopt import docopt
 
 from elodie import constants
 from elodie import geolocation
-from elodie.media.photo import Media
+from elodie.media.media import Media
 from elodie.media.photo import Photo
 from elodie.media.video import Video
 from elodie.filesystem import FileSystem
