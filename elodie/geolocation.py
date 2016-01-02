@@ -3,9 +3,7 @@ from ConfigParser import ConfigParser
 import fractions
 import pyexiv2
 
-import math
 import requests
-import sys
 import urllib
 
 from elodie import constants
@@ -30,8 +28,8 @@ def coordinates_by_name(name):
     cached_coordinates = db.get_location_coordinates(name)
     if(cached_coordinates is not None):
         return {
-                'latitude': cached_coordinates[0],
-                'longitude': cached_coordinates[1]
+            'latitude': cached_coordinates[0],
+            'longitude': cached_coordinates[1]
         }
 
     # If the name is not cached then we go ahead with an API lookup
@@ -63,8 +61,8 @@ def coordinates_by_name(name):
                     break
 
             return {
-                    'latitude': use_location['lat'],
-                    'longitude': use_location['lng']
+                'latitude': use_location['lat'],
+                'longitude': use_location['lng']
             }
 
     return None

@@ -3,12 +3,7 @@ Author: Jaisen Mathai <jaisen@jmathai.com>
 Photo package that handles all photo operations
 """
 
-# load modules
-from datetime import datetime
-from sys import argv
-
 import imghdr
-import mimetypes
 import LatLon
 import os
 import pyexiv2
@@ -228,5 +223,5 @@ class Photo(Media):
     @returns, tuple
     """
     @classmethod
-    def get_valid_extensions(Photo):
-        return Photo.extensions
+    def get_valid_extensions(cls):
+        return cls.extensions
