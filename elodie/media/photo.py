@@ -20,9 +20,7 @@ from elodie import constants
 from media import Media
 from elodie import geolocation
 
-"""
-Photo class for general photo operations
-"""
+
 class Photo(Media):
     __name__ = 'Photo'
     extensions = ('jpg', 'jpeg', 'nef', 'dng', 'gif')
@@ -35,7 +33,7 @@ class Photo(Media):
 
         # We only want to parse EXIF once so we store it here
         self.exif = None
-        
+
     """
     Get the duration of a photo in seconds.
     Uses ffmpeg/ffprobe
@@ -47,11 +45,17 @@ class Photo(Media):
             return None
 
         source = self.source
-        result = subprocess.Popen(['ffprobe', source],
-            stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
+        result = subprocess.Popen(
+            ['ffprobe', source],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT
+        )
         for key in result.stdout.readlines():
             if 'Duration' in key:
-                return re.search('(\d{2}:\d{2}.\d{2})', key).group(1).replace('.', ':')
+                return re.search(
+                    '(\d{2}:\d{2}.\d{2})',
+                    key
+                ).group(1).replace('.', ':')
         return None
 
     """
@@ -63,26 +67,40 @@ class Photo(Media):
         if(not self.is_valid()):
             return None
 
-        key = self.exif_map['longitude'] if type == 'longitude' else self.exif_map['latitude']
+        key = self.exif_map['latitude']
+        if(type == 'longitude'):
+            key = self.exif_map['longitude']
         exif = self.get_exif()
 
         if(key not in exif):
             return None
 
         try:
-            # this is a hack to get the proper direction by negating the values for S and W
+            # this is a hack to get the proper direction by negating the
+            #   values for S and W
             latdir = 1
-            if(type == 'latitude' and str(exif[self.exif_map['latitude_ref']].value) == 'S'):
+            if(type == 'latitude' and str(exif[self.exif_map['latitude_ref']].value) == 'S'):  # noqa
                 latdir = -1
+
             londir = 1
-            if(type =='longitude' and str(exif[self.exif_map['longitude_ref']].value) == 'W'):
+            if(type == 'longitude' and str(exif[self.exif_map['longitude_ref']].value) == 'W'):  # noqa
                 londir = -1
 
             coords = exif[key].value
             if(type == 'latitude'):
-                return float(str(LatLon.Latitude(degree=coords[0], minute=coords[1], second=coords[2]))) * latdir
+                lat_val = LatLon.Latitude(
+                    degree=coords[0],
+                    minute=coords[1],
+                    second=coords[2]
+                )
+                return float(str(lat_val)) * latdir
             else:
-                return float(str(LatLon.Longitude(degree=coords[0], minute=coords[1], second=coords[2]))) * londir
+                lon_val = LatLon.Longitude(
+                    degree=coords[0],
+                    minute=coords[1],
+                    second=coords[2]
+                )
+                return float(str(lon_val)) * londir
         except KeyError:
             return None
 
@@ -97,21 +115,23 @@ class Photo(Media):
             return None
 
         source = self.source
-        seconds_since_epoch = min(os.path.getmtime(source), os.path.getctime(source))
+        seconds_since_epoch = min(os.path.getmtime(source), os.path.getctime(source))  # noqa
         # We need to parse a string from EXIF into a timestamp.
-        # EXIF DateTimeOriginal and EXIF DateTime are both stored in %Y:%m:%d %H:%M:%S format
-        # we use date.strptime -> .timetuple -> time.mktime to do the conversion in the local timezone
+        # EXIF DateTimeOriginal and EXIF DateTime are both stored
+        #   in %Y:%m:%d %H:%M:%S format
+        # we use date.strptime -> .timetuple -> time.mktime to do
+        #   the conversion in the local timezone
         # EXIF DateTime is already stored as a timestamp
-        # Sourced from https://github.com/photo/frontend/blob/master/src/libraries/models/Photo.php#L500
+        # Sourced from https://github.com/photo/frontend/blob/master/src/libraries/models/Photo.php#L500  # noqa
         exif = self.get_exif()
         for key in self.exif_map['date_taken']:
             try:
                 if(key in exif):
-                    if(re.match('\d{4}(-|:)\d{2}(-|:)\d{2}', str(exif[key].value)) is not None):
-                        seconds_since_epoch = time.mktime(exif[key].value.timetuple())
-                        break;
+                    if(re.match('\d{4}(-|:)\d{2}(-|:)\d{2}', str(exif[key].value)) is not None):  # noqa
+                        seconds_since_epoch = time.mktime(exif[key].value.timetuple())  # noqa
+                        break
             except BaseException as e:
-                if(constants.debug == True):
+                if(constants.debug is True):
                     print e
                 pass
 
@@ -121,8 +141,9 @@ class Photo(Media):
         return time.gmtime(seconds_since_epoch)
 
     """
-    Check the file extension against valid file extensions as returned by self.extensions
-    
+    Check the file extension against valid file extensions as returned
+        by self.extensions
+
     @returns, boolean
     """
     def is_valid(self):
@@ -131,7 +152,7 @@ class Photo(Media):
         # gh-4 This checks if the source file is an image.
         # It doesn't validate against the list of supported types.
         if(imghdr.what(source) is None):
-            return False;
+            return False
 
         return os.path.splitext(source)[1][1:].lower() in self.extensions
 
@@ -172,10 +193,10 @@ class Photo(Media):
         exif_metadata = pyexiv2.ImageMetadata(source)
         exif_metadata.read()
 
-        exif_metadata['Exif.GPSInfo.GPSLatitude'] = geolocation.decimal_to_dms(latitude, False)
-        exif_metadata['Exif.GPSInfo.GPSLatitudeRef'] = pyexiv2.ExifTag('Exif.GPSInfo.GPSLatitudeRef', 'N' if latitude >= 0 else 'S')
-        exif_metadata['Exif.GPSInfo.GPSLongitude'] = geolocation.decimal_to_dms(longitude, False)
-        exif_metadata['Exif.GPSInfo.GPSLongitudeRef'] = pyexiv2.ExifTag('Exif.GPSInfo.GPSLongitudeRef', 'E' if longitude >= 0 else 'W')
+        exif_metadata['Exif.GPSInfo.GPSLatitude'] = geolocation.decimal_to_dms(latitude, False)  # noqa
+        exif_metadata['Exif.GPSInfo.GPSLatitudeRef'] = pyexiv2.ExifTag('Exif.GPSInfo.GPSLatitudeRef', 'N' if latitude >= 0 else 'S')  # noqa
+        exif_metadata['Exif.GPSInfo.GPSLongitude'] = geolocation.decimal_to_dms(longitude, False)  # noqa
+        exif_metadata['Exif.GPSInfo.GPSLongitudeRef'] = pyexiv2.ExifTag('Exif.GPSInfo.GPSLongitudeRef', 'E' if longitude >= 0 else 'W')  # noqa
 
         exif_metadata.write()
         return True

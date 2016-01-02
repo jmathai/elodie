@@ -1,7 +1,9 @@
 """
 """
-import sys, getopt
+import getopt
+import sys
 from re import sub
+
 
 def parse(argv, options, long_options, usage):
     try:
@@ -9,7 +11,7 @@ def parse(argv, options, long_options, usage):
     except getopt.GetoptError:
         print usage
         sys.exit(2)
- 
+
     return_arguments = {}
     for opt, arg in opts:
         if opt == '-h':

@@ -1,6 +1,6 @@
 """
 Author: Jaisen Mathai <jaisen@jmathai.com>
-Video package that handles all video operations
+General file system methods
 """
 import os
 import re
@@ -11,14 +11,13 @@ from elodie import geolocation
 from elodie import constants
 from elodie.localstorage import Db
 
-"""
-General file system methods
-"""
+
 class FileSystem:
     """
     Create a directory if it does not already exist..
 
-    @param, directory_name, string, A fully qualified path of the directory to create.
+    @param, directory_name, string, A fully qualified path of the
+        directory to create.
     """
     def create_directory(self, directory_path):
         try:
@@ -35,10 +34,11 @@ class FileSystem:
 
     """
     Delete a directory only if it's empty.
-    Instead of checking first using `len([name for name in os.listdir(directory_path)]) == 0` 
-        we catch the OSError exception.
+    Instead of checking first using `len([name for name in
+        os.listdir(directory_path)]) == 0` we catch the OSError exception.
 
-    @param, directory_name, string, A fully qualified path of the directory to delete.
+    @param, directory_name, string, A fully qualified path of the directory
+        to delete.
     """
     def delete_directory_if_empty(self, directory_path):
         try:
@@ -60,7 +60,10 @@ class FileSystem:
         for dirname, dirnames, filenames in os.walk(path):
             # print path to all filenames.
             for filename in filenames:
-                if(extensions == None or filename.lower().endswith(extensions)):
+                if(
+                    extensions is None or
+                    filename.lower().endswith(extensions)
+                ):
                     files.append('%s/%s' % (dirname, filename))
         return files
 
@@ -75,7 +78,8 @@ class FileSystem:
     """
     Generate file name for a photo or video using its metadata.
     We use an ISO8601-like format for the file name prefix.
-    Instead of colons as the separator for hours, minutes and seconds we use a hyphen.
+    Instead of colons as the separator for hours, minutes and seconds we use a
+        hyphen.
     https://en.wikipedia.org/wiki/ISO_8601#General_principles
 
     @param, media, Photo|Video, A Photo or Video instance
@@ -86,21 +90,39 @@ class FileSystem:
             return None
 
         metadata = media.get_metadata()
-        if(metadata == None):
+        if(metadata is None):
             return None
 
-        # If the file has EXIF title we use that in the file name (i.e. my-favorite-photo-img_1234.jpg)
+        # If the file has EXIF title we use that in the file name
+        #   (i.e. my-favorite-photo-img_1234.jpg)
         # We want to remove the date prefix we add to the name.
-        # This helps when re-running the program on file which were already processed. 
-        base_name = re.sub('^\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}-', '', metadata['base_name'])
+        # This helps when re-running the program on file which were already
+        #   processed.
+        base_name = re.sub(
+                        '^\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}-',
+                        '',
+                        metadata['base_name']
+                    )
         if(len(base_name) == 0):
             base_name = metadata['base_name']
-        if('title' in metadata and metadata['title'] is not None and len(metadata['title']) > 0):
+
+        if(
+            'title' in metadata and
+            metadata['title'] is not None and
+            len(metadata['title']) > 0
+        ):
             title_sanitized = re.sub('\W+', '-', metadata['title'].strip())
             base_name = base_name.replace('-%s' % title_sanitized, '')
             base_name = '%s-%s' % (base_name, title_sanitized)
 
-        file_name = '%s-%s.%s' % (time.strftime('%Y-%m-%d_%H-%M-%S', metadata['date_taken']), base_name, metadata['extension'])
+        file_name = '%s-%s.%s' % (
+                                    time.strftime(
+                                        '%Y-%m-%d_%H-%M-%S',
+                                        metadata['date_taken']
+                                    ),
+                                    base_name,
+                                    metadata['extension']
+                                )
         return file_name.lower()
 
     """
@@ -125,8 +147,14 @@ class FileSystem:
 
         if(metadata['album'] is not None):
             path.append(metadata['album'])
-        elif(metadata['latitude'] is not None and metadata['longitude'] is not None):
-            place_name = geolocation.place_name(metadata['latitude'], metadata['longitude'])
+        elif(
+            metadata['latitude'] is not None and
+            metadata['longitude'] is not None
+        ):
+            place_name = geolocation.place_name(
+                metadata['latitude'],
+                metadata['longitude']
+            )
             if(place_name is not None):
                 path.append(place_name)
 
@@ -134,7 +162,7 @@ class FileSystem:
         if(len(path) < 2):
             path.append('Unknown Location')
 
-        #return '/'.join(path[::-1])
+        # return '/'.join(path[::-1])
         return '/'.join(path)
 
     def process_file(self, _file, destination, media, **kwargs):
@@ -156,20 +184,24 @@ class FileSystem:
 
         db = Db()
         checksum = db.checksum(_file)
-        if(checksum == None):
-            if(constants.debug == True):
+        if(checksum is None):
+            if(constants.debug is True):
                 print 'Could not get checksum for %s. Skipping...' % _file
             return
 
-        # If duplicates are not allowed and this hash exists in the db then we return
-        if(allowDuplicate == False and db.check_hash(checksum) == True):
-            if(constants.debug == True):
-                print '%s already exists at %s. Skipping...' % (_file, db.get_hash(checksum))
+        # If duplicates are not allowed and this hash exists in the db then we
+        #   return
+        if(allowDuplicate is False and db.check_hash(checksum) is True):
+            if(constants.debug is True):
+                print '%s already exists at %s. Skipping...' % (
+                    _file,
+                    db.get_hash(checksum)
+                )
             return
 
         self.create_directory(dest_directory)
 
-        if(move == True):
+        if(move is True):
             stat = os.stat(_file)
             shutil.move(_file, dest_path)
             os.utime(dest_path, (stat.st_atime, stat.st_mtime))
@@ -191,22 +223,34 @@ class FileSystem:
         video_file_path = video.get_file_path()
 
         # Initialize date taken to what's returned from the metadata function.
-        # If the folder and file name follow a time format of YYYY-MM/DD-IMG_0001.JPG then we override the date_taken
+        # If the folder and file name follow a time format of
+        #   YYYY-MM/DD-IMG_0001.JPG then we override the date_taken
         (year, month, day) = [None] * 3
         directory = os.path.dirname(video_file_path)
-        # If the directory matches we get back a match with groups() = (year, month)
+        # If the directory matches we get back a match with
+        #   groups() = (year, month)
         year_month_match = re.search('(\d{4})-(\d{2})', directory)
         if(year_month_match is not None):
             (year, month) = year_month_match.groups()
-        day_match = re.search('^(\d{2})', os.path.basename(video.get_file_path()))
+        day_match = re.search(
+            '^(\d{2})',
+            os.path.basename(video.get_file_path())
+        )
         if(day_match is not None):
             day = day_match.group(1)
 
-        # check if the file system path indicated a date and if so we override the metadata value
+        # check if the file system path indicated a date and if so we
+        #   override the metadata value
         if(year is not None and month is not None):
             if(day is not None):
-                date_taken = time.strptime('{}-{}-{}'.format(year, month, day), '%Y-%m-%d')
+                date_taken = time.strptime(
+                    '{}-{}-{}'.format(year, month, day),
+                    '%Y-%m-%d'
+                )
             else:
-                date_taken = time.strptime('{}-{}'.format(year, month), '%Y-%m')
-            
+                date_taken = time.strptime(
+                    '{}-{}'.format(year, month),
+                    '%Y-%m'
+                )
+
             os.utime(video_file_path, (time.time(), time.mktime(date_taken)))
