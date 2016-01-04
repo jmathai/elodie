@@ -10,6 +10,7 @@ from docopt import docopt
 from elodie import constants
 from elodie import geolocation
 from elodie.media.media import Media
+from elodie.media.audio import Audio
 from elodie.media.photo import Photo
 from elodie.media.video import Video
 from elodie.filesystem import FileSystem
@@ -34,7 +35,7 @@ FILESYSTEM = FileSystem()
 def import_file(_file, destination, album_from_folder):
     """Set file metadata and move it to destination.
     """
-    media = Media.get_class_by_file(_file, (Photo, Video))
+    media = Media.get_class_by_file(_file, [Audio, Photo, Video])
     if not media:
         if constants.debug:
             print 'Not a supported file (%s)' % _file
@@ -119,7 +120,7 @@ def _update(params):
         destination = os.path.expanduser(os.path.dirname(os.path.dirname(
                                          os.path.dirname(file_path))))
 
-        media = Media.get_class_by_file(file_path, (Photo, Video))
+        media = Media.get_class_by_file(file_path, [Audio, Photo, Video])
         if not media:
             continue
 
@@ -155,7 +156,7 @@ def _update(params):
             updated = True
 
         if updated:
-            updated_media = Media.get_class_by_file(file_path, (Photo, Video))
+            updated_media = Media.get_class_by_file(file_path, [Audio, Photo, Video])
             # See comments above on why we have to do this when titles
             # get updated.
             if remove_old_title_from_name and len(original_title) > 0:

@@ -27,6 +27,7 @@ class Video(Media):
 
     """
     @param, source, string, The fully qualified path to the video file
+    @param, Audio, class or none, The Audio class if being extendted by the Audio class
     """
     def __init__(self, source=None):
         super(Video, self).__init__(source)
@@ -375,7 +376,7 @@ class Video(Media):
 
             # Before we do anything destructive we confirm that the
             #   file is in tact.
-            check_media = Video(temp_movie)
+            check_media = Media.get_class_by_file(temp_movie, [self.__class__])
             check_metadata = check_media.get_metadata()
             if(
                 (

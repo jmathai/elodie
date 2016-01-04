@@ -92,7 +92,8 @@ def decimal_to_dms(decimal, signed=True):
     return (
         pyexiv2.Rational(degrees, 1),
         pyexiv2.Rational(minutes, 1),
-        pyexiv2.Rational(subseconds_fraction.numerator, subseconds_fraction.denominator)  # noqa
+        pyexiv2.Rational(subseconds_fraction.numerator,
+            subseconds_fraction.denominator)
     )
 
 
