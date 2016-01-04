@@ -4,9 +4,6 @@ Audio package that handles all audio operations
 Inherits from Video package
 """
 
-from elodie import constants
-from elodie import plist_parser
-from media import Media
 from video import Video
 
 

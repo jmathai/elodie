@@ -25,7 +25,8 @@ class Video(Media):
 
     """
     @param, source, string, The fully qualified path to the video file
-    @param, Audio, class or none, The Audio class if being extendted by the Audio class
+    @param, Audio, class or none, The Audio class if being extendted
+        by the Audio class
     """
     def __init__(self, source=None):
         super(Video, self).__init__(source)
