@@ -6,10 +6,8 @@ Video package that handles all video operations
 # load modules
 from distutils.spawn import find_executable
 import tempfile
-from sys import argv
 from datetime import datetime
 
-import mimetypes
 import os
 import re
 import shutil
@@ -91,7 +89,6 @@ class Video(Media):
         #   conversion in the local timezone
         # If the time is not found in EXIF we update EXIF
         seconds_since_epoch = min(os.path.getmtime(source), os.path.getctime(source))  # noqa
-        time_found_in_exif = False
         exif_data = self.get_exif()
         for key in ['Creation Date', 'Media Create Date']:
             date = re.search('%s +: +([0-9: ]+)' % key, exif_data)
@@ -106,7 +103,6 @@ class Video(Media):
                     )
                     if(exif_seconds_since_epoch < seconds_since_epoch):
                         seconds_since_epoch = exif_seconds_since_epoch
-                        time_found_in_exif = True
                         break
                 except:
                     pass
@@ -279,7 +275,7 @@ class Video(Media):
                 stdout=subprocess.PIPE,
                 shell=True
             )
-            streamdata = write_process.communicate()[0]
+            write_process.communicate()
             if(write_process.returncode != 0):
                 if(constants.debug is True):
                     print 'Failed to generate plist file'
@@ -368,7 +364,7 @@ class Video(Media):
                 stdout=subprocess.PIPE,
                 shell=True
             )
-            streamdata = update_process.communicate()[0]
+            update_process.communicate()
             if(update_process.returncode != 0):
                 if(constants.debug is True):
                     print '%s did not complete successfully' % avmetareadwrite_command  # noqa
@@ -385,8 +381,8 @@ class Video(Media):
                     check_metadata['latitude'] is None and
                     check_metadata['longitude'] is None
                 ) or (
-                        'time' in kwargs and
-                        check_metadata['date_taken'] is None
+                    'time' in kwargs and
+                    check_metadata['date_taken'] is None
                 )
             ):
                 if(constants.debug is True):
@@ -408,8 +404,8 @@ class Video(Media):
     @returns, tuple
     """
     @classmethod
-    def get_valid_extensions(Video):
-        return Video.extensions
+    def get_valid_extensions(cls):
+        return cls.extensions
 
 
 class Transcode(object):

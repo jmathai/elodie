@@ -99,10 +99,10 @@ class FileSystem:
         # This helps when re-running the program on file which were already
         #   processed.
         base_name = re.sub(
-                        '^\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}-',
-                        '',
-                        metadata['base_name']
-                    )
+            '^\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}-',
+            '',
+            metadata['base_name']
+        )
         if(len(base_name) == 0):
             base_name = metadata['base_name']
 
@@ -116,13 +116,12 @@ class FileSystem:
             base_name = '%s-%s' % (base_name, title_sanitized)
 
         file_name = '%s-%s.%s' % (
-                                    time.strftime(
-                                        '%Y-%m-%d_%H-%M-%S',
-                                        metadata['date_taken']
-                                    ),
-                                    base_name,
-                                    metadata['extension']
-                                )
+            time.strftime(
+                '%Y-%m-%d_%H-%M-%S',
+                metadata['date_taken']
+            ),
+            base_name,
+            metadata['extension'])
         return file_name.lower()
 
     """
@@ -170,9 +169,9 @@ class FileSystem:
         if('move' in kwargs):
             move = kwargs['move']
 
-        allowDuplicate = False
+        allow_duplicate = False
         if('allowDuplicate' in kwargs):
-            allowDuplicate = kwargs['allowDuplicate']
+            allow_duplicate = kwargs['allowDuplicate']
 
         metadata = media.get_metadata()
 
@@ -191,7 +190,7 @@ class FileSystem:
 
         # If duplicates are not allowed and this hash exists in the db then we
         #   return
-        if(allowDuplicate is False and db.check_hash(checksum) is True):
+        if(allow_duplicate is False and db.check_hash(checksum) is True):
             if(constants.debug is True):
                 print '%s already exists at %s. Skipping...' % (
                     _file,

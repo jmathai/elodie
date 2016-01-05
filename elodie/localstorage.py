@@ -108,10 +108,10 @@ class Db(object):
                 [longitude, latitude, data['long'], data['lat']]
             )
 
-            R = 6371000  # radius of the earth in m
-            x = (lon2 - lon1) * cos(0.5*(lat2+lat1))
+            r = 6371000  # radius of the earth in m
+            x = (lon2 - lon1) * cos(0.5 * (lat2 + lat1))
             y = lat2 - lat1
-            d = R * sqrt(x*x + y*y)
+            d = r * sqrt(x * x + y * y)
             # Use if closer then threshold_km reuse lookup
             if(d <= threshold_m and d < last_d):
                 name = data['name']

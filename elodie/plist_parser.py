@@ -13,7 +13,7 @@ import plistlib
 
 class Plist(object):
     def __init__(self, source):
-        if(path.isfile(source) == False):
+        if not path.isfile(source):
             raise IOError('Could not load plist file %s' % source)
 
         self.source = source

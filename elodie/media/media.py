@@ -4,18 +4,14 @@ Media package that's a parent class for media objects
 """
 
 # load modules
-from datetime import datetime
 from distutils.spawn import find_executable
 from elodie import constants
-from fractions import Fraction
-from sys import argv
 
 import mimetypes
 import os
 import pyexiv2
 import re
 import subprocess
-import time
 
 
 class Media(object):
@@ -241,7 +237,7 @@ class Media(object):
             stdout=subprocess.PIPE,
             shell=True
         )
-        streamdata = process_output.communicate()[0]
+        process_output.communicate()
 
         if(process_output.returncode != 0):
             return False
@@ -299,7 +295,7 @@ class Media(object):
                 self.metadata[key] = kwargs[key]
 
     @classmethod
-    def get_class_by_file(Media, _file, classes):
+    def get_class_by_file(cls, _file, classes):
         extension = os.path.splitext(_file)[1][1:].lower()
 
         for i in classes:
