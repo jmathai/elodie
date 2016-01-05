@@ -1,9 +1,11 @@
 # Hello, I'm Elodie
-~~ *Your Personal EXIF-based Photo Assistant* ~~
+~~ *Your Personal EXIF-based Photo, Video and Audio Assistant* ~~
 
 [![Build Status](https://travis-ci.org/jmathai/elodie.svg?branch=master)](https://travis-ci.org/jmathai/elodie) [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/jmathai/elodie/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/jmathai/elodie/?branch=master)
 
-I work tirelessly to make sure your photos are always sorted and organized so you can focus on more important things. By photos I mean JPEG, DNG, NEF and common video files.
+<p align="center"><img src ="creative/logo@300x.png" /></p>
+
+I work tirelessly to make sure your photos are always sorted and organized so you can focus on more important things. By photos I mean JPEG, DNG, NEF and common video and audio files.
 
 You don't love me yet but you will.
 
@@ -14,15 +16,25 @@ I only do 3 things.
 
 *NOTE: make sure you've installed everything I need before running the commands below. [Instructions](#install-everything-you-need) at the bottom of this page.*
 
+## Two interfaces, same result
+
+I can be used as a GUI taskbar app or through the command line. My GUI app is great for updating EXIF on existing photos while my command line tools are great for setting up automated jobs.
+
+Read the [instructions on building the GUI taskbar app](tree/master/app) for more information.
+
 ## See me in action
 
-Watch me importing photos and organizing them.
+Updating EXIF of photos using the GUI taskbar app.
 
-[![IMAGE ALT TEXT](http://img.youtube.com/vi/oOvKpUO3LLs/0.jpg)](http://www.youtube.com/watch?v=oOvKpUO3LLs "Import Photos")
+[![IMAGE ALT TEXT](http://img.youtube.com/vi/fF_jGCaMog0/0.jpg)](http://www.youtube.com/watch?v=fF_jGCaMog0 "Updating Photos Using GUI Taskbar App")
 
-Sometimes photos don't have much information for me to organize them well. Here is how you can fix them up.
+Importing and organizing photos from the command line.
 
-[![IMAGE ALT TEXT](http://img.youtube.com/vi/7kqirQRQ--4/0.jpg)](http://www.youtube.com/watch?v=7kqirQRQ--4 "Updating Photos")
+[![IMAGE ALT TEXT](http://img.youtube.com/vi/oOvKpUO3LLs/0.jpg)](http://www.youtube.com/watch?v=oOvKpUO3LLs "Import Photos Using the Command Line")
+
+Updating EXIF of photos from the command line.
+
+[![IMAGE ALT TEXT](http://img.youtube.com/vi/7kqirQRQ--4/0.jpg)](http://www.youtube.com/watch?v=7kqirQRQ--4 "Updating Photos Using the Command Line")
 
 ## The dream setup I am optimized for
 
