@@ -27,7 +27,7 @@ def usage():
     """Return usage message
     """
     return """
-Usage: elodie.py import --destination=<d> [--album-from-folder] INPUT ...
+Usage: elodie.py import --destination=<d> [--source=<s>] [--file=<f>] [--album-from-folder] [INPUT ...]
        elodie.py update [--time=<t>] [--location=<l>] [--album=<a>] [--title=<t>] INPUT ...
 
        -h --help    show this
@@ -72,7 +72,12 @@ def _import(params):
     destination = os.path.expanduser(params['--destination'])
 
     files = set()
-    for path in params['INPUT']:
+    paths = set(params['INPUT'])
+    if params['--source']:
+        paths.add(params['--source'])
+    if params['--file']:
+        paths.add(params['--file'])
+    for path in paths:
         path = os.path.expanduser(path)
         if os.path.isdir(path):
             files.update(FILESYSTEM.get_all_files(path, None))
