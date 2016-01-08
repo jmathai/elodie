@@ -9,7 +9,7 @@ from video import Video
 
 class Audio(Video):
     __name__ = 'Audio'
-    extensions = ('m4a')
+    extensions = ('m4a',)
 
     """
     @param, source, string, The fully qualified path to the audio file
