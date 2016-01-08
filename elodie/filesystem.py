@@ -1,7 +1,9 @@
 """
-Author: Jaisen Mathai <jaisen@jmathai.com>
-General file system methods
+General file system methods.
+
+.. moduleauthor:: Jaisen Mathai <jaisen@jmathai.com>
 """
+
 import os
 import re
 import shutil
@@ -12,14 +14,17 @@ from elodie import constants
 from elodie.localstorage import Db
 
 
-class FileSystem:
-    """
-    Create a directory if it does not already exist..
+class FileSystem(object):
 
-    @param, directory_name, string, A fully qualified path of the
-        directory to create.
-    """
+    """A class for interacting with the file system."""
+
     def create_directory(self, directory_path):
+        """Create a directory if it does not already exist.
+
+        :param str directory_name: A fully qualified path of the
+            to create.
+        :returns: bool
+        """
         try:
             if os.path.exists(directory_path):
                 return True
@@ -32,15 +37,15 @@ class FileSystem:
 
         return False
 
-    """
-    Delete a directory only if it's empty.
-    Instead of checking first using `len([name for name in
-        os.listdir(directory_path)]) == 0` we catch the OSError exception.
-
-    @param, directory_name, string, A fully qualified path of the directory
-        to delete.
-    """
     def delete_directory_if_empty(self, directory_path):
+        """Delete a directory only if it's empty.
+
+        Instead of checking first using `len([name for name in
+        os.listdir(directory_path)]) == 0`, we catch the OSError exception.
+
+        :param str directory_name: A fully qualified path of the directory
+            to delete.
+        """
         try:
             os.rmdir(directory_path)
             return True
@@ -49,13 +54,12 @@ class FileSystem:
 
         return False
 
-    """
-    Recursively get all files which match a path and extension.
-
-    @param, path, string, Path to start recursive file listing
-    @param, extensions, tuple, File extensions to include (whitelist)
-    """
     def get_all_files(self, path, extensions=None):
+        """Recursively get all files which match a path and extension.
+
+        :param str path string: Path to start recursive file listing
+        :param tuple(str) extensions: File extensions to include (whitelist)
+        """
         files = []
         for dirname, dirnames, filenames in os.walk(path):
             # print path to all filenames.
@@ -67,25 +71,25 @@ class FileSystem:
                     files.append('%s/%s' % (dirname, filename))
         return files
 
-    """
-    Get the current working directory
-
-    @returns, string
-    """
     def get_current_directory(self):
+        """Get the current working directory.
+
+        :returns: str
+        """
         return os.getcwd()
 
-    """
-    Generate file name for a photo or video using its metadata.
-    We use an ISO8601-like format for the file name prefix.
-    Instead of colons as the separator for hours, minutes and seconds we use a
-        hyphen.
-    https://en.wikipedia.org/wiki/ISO_8601#General_principles
-
-    @param, media, Photo|Video, A Photo or Video instance
-    @returns, string or None for non-photo or non-videos
-    """
     def get_file_name(self, media):
+        """Generate file name for a photo or video using its metadata.
+
+        We use an ISO8601-like format for the file name prefix. Instead of
+        colons as the separator for hours, minutes and seconds we use a hyphen.
+        https://en.wikipedia.org/wiki/ISO_8601#General_principles
+
+        :param media: A Photo or Video instance
+        :type media: :class:`~elodie.media.photo.Photo` or
+            :class:`~elodie.media.video.Video`
+        :returns: str or None for non-photo or non-videos
+        """
         if(not media.is_valid()):
             return None
 
@@ -124,22 +128,20 @@ class FileSystem:
             metadata['extension'])
         return file_name.lower()
 
-    """
-    Get date based folder name.
-
-    @param, time_obj, time, Time object to be used to determine folder name.
-    @returns, string
-    """
     def get_folder_name_by_date(self, time_obj):
+        """Get date based folder name.
+
+        :param time time_obj: Time object to be used to determine folder name.
+        :returns: str
+        """
         return time.strftime('%Y-%m-%b', time_obj)
 
-    """
-    Get folder path by various parameters.
-
-    @param, time_obj, time, Time object to be used to determine folder name.
-    @returns, string
-    """
     def get_folder_path(self, metadata):
+        """Get folder path by various parameters.
+
+        :param time time_obj: Time object to be used to determine folder name.
+        :returns: str
+        """
         path = []
         if(metadata['date_taken'] is not None):
             path.append(time.strftime('%Y-%m-%b', metadata['date_taken']))
@@ -212,11 +214,13 @@ class FileSystem:
 
         return dest_path
 
-    """
-    Set the modification time on the file based on the file path.
-    Noop if the path doesn't match the format YYYY-MM/DD-IMG_0001.JPG.
-    """
     def set_date_from_path_video(self, video):
+        """Set the modification time on the file based on the file path.
+
+        Noop if the path doesn't match the format YYYY-MM/DD-IMG_0001.JPG.
+
+        :param elodie.media.video.Video video: An instance of Video.
+        """
         date_taken = None
 
         video_file_path = video.get_file_path()

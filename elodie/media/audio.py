@@ -1,18 +1,25 @@
 """
-Author: Jaisen Mathai <jaisen@jmathai.com>
-Audio package that handles all audio operations
-Inherits from Video package
+The audio module contains classes specifically for dealing with audio files.
+The :class:`Audio` class inherits from the :class:`~elodie.media.video.Video`
+class.
+
+.. moduleauthor:: Jaisen Mathai <jaisen@jmathai.com>
 """
 
 from video import Video
 
 
 class Audio(Video):
+
+    """An audio object.
+
+    :param str source: The fully qualified path to the audio file.
+    """
+
     __name__ = 'Audio'
+
+    #: Valid extensions for audio files.
     extensions = ('m4a',)
 
-    """
-    @param, source, string, The fully qualified path to the audio file
-    """
     def __init__(self, source=None):
         super(Audio, self).__init__(source)

@@ -3,4 +3,5 @@
 **/config.ini
 **/node_modules/**
 dist/**
+docs/_build
 build/**

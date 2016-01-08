@@ -1,6 +1,8 @@
 """
-Author: Jaisen Mathai <jaisen@jmathai.com>
-Photo package that handles all photo operations
+The photo module contains the :class:`Photo` class, which is used to track
+image objects (JPG, DNG, etc.).
+
+.. moduleauthor:: Jaisen Mathai <jaisen@jmathai.com>
 """
 
 import imghdr
@@ -17,25 +19,28 @@ from elodie import geolocation
 
 
 class Photo(Media):
+
+    """A photo object.
+
+    :param str source: The fully qualified path to the photo file
+    """
+
     __name__ = 'Photo'
+
+    #: Valid extensions for photo files.
     extensions = ('jpg', 'jpeg', 'nef', 'dng', 'gif')
 
-    """
-    @param, source, string, The fully qualified path to the photo file
-    """
     def __init__(self, source=None):
         super(Photo, self).__init__(source)
 
         # We only want to parse EXIF once so we store it here
         self.exif = None
 
-    """
-    Get the duration of a photo in seconds.
-    Uses ffmpeg/ffprobe
-
-    @returns, string or None for a non-photo file
-    """
     def get_duration(self):
+        """Get the duration of a photo in seconds. Uses ffmpeg/ffprobe.
+
+        :returns: str or None for a non-photo file
+        """
         if(not self.is_valid()):
             return None
 
@@ -53,12 +58,13 @@ class Photo(Media):
                 ).group(1).replace('.', ':')
         return None
 
-    """
-    Get latitude or longitude of photo from EXIF
-
-    @returns, float or None if not present in EXIF or a non-photo file
-    """
     def get_coordinate(self, type='latitude'):
+        """Get latitude or longitude of photo from EXIF
+
+        :param str type: Type of coordinate to get. Either "latitude" or
+            "longitude".
+        :returns: float or None if not present in EXIF or a non-photo file
+        """
         if(not self.is_valid()):
             return None
 
@@ -99,13 +105,13 @@ class Photo(Media):
         except KeyError:
             return None
 
-    """
-    Get the date which the photo was taken.
-    The date value returned is defined by the min() of mtime and ctime.
-
-    @returns, time object or None for non-photo files or 0 timestamp
-    """
     def get_date_taken(self):
+        """Get the date which the photo was taken.
+
+        The date value returned is defined by the min() of mtime and ctime.
+
+        :returns: time object or None for non-photo files or 0 timestamp
+        """
         if(not self.is_valid()):
             return None
 
@@ -135,13 +141,14 @@ class Photo(Media):
 
         return time.gmtime(seconds_since_epoch)
 
-    """
-    Check the file extension against valid file extensions as returned
-        by self.extensions
-
-    @returns, boolean
-    """
     def is_valid(self):
+        """Check the file extension against valid file extensions.
+
+        The list of valid file extensions come from self.extensions. This
+        also checks whether the file is an image.
+
+        :returns: bool
+        """
         source = self.source
 
         # gh-4 This checks if the source file is an image.
@@ -151,14 +158,12 @@ class Photo(Media):
 
         return os.path.splitext(source)[1][1:].lower() in self.extensions
 
-    """
-    Set the date/time a photo was taken
-
-    @param, time, datetime, datetime object of when the photo was taken
-
-    @returns, boolean
-    """
     def set_date_taken(self, time):
+        """Set the date/time a photo was taken.
+
+        :param datetime time: datetime object of when the photo was taken
+        :returns: bool
+        """
         if(time is None):
             return False
 
@@ -172,15 +177,13 @@ class Photo(Media):
         exif_metadata.write()
         return True
 
-    """
-    Set lat/lon for a photo
-
-    @param, latitude, float, Latitude of the file
-    @param, longitude, float, Longitude of the file
-
-    @returns, boolean
-    """
     def set_location(self, latitude, longitude):
+        """Set latitude and longitude for a photo.
+
+        :param float latitude: Latitude of the file
+        :param float longitude: Longitude of the file
+        :returns: bool
+        """
         if(latitude is None or longitude is None):
             return False
 
@@ -196,15 +199,12 @@ class Photo(Media):
         exif_metadata.write()
         return True
 
-    """
-    Set title for a photo
-
-    @param, latitude, float, Latitude of the file
-    @param, longitude, float, Longitude of the file
-
-    @returns, boolean
-    """
     def set_title(self, title):
+        """Set title for a photo.
+
+        :param str title: Title of the photo.
+        :returns: bool
+        """
         if(title is None):
             return False
 
@@ -216,12 +216,3 @@ class Photo(Media):
 
         exif_metadata.write()
         return True
-
-    """
-    Static method to access static __valid_extensions variable.
-
-    @returns, tuple
-    """
-    @classmethod
-    def get_valid_extensions(cls):
-        return cls.extensions
