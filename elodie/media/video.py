@@ -16,6 +16,7 @@ import time
 
 from elodie import constants
 from elodie import plist_parser
+from elodie.dependencies import get_exiftool
 from media import Media
 
 
@@ -145,7 +146,7 @@ class Video(Media):
     @returns, string or None if exiftool is not found
     """
     def get_exif(self):
-        exiftool = self.get_exiftool()
+        exiftool = get_exiftool()
         if(exiftool is None):
             return None
 

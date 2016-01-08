@@ -7,6 +7,12 @@ import sys
 from datetime import datetime
 from docopt import docopt
 
+# Verify that external dependencies are present first, so the user gets a
+# more user-friendly error instead of an ImportError traceback.
+from elodie.dependencies import verify_dependencies
+if not verify_dependencies():
+    sys.exit(1)
+
 from elodie import constants
 from elodie import geolocation
 from elodie.media.media import Media
