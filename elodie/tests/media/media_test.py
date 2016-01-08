@@ -14,6 +14,7 @@ sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirna
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
 
 import helper
+from elodie.media.audio import Audio
 from elodie.media.media import Media
 from elodie.media.photo import Photo
 from elodie.media.video import Video
@@ -45,6 +46,11 @@ def test_get_class_by_file_video():
 def test_get_class_by_file_unsupported():
     media = Media.get_class_by_file(helper.get_file('text.txt'), [Photo, Video])
 
+    assert media is None
+
+def test_get_class_by_file_empty():
+    media = Media.get_class_by_file(helper.get_file('.DS_Store'),
+                                    [Photo, Video, Audio])
     assert media is None
 
 def is_valid():
