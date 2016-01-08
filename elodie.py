@@ -6,6 +6,7 @@ import sys
 
 from datetime import datetime
 from docopt import docopt
+from send2trash import send2trash
 
 # Verify that external dependencies are present first, so the user gets a
 # more user-friendly error instead of an ImportError traceback.
@@ -27,7 +28,7 @@ def usage():
     """Return usage message
     """
     return """
-Usage: elodie.py import --destination=<d> [--source=<s>] [--file=<f>] [--album-from-folder] [INPUT ...]
+Usage: elodie.py import --destination=<d> [--source=<s>] [--file=<f>] [--album-from-folder] [--trash] [INPUT ...]
        elodie.py update [--time=<t>] [--location=<l>] [--album=<a>] [--title=<t>] INPUT ...
 
        -h --help    show this
@@ -37,7 +38,7 @@ DB = Db()
 FILESYSTEM = FileSystem()
 
 
-def import_file(_file, destination, album_from_folder):
+def import_file(_file, destination, album_from_folder, trash):
     """Set file metadata and move it to destination.
     """
     if not os.path.exists(_file):
@@ -64,6 +65,8 @@ def import_file(_file, destination, album_from_folder):
         media, allowDuplicate=False, move=False)
     if dest_path:
         print '%s -> %s' % (_file, dest_path)
+    if trash:
+        send2trash(_file)
 
 
 def _import(params):
@@ -85,7 +88,8 @@ def _import(params):
             files.add(path)
 
     for current_file in files:
-        import_file(current_file, destination, params['--album-from-folder'])
+        import_file(current_file, destination, params['--album-from-folder'],
+                    params['--trash'])
 
 
 def update_location(media, file_path, location_name):
