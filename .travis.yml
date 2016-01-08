@@ -7,7 +7,7 @@ before_install:
   - "sudo apt-get update -qq"
   - "sudo apt-get install python-dev python-pip python-pyexiv2 libimage-exiftool-perl -y"
 install:
-  - "sudo pip install docopt LatLon nose requests"
+  - "sudo pip install docopt LatLon mock nose requests"
 # command to run tests
 # test mapquest key
 before_script:

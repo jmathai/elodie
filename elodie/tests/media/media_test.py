@@ -21,11 +21,6 @@ from elodie.media.video import Video
 
 os.environ['TZ'] = 'GMT'
 
-def test_exiftool():
-    media = Media()
-    exiftool = media.get_exiftool()
-
-    assert exiftool is not None, exiftool
 
 def test_get_file_path():
     media = Media(helper.get_file('plain.jpg'))

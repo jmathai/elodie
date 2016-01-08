@@ -4,8 +4,8 @@ Media package that's a parent class for media objects
 """
 
 # load modules
-from distutils.spawn import find_executable
 from elodie import constants
+from elodie.dependencies import get_exiftool
 
 import mimetypes
 import os
@@ -49,22 +49,6 @@ class Media(object):
         return exiftool_attributes['album']
 
     """
-    Get path to executable exiftool binary.
-    We wrap this since we call it in a few places and we do a fallback.
-
-    @returns, None or string
-    """
-    def get_exiftool(self):
-        exiftool = find_executable('exiftool')
-        # If exiftool wasn't found we try to brute force the homebrew location
-        if(exiftool is None):
-            exiftool = '/usr/local/bin/exiftool'
-            if(not os.path.isfile(exiftool) or not os.access(exiftool, os.X_OK)):  # noqa
-                return None
-
-        return exiftool
-
-    """
     Get the full path to the video.
 
     @returns string
@@ -103,7 +87,7 @@ class Media(object):
         if(self.exiftool_attributes is not None):
             return self.exiftool_attributes
 
-        exiftool = self.get_exiftool()
+        exiftool = get_exiftool()
         if(exiftool is None):
             return False
 
@@ -222,7 +206,7 @@ class Media(object):
         if(name is None):
             return False
 
-        exiftool = self.get_exiftool()
+        exiftool = get_exiftool()
         if(exiftool is None):
             return False
 
