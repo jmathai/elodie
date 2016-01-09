@@ -27,8 +27,7 @@ def usage():
     """Return usage message
     """
     return """
-Usage: elodie.py import --source=<s> --destination=<d> [--album-from-folder]
-       elodie.py import --file=<f> --destination=<d> [--album-from-folder]
+Usage: elodie.py import --destination=<d> [--source=<s>] [--file=<f>] [--album-from-folder] [INPUT ...]
        elodie.py update [--time=<t>] [--location=<l>] [--album=<a>] [--title=<t>] INPUT ...
 
        -h --help    show this
@@ -41,6 +40,13 @@ FILESYSTEM = FileSystem()
 def import_file(_file, destination, album_from_folder):
     """Set file metadata and move it to destination.
     """
+    if not os.path.exists(_file):
+        if constants.debug:
+            print 'Could not find %s' % _file
+        print '{"source":"%s", "error_msg":"Could not find %s"}' % \
+            (_file, _file)
+        return
+
     media = Media.get_class_by_file(_file, [Audio, Photo, Video])
     if not media:
         if constants.debug:
@@ -65,11 +71,18 @@ def _import(params):
     """
     destination = os.path.expanduser(params['--destination'])
 
+    files = set()
+    paths = set(params['INPUT'])
     if params['--source']:
-        source = os.path.expanduser(params['--source'])
-        files = FILESYSTEM.get_all_files(source, None)
-    elif params['--file']:
-        files = [os.path.expanduser(params['--file'])]
+        paths.add(params['--source'])
+    if params['--file']:
+        paths.add(params['--file'])
+    for path in paths:
+        path = os.path.expanduser(path)
+        if os.path.isdir(path):
+            files.update(FILESYSTEM.get_all_files(path, None))
+        else:
+            files.add(path)
 
     for current_file in files:
         import_file(current_file, destination, params['--album-from-folder'])
