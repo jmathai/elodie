@@ -57,7 +57,7 @@ def verify_dependencies():
         return False
 
     try:
-        import pyexiv2
+        import pyexiv2  # noqa
     except ImportError as e:
         print >>sys.stderr, PYEXIV2_ERROR.format(
             error_class_name=e.__class__.__name__, error=e)
