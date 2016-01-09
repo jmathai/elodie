@@ -1,0 +1,5 @@
+LatLon
+docopt
+requests
+mock
+sphinx

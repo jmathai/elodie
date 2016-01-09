@@ -1,6 +1,12 @@
 """
-Author: Jaisen Mathai <jaisen@jmathai.com>
-Media package that's a parent class for media objects
+The media module provides a base :class:`Media` class for all objects that
+are tracked by Elodie. The Media class provides some base functionality used
+by all the media types, but isn't itself used to represent anything. Its
+sub-classes (:class:`~elodie.media.audio.Audio`,
+:class:`~elodie.media.photo.Photo`, and :class:`~elodie.media.video.Video`)
+are used to represent the actual files.
+
+.. moduleauthor:: Jaisen Mathai <jaisen@jmathai.com>
 """
 
 # load modules
@@ -15,12 +21,14 @@ import subprocess
 
 
 class Media(object):
-    # class / static variable accessible through get_valid_extensions()
+
+    """The base class for all media objects.
+
+    :param str source: The fully qualified path to the video file.
+    """
+
     __name__ = 'Media'
 
-    """
-    @param, source, string, The fully qualified path to the video file
-    """
     def __init__(self, source=None):
         self.source = source
         self.exif_map = {
@@ -33,12 +41,11 @@ class Media(object):
         self.exiftool_attributes = None
         self.metadata = None
 
-    """
-    Get album from EXIF
-
-    @returns, None or string
-    """
     def get_album(self):
+        """Get album from EXIF
+
+        :returns: None or string
+        """
         if(not self.is_valid()):
             return None
 
@@ -48,29 +55,31 @@ class Media(object):
 
         return exiftool_attributes['album']
 
-    """
-    Get the full path to the video.
-
-    @returns string
-    """
     def get_file_path(self):
+        """Get the full path to the video.
+
+        :returns: string
+        """
         return self.source
 
-    """
-    Define is_valid to always return false.
-    This should be overridden in a child class.
-    """
     def is_valid(self):
+        """The default is_valid() always returns false.
+
+        This should be overridden in a child class to return true if the
+        source is valid, and false otherwise.
+
+        :returns: bool
+        """
         return False
 
-    """
-    Read EXIF from a photo file.
-    We store the result in a member variable so we can call get_exif() often
-        without performance degredation
-
-    @returns, list or none for a non-photo file
-    """
     def get_exif(self):
+        """Read EXIF from a photo file.
+
+        We store the result in a member variable so we can call get_exif()
+        often without performance degredation.
+
+        :returns: list or none for a non-photo file
+        """
         if(not self.is_valid()):
             return None
 
@@ -84,6 +93,10 @@ class Media(object):
         return self.exif
 
     def get_exiftool_attributes(self):
+        """Get attributes for the media object from exiftool.
+
+        :returns: dict, or False if exiftool was not available.
+        """
         if(self.exiftool_attributes is not None):
             return self.exiftool_attributes
 
@@ -122,25 +135,24 @@ class Media(object):
 
         return self.exiftool_attributes
 
-    """
-    Get the file extension as a lowercased string.
-
-    @returns, string or None for a non-video
-    """
     def get_extension(self):
+        """Get the file extension as a lowercased string.
+
+        :returns: string or None for a non-video
+        """
         if(not self.is_valid()):
             return None
 
         source = self.source
         return os.path.splitext(source)[1][1:].lower()
 
-    """
-    Get a dictionary of metadata for a photo.
-    All keys will be present and have a value of None if not obtained.
-
-    @returns, dictionary or None for non-photo files
-    """
     def get_metadata(self, update_cache=False):
+        """Get a dictionary of metadata for a photo.
+
+        All keys will be present and have a value of None if not obtained.
+
+        :returns: dict or None for non-photo files
+        """
         if(not self.is_valid()):
             return None
 
@@ -163,12 +175,11 @@ class Media(object):
 
         return self.metadata
 
-    """
-    Get the mimetype of the file.
-
-    @returns, string or None for a non-video
-    """
     def get_mimetype(self):
+        """Get the mimetype of the file.
+
+        :returns: str or None for a non-video
+        """
         if(not self.is_valid()):
             return None
 
@@ -179,12 +190,11 @@ class Media(object):
 
         return mimetype[0]
 
-    """
-    Get the title for a photo of video
-
-    @returns, string or None if no title is set or not a valid media type
-    """
     def get_title(self):
+        """Get the title for a photo of video
+
+        :returns: str or None if no title is set or not a valid media type
+        """
         if(not self.is_valid()):
             return None
 
@@ -195,14 +205,12 @@ class Media(object):
 
         return exiftool_attributes['title']
 
-    """
-    Set album for a photo
-
-    @param, name, string, Name of album
-
-    @returns, boolean
-    """
     def set_album(self, name):
+        """Set album for a photo
+
+        :param str name: Name of album
+        :returns: bool
+        """
         if(name is None):
             return False
 
@@ -252,27 +260,26 @@ class Media(object):
         self.set_album(folder)
         return True
 
-    """
-    Specifically update the basename attribute in the metadata
-        dictionary for this instance.
-    This is used for when we update the EXIF title of a media file.
-    Since that determines the name of a file if we update the
-        title of a file more than once it appends to the file name.
-    I.e. 2015-12-31_00-00-00-my-first-title-my-second-title.jpg
-
-    @param, string, new_basename, New basename of file
-        (with the old title removed)
-    """
     def set_metadata_basename(self, new_basename):
+        """Update the basename attribute in the metadata dict for this instance.
+
+        This is used for when we update the EXIF title of a media file. Since
+        that determines the name of a file if we update the title of a file
+        more than once it appends to the file name.
+
+        i.e. 2015-12-31_00-00-00-my-first-title-my-second-title.jpg
+
+        :param str new_basename: New basename of file (with the old title
+            removed).
+        """
         self.get_metadata()
         self.metadata['base_name'] = new_basename
 
-    """
-    Method to manually update attributes in metadata.
-
-    @params, named paramaters
-    """
     def set_metadata(self, **kwargs):
+        """Method to manually update attributes in metadata.
+
+        :params dict kwargs: Named parameters to update.
+        """
         metadata = self.get_metadata()
         for key in kwargs:
             if(key in metadata):
@@ -287,3 +294,11 @@ class Media(object):
                 return i(_file)
 
         return None
+
+    @classmethod
+    def get_valid_extensions(cls):
+        """Static method to access static extensions variable.
+
+        :returns: tuple(str)
+        """
+        return cls.extensions

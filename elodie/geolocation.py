@@ -1,3 +1,5 @@
+"""Look up geolocation information for media objects."""
+
 from os import path
 from ConfigParser import ConfigParser
 import fractions
@@ -11,14 +13,18 @@ from elodie.localstorage import Db
 
 
 class Fraction(fractions.Fraction):
+
     """Only create Fractions from floats.
+
+    Should be compatible with Python 2.6, though untested.
+
     >>> Fraction(0.3)
     Fraction(3, 10)
     >>> Fraction(1.1)
     Fraction(11, 10)
     """
+
     def __new__(cls, value, ignore=None):
-        """Should be compatible with Python 2.6, though untested."""
         return fractions.Fraction.from_float(value).limit_denominator(99999)
 
 

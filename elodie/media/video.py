@@ -1,6 +1,8 @@
 """
-Author: Jaisen Mathai <jaisen@jmathai.com>
-Video package that handles all video operations
+The video module contains the :class:`Video` class, which represents video
+objects (AVI, MOV, etc.).
+
+.. moduleauthor:: Jaisen Mathai <jaisen@jmathai.com>
 """
 
 # load modules
@@ -21,24 +23,27 @@ from media import Media
 
 
 class Video(Media):
+
+    """A video object.
+
+    :param str source: The fully qualified path to the video file.
+    """
+
     __name__ = 'Video'
+
+    #: Valid extensions for video files.
     extensions = ('avi', 'm4v', 'mov', 'mp4', '3gp')
 
-    """
-    @param, source, string, The fully qualified path to the video file
-    @param, Audio, class or none, The Audio class if being extendted
-        by the Audio class
-    """
     def __init__(self, source=None):
         super(Video, self).__init__(source)
 
-    """
-    Get path to executable avmetareadwrite binary.
-    We wrap this since we call it in a few places and we do a fallback.
-
-    @returns, None or string
-    """
     def get_avmetareadwrite(self):
+        """Get path to executable avmetareadwrite binary.
+
+        We wrap this since we call it in a few places and we do a fallback.
+
+        :returns: None or string
+        """
         avmetareadwrite = find_executable('avmetareadwrite')
         if(avmetareadwrite is None):
             avmetareadwrite = '/usr/bin/avmetareadwrite'
@@ -47,12 +52,11 @@ class Video(Media):
 
         return avmetareadwrite
 
-    """
-    Get latitude or longitude of photo from EXIF
-
-    @returns, time object or None for non-video files or 0 timestamp
-    """
     def get_coordinate(self, type='latitude'):
+        """Get latitude or longitude of photo from EXIF.
+
+        :returns: time object or None for non-video files or 0 timestamp
+        """
         exif_data = self.get_exif()
         if(exif_data is None):
             return None
@@ -75,13 +79,13 @@ class Video(Media):
 
         return decimal_degrees
 
-    """
-    Get the date which the video was taken.
-    The date value returned is defined by the min() of mtime and ctime.
-
-    @returns, time object or None for non-video files or 0 timestamp
-    """
     def get_date_taken(self):
+        """Get the date which the video was taken.
+
+        The date value returned is defined by the min() of mtime and ctime.
+
+        :returns: time object or None for non-video files or 0 timestamp
+        """
         if(not self.is_valid()):
             return None
 
@@ -114,13 +118,13 @@ class Video(Media):
 
         return time.gmtime(seconds_since_epoch)
 
-    """
-    Get the duration of a video in seconds.
-    Uses ffmpeg/ffprobe
-
-    @returns, string or None for a non-video file
-    """
     def get_duration(self):
+        """Get the duration of a video in seconds.
+
+        This uses ffmpeg/ffprobe.
+
+        :returns: str or None for a non-video file
+        """
         if(not self.is_valid()):
             return None
 
@@ -138,14 +142,14 @@ class Video(Media):
                 ).group(1).replace('.', ':')
         return None
 
-    """
-    Get exif data from video file.
-    Not all video files have exif and this currently relies on
-        the CLI exiftool program
-
-    @returns, string or None if exiftool is not found
-    """
     def get_exif(self):
+        """Get exif data from video file.
+
+        Not all video files have exif and this currently relies on the CLI
+        exiftool program.
+
+        :returns: str or None if exiftool is not found
+        """
         exiftool = get_exiftool()
         if(exiftool is None):
             return None
@@ -158,24 +162,24 @@ class Video(Media):
         )
         return process_output.stdout.read()
 
-    """
-    Check the file extension against valid file extensions as
-        returned by self.extensions
-
-    @returns, boolean
-    """
     def is_valid(self):
+        """Check the file extension against valid file extensions.
+
+        The list of valid file extensions come from self.extensions.
+
+        :returns: bool
+        """
         source = self.source
         return os.path.splitext(source)[1][1:].lower() in self.extensions
 
-    """
-    Set the date/time a photo was taken
-
-    @param, time, datetime, datetime object of when the photo was taken
-
-    @returns, boolean
-    """
     def set_date_taken(self, date_taken_as_datetime):
+        """
+        Set the date/time a photo was taken
+
+        :param datetime date_taken_as_datetime: datetime object of when the
+            video was recorded.
+        :returns: bool
+        """
         if(time is None):
             return False
 
@@ -193,56 +197,51 @@ class Video(Media):
 
         return result
 
-    """
-    Set lat/lon for a video
-
-    @param, latitude, float, Latitude of the file
-    @param, longitude, float, Longitude of the file
-
-    @returns, boolean
-    """
     def set_location(self, latitude, longitude):
+        """
+        Set latitude and longitude for a video.
+
+        :param float latitude: Latitude of the file
+        :param float longitude: Longitude of the file
+        :returns: bool
+        """
         if(latitude is None or longitude is None):
             return False
 
         result = self.__update_using_plist(latitude=latitude, longitude=longitude)  # noqa
         return result
 
-    """
-    Set title for a video
-
-    @param, title, string, Title for the file
-
-    @returns, boolean
-    """
-
     def set_title(self, title):
+        """Set title for a video.
+
+        :param str title: Title for the file
+        :returns: bool
+        """
         if(title is None):
             return False
 
         result = self.__update_using_plist(title=title)
         return result
 
-    """
-    Updates video metadata using avmetareadwrite.
-    This method is a does a lot more than it should.
-    The general steps are...
-    1) Check if avmetareadwrite is installed
-    2) Export a plist file to a temporary location from the source file
-    3) Regex replace values in the plist file
-    4) Update the source file using the updated plist and save it to a
-        temporary location
-    5) Validate that the metadata in the updated temorary movie is valid
-    6) Copystat permission and time bits from the source file to the
-        temporary movie
-    7) Move the temporary file to overwrite the source file
-
-    @param, latitude, float, Latitude of the file
-    @param, longitude, float, Longitude of the file
-
-    @returns, boolean
-    """
     def __update_using_plist(self, **kwargs):
+        """Updates video metadata using avmetareadwrite.
+
+        This method does a lot more than it should. The general steps are...
+
+        1. Check if avmetareadwrite is installed
+        2. Export a plist file to a temporary location from the source file
+        3. Regex replace values in the plist file
+        4. Update the source file using the updated plist and save it to a
+           temporary location
+        5. Validate that the metadata in the updated temorary movie is valid
+        6. Copystat permission and time bits from the source file to the
+           temporary movie
+        7. Move the temporary file to overwrite the source file
+
+        :param float latitude: Latitude of the file
+        :param float longitude: Longitude of the file
+        :returns: bool
+        """
         if(
             'latitude' not in kwargs and
             'longitude' not in kwargs and
@@ -400,17 +399,13 @@ class Video(Media):
 
             return True
 
-    """
-    Static method to access static __valid_extensions variable.
-
-    @returns, tuple
-    """
-    @classmethod
-    def get_valid_extensions(cls):
-        return cls.extensions
-
 
 class Transcode(object):
-    # Constructor takes a video object as it's parameter
+
+    """Constructor takes a video object as its parameter.
+
+    :param Video video: Video object.
+    """
+
     def __init__(self, video=None):
         self.video = video

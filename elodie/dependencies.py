@@ -1,10 +1,14 @@
-"""Helpers for checking external dependencies."""
+"""
+Helpers for checking for an interacting with external dependencies. These are
+things that Elodie requires, but aren't installed automatically for the user.
+"""
 
 import os
 import sys
 from distutils.spawn import find_executable
 
 
+#: Error to print when exiftool can't be found.
 EXIFTOOL_ERROR = u"""
 It looks like you don't have exiftool installed, which Elodie requires.
 Please take a look at the installation steps in the readme:
@@ -12,6 +16,7 @@ Please take a look at the installation steps in the readme:
 https://github.com/jmathai/elodie#install-everything-you-need
 """.lstrip()
 
+#: Template for the error to print when pyexiv2 can't be found.
 PYEXIV2_ERROR = u"""
 {error_class_name}: {error}
 
@@ -27,7 +32,7 @@ def get_exiftool():
 
     We wrap this since we call it in a few places and we do a fallback.
 
-    @returns, None or string
+    :returns: str or None
     """
     path = find_executable('exiftool')
     # If exiftool wasn't found we try to brute force the homebrew location
@@ -44,7 +49,7 @@ def verify_dependencies():
     Prints a message to stderr and returns False if any dependencies are
     missing.
 
-    @returns, bool
+    :returns: bool
     """
     exiftool = get_exiftool()
     if exiftool is None:
