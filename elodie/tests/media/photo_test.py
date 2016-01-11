@@ -184,7 +184,6 @@ def test_set_title():
     assert metadata['title'] == 'my photo title', metadata['title']
 
 def test_set_title_non_ascii():
-    raise SkipTest('gh-27, non-ascii characters')
     temporary_folder, folder = helper.create_working_folder()
 
     origin = '%s/photo.jpg' % folder
@@ -193,8 +192,10 @@ def test_set_title_non_ascii():
     photo = Photo(origin)
     origin_metadata = photo.get_metadata()
 
-    status = photo.set_title('形声字 / 形聲字')
+    unicode_title = u'形声字 / 形聲字'
+    utf8_title = unicode_title.encode('utf-8')
 
+    status = photo.set_title(unicode_title)
     assert status == True, status
 
     photo_new = Photo(origin)
@@ -202,4 +203,4 @@ def test_set_title_non_ascii():
 
     shutil.rmtree(folder)
 
-    assert metadata['title'] == '形声字 / 形聲字', metadata['title']
+    assert metadata['title'] == utf8_title, metadata['title']
