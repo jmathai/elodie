@@ -1,7 +1,6 @@
 import hashlib
 import os
 import random
-import shutil
 import string
 import tempfile
 

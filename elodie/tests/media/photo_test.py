@@ -116,6 +116,28 @@ def test_is_not_valid():
 
     assert not photo.is_valid()
 
+def test_set_date_taken_with_missing_datetimeoriginal():
+    # When datetimeoriginal (or other key) is missing we have to add it gh-74
+    # https://github.com/jmathai/elodie/issues/74
+    temporary_folder, folder = helper.create_working_folder()
+
+    origin = '%s/photo.jpg' % folder
+    shutil.copyfile(helper.get_file('no-exif.jpg'), origin)
+
+    photo = Photo(origin)
+    status = photo.set_date_taken(datetime.datetime(2013, 9, 30, 7, 6, 5))
+
+    assert status == True, status
+
+    photo_new = Photo(origin)
+    metadata = photo_new.get_metadata()
+
+    date_taken = metadata['date_taken']
+
+    shutil.rmtree(folder)
+
+    assert date_taken == (2013, 9, 30, 7, 6, 5, 0, 273, 0), metadata['date_taken']
+
 def test_set_date_taken():
     temporary_folder, folder = helper.create_working_folder()
 

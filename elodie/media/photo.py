@@ -171,8 +171,13 @@ class Photo(Media):
         exif_metadata = pyexiv2.ImageMetadata(source)
         exif_metadata.read()
 
-        exif_metadata['Exif.Photo.DateTimeOriginal'].value = time
-        exif_metadata['Exif.Image.DateTime'].value = time
+        # Writing exif with pyexiv2 differs if the key already exists so we
+        #   handle both cases here.
+        for key in ['Exif.Photo.DateTimeOriginal', 'Exif.Image.DateTime']:
+            if(key in exif_metadata):
+                exif_metadata[key].value = time
+            else:
+                exif_metadata[key] = pyexiv2.ExifTag(key, time)
 
         exif_metadata.write()
         return True
