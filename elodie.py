@@ -3,9 +3,9 @@
 import os
 import re
 import sys
-
 from datetime import datetime
-from docopt import docopt
+
+import click
 from send2trash import send2trash
 
 # Verify that external dependencies are present first, so the user gets a
@@ -23,16 +23,6 @@ from elodie.media.video import Video
 from elodie.filesystem import FileSystem
 from elodie.localstorage import Db
 
-
-def usage():
-    """Return usage message
-    """
-    return """
-Usage: elodie.py import --destination=<d> [--source=<s>] [--file=<f>] [--album-from-folder] [--trash] [INPUT ...]
-       elodie.py update [--time=<t>] [--location=<l>] [--album=<a>] [--title=<t>] INPUT ...
-
-       -h --help    show this
-"""
 
 DB = Db()
 FILESYSTEM = FileSystem()
@@ -69,17 +59,29 @@ def import_file(_file, destination, album_from_folder, trash):
         send2trash(_file)
 
 
-def _import(params):
-    """Import files.
+@click.command('import')
+@click.option('--destination', type=click.Path(file_okay=False),
+              required=True, help='Copy imported files into this directory.')
+@click.option('--source', type=click.Path(file_okay=False),
+              help='Import files from this directory, if specified.')
+@click.option('--file', type=click.Path(dir_okay=False),
+              help='Import this file, if specified.')
+@click.option('--album-from-folder', default=False, is_flag=True,
+              help="Use images' folders as their album names.")
+@click.option('--trash', default=False, is_flag=True,
+              help='After copying files, move the old files to the trash.')
+@click.argument('paths', nargs=-1, type=click.Path())
+def _import(destination, source, file, album_from_folder, trash, paths):
+    """Import files or directories.
     """
-    destination = os.path.expanduser(params['--destination'])
+    destination = os.path.expanduser(destination)
 
     files = set()
-    paths = set(params['INPUT'])
-    if params['--source']:
-        paths.add(params['--source'])
-    if params['--file']:
-        paths.add(params['--file'])
+    paths = set(paths)
+    if source:
+        paths.add(source)
+    if file:
+        paths.add(file)
     for path in paths:
         path = os.path.expanduser(path)
         if os.path.isdir(path):
@@ -88,8 +90,8 @@ def _import(params):
             files.add(path)
 
     for current_file in files:
-        import_file(current_file, destination, params['--album-from-folder'],
-                    params['--trash'])
+        import_file(current_file, destination, album_from_folder,
+                    trash)
 
 
 def update_location(media, file_path, location_name):
@@ -128,10 +130,20 @@ def update_time(media, file_path, time_string):
     return True
 
 
-def _update(params):
+@click.command('update')
+@click.option('--album', help='Update the image album.')
+@click.option('--location', help=('Update the image location. Location '
+                                  'should be the name of a place, like "Las '
+                                  'Vegas, NV".'))
+@click.option('--time', help=('Update the image time. Time should be in '
+                              'YYYY-mm-dd hh:ii:ss or YYYY-mm-dd format.'))
+@click.option('--title', help='Update the image title.')
+@click.argument('files', nargs=-1, type=click.Path(dir_okay=False),
+                required=True)
+def _update(album, location, time, title, files):
     """Update files.
     """
-    for file_path in params['INPUT']:
+    for file_path in files:
         if not os.path.exists(file_path):
             if constants.debug:
                 print 'Could not find %s' % file_path
@@ -148,12 +160,14 @@ def _update(params):
             continue
 
         updated = False
-        if params['--location']:
-            updated = update_location(media, file_path, params['--location'])
-        if params['--time']:
-            updated = update_time(media, file_path, params['--time'])
-        if params['--album']:
-            media.set_album(params['--album'])
+        if location:
+            update_location(media, file_path, location)
+            updated = True
+        if time:
+            update_time(media, file_path, time)
+            updated = True
+        if album:
+            media.set_album(album)
             updated = True
 
         # Updating a title can be problematic when doing it 2+ times on a file.
@@ -165,10 +179,10 @@ def _update(params):
         # Since FileSystem.get_file_name() relies on base_name it will properly
         #  rename the file by updating the title instead of appending it.
         remove_old_title_from_name = False
-        if params['--title']:
+        if title:
             # We call get_metadata() to cache it before making any changes
             metadata = media.get_metadata()
-            title_update_status = media.set_title(params['--title'])
+            title_update_status = media.set_title(title)
             original_title = metadata['title']
             if title_update_status and original_title:
                 # @TODO: We should move this to a shared method since
@@ -179,7 +193,8 @@ def _update(params):
             updated = True
 
         if updated:
-            updated_media = Media.get_class_by_file(file_path, [Audio, Photo, Video])
+            updated_media = Media.get_class_by_file(file_path,
+                                                    [Audio, Photo, Video])
             # See comments above on why we have to do this when titles
             # get updated.
             if remove_old_title_from_name and len(original_title) > 0:
@@ -200,18 +215,14 @@ def _update(params):
                 os.path.dirname(os.path.dirname(file_path)))
 
 
-def main(argv=None):
-    """Main function call elodie subcommand on files.
-    """
-    if argv is None:
-        argv = sys.argv
-    params = docopt(usage())
-    if params['import']:
-        _import(params)
-    elif params['update']:
-        _update(params)
-    sys.exit(0)
+@click.group()
+def main():
+    pass
+
+
+main.add_command(_import)
+main.add_command(_update)
 
 
 if __name__ == '__main__':
-    sys.exit(main())
+    main()

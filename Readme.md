@@ -48,7 +48,7 @@ Here's dada's (very asynchronous) setup.
   * AirDrop is fast, easy for momma to use and once the transfer is finished they don't have to stick around. I'll move it to Dropbox and Dropbox will sync it to their servers.
 * Periodically recategorize photos by fixing their location or date or by adding them to an album.
 * Have a Synology at home set to automatically sync down from Dropbox.
- 
+
 This setup means dada can quickly get photos off his or momma's phone and know that they'll be organized and backed up by the time they're ready to view them.
 
 ## Let's organize your existing photos
