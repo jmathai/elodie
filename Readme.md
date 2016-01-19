@@ -173,10 +173,7 @@ git clone https://github.com/jmathai/elodie.git
 The commands on this page assume you're running them from the root of this repository. I don't have any submodules but you'll need to install the following packages.
 
 ```
-pip install LatLon
-pip install requests
-pip install docopt
-pip install send2trash
+pip install -r requirements.txt
 ```
 
 You'll need to install *exiftool* *pyexiv2* using  `homebrew` on OSX. If you're running another operating system you're sort of on your own but my pal Google should be able to help. Some folks may be able to simply run these commands. Installing *boost* is a drag and can take up to 30 minutes. Don't say I didn't warn you.

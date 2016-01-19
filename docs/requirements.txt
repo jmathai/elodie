@@ -1,6 +1,3 @@
-LatLon
-docopt
-requests
-mock
-send2trash
-sphinx
+-r ../requirements.txt
+mock>=1.3.0,<2.0
+sphinx>=1.3.4,<2.0
