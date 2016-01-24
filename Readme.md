@@ -48,7 +48,7 @@ Here's dada's (very asynchronous) setup.
   * AirDrop is fast, easy for momma to use and once the transfer is finished they don't have to stick around. I'll move it to Dropbox and Dropbox will sync it to their servers.
 * Periodically recategorize photos by fixing their location or date or by adding them to an album.
 * Have a Synology at home set to automatically sync down from Dropbox.
- 
+
 This setup means dada can quickly get photos off his or momma's phone and know that they'll be organized and backed up by the time they're ready to view them.
 
 ## Let's organize your existing photos
@@ -58,7 +58,7 @@ My guess is you've got quite a few photos scattered around. The first thing I'll
 Fire up your terminal and run this command which *__copies__* your photos into something a bit more structured.
 
 ```
-./elodie.py import --source="/where/my/photos/are" --destination="/where/i/want/my/photos/to/go"
+./elodie.py import --destination="/where/i/want/my/photos/to/go" /where/my/photos/are
 ```
 
 I'm pretty fast but depending on how many photos you have you might want to grab a snack. When you run this command I'll `print` out my work as I go along. If you're bored you can open `/where/i/want/my/photos/to/go` in *Finder* and watch as I effortlessly copy your photos there.
@@ -93,7 +93,7 @@ Not too bad, eh? Wait a second, what's *Unknown Location*? If I'm not able to fi
 If you notice some photos were incorrectly organized you should definitely let me know. In the example above I put two photos into an *Unknown Location* folder because I didn't find GPS information in their EXIF. To fix this I'll help you add GPS information into the photos' EXIF and then I'll reorganize them.
 
 #### Tell me where your photos were taken
-Run the command below if you want to tell me the photos were taken in Las Vegas. You don't have to type all that in though. It's easier to just type `./update.py --location="Las Vegas, NV" ` and select and drag the files from *OS X Finder* into the terminal.
+Run the command below if you want to tell me the photos were taken in Las Vegas. You don't have to type all that in though. It's easier to just type `./elodie.py update --location="Las Vegas, NV" ` and select and drag the files from *OS X Finder* into the terminal.
 
 ```
 ./elodie.py update --location="Las Vegas, NV" /where/i/want/my/photos/to/go/2015-09-Sep/Unknown\ Location/2015-09-27_01-41-38-_dsc8705.dng /where/i/want/my/photos/to/go/2015-09-Sep/Unknown\ Location/2015-09-27_01-41-38-_dsc8705.nef
@@ -142,10 +142,10 @@ If you'd like to let me know of a specific photo or group of photos to add to yo
 
 ```
 # I can import a single file into your library.
-/full/path/to/import.py --type=photo --file="/full/path/to/file.jpg" --destination="/where/i/want/my/photo/to/go"
+./elodie.py import --destination="/where/i/want/my/photo/to/go" /full/path/to/file.jpg
 
 # I can also import all the photos from a directory into your library.
-/full/path/to/import.py --type=photo --source="/where/my/photos/are" --destination="/where/i/want/my/photo/to/go"
+./elodie.py import --destination="/where/i/want/my/photo/to/go" /where/my/photos/are
 ```
 
 ## Why not use a database?
