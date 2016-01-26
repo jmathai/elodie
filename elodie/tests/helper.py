@@ -17,14 +17,14 @@ def checksum(file_path, blocksize=65536):
 
 def create_working_folder():
     temporary_folder = tempfile.gettempdir()
-    folder = '%s/%s/%s' % (temporary_folder, random_string(10), random_string(10))
+    folder = os.path.join(temporary_folder, random_string(10), random_string(10))
     os.makedirs(folder)
 
     return (temporary_folder, folder)
 
 def get_file(name):
     current_folder = os.path.dirname(os.path.realpath(__file__))
-    return '%s/files/%s' % (current_folder, name)
+    return os.path.join(current_folder, 'files', name)
 
 def get_test_location():
     return (61.013710, 99.196656, 'Siberia')

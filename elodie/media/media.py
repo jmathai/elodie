@@ -106,9 +106,10 @@ class Media(object):
 
         source = self.source
         process_output = subprocess.Popen(
-            ['%s "%s"' % (exiftool, source)],
+            [exiftool, source],
             stdout=subprocess.PIPE,
-            shell=True
+            shell=True,
+            universal_newlines=True
         )
         output = process_output.stdout.read()
 
@@ -224,8 +225,7 @@ class Media(object):
         if(constants.debug is True):
             print '%s -config "%s" -xmp-elodie:Album="%s" "%s"' % (exiftool, exiftool_config, name, source)  # noqa
         process_output = subprocess.Popen(
-            ['%s -config "%s" -xmp-elodie:Album="%s" "%s"' %
-                (exiftool, exiftool_config, name, source)],
+           [exiftool, '-config', exiftool_config, '-xmp-elodie:Album=%s'%(name),source],
             stdout=subprocess.PIPE,
             shell=True
         )

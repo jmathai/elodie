@@ -18,7 +18,7 @@ os.environ['TZ'] = 'GMT'
 
 def test_create_directory_success():
     filesystem = FileSystem()
-    folder = '%s/%s' % (helper.temp_dir(), helper.random_string(10))
+    folder = os.path.join(helper.temp_dir(), helper.random_string(10))
     status = filesystem.create_directory(folder)
 
     # Needs to be a subdirectory
@@ -34,7 +34,7 @@ def test_create_directory_success():
 
 def test_create_directory_recursive_success():
     filesystem = FileSystem()
-    folder = '%s/%s/%s' % (helper.temp_dir(), helper.random_string(10), helper.random_string(10))
+    folder = os.path.join(helper.temp_dir(), helper.random_string(10), helper.random_string(10))
     status = filesystem.create_directory(folder)
 
     # Needs to be a subdirectory
@@ -47,14 +47,16 @@ def test_create_directory_recursive_success():
     shutil.rmtree(folder)
 
 def test_create_directory_invalid_permissions():
+    if os.name == 'nt':
+       raise SkipTest("It isn't implemented on Windows")
     filesystem = FileSystem()
-    status = filesystem.create_directory('/apathwhichdoesnotexist/afolderwhichdoesnotexist')
+    status = filesystem.create_directory(os.path.join('apathwhichdoesnotexist','afolderwhichdoesnotexist'))
 
     assert status == False
 
 def test_delete_directory_if_empty():
     filesystem = FileSystem()
-    folder = '%s/%s' % (helper.temp_dir(), helper.random_string(10))
+    folder = os.path.join(helper.temp_dir(), helper.random_string(10))
     os.makedirs(folder)
 
     assert os.path.isdir(folder) == True
@@ -67,7 +69,7 @@ def test_delete_directory_if_empty():
 
 def test_delete_directory_if_empty_when_not_empty():
     filesystem = FileSystem()
-    folder = '%s/%s/%s' % (helper.temp_dir(), helper.random_string(10), helper.random_string(10))
+    folder = os.path.join(helper.temp_dir(), helper.random_string(10), helper.random_string(10))
     os.makedirs(folder)
     parent_folder = os.path.dirname(folder)
 
@@ -152,34 +154,34 @@ def test_get_folder_path_plain():
     media = Photo(helper.get_file('plain.jpg'))
     path = filesystem.get_folder_path(media.get_metadata())
 
-    assert path == '2015-12-Dec/Unknown Location', path
+    assert path == os.path.join('2015-12-Dec','Unknown Location'), path
 
 def test_get_folder_path_with_title():
     filesystem = FileSystem()
     media = Photo(helper.get_file('with-title.jpg'))
     path = filesystem.get_folder_path(media.get_metadata())
 
-    assert path == '2015-12-Dec/Unknown Location', path
+    assert path == os.path.join('2015-12-Dec','Unknown Location'), path
 
 def test_get_folder_path_with_location():
     filesystem = FileSystem()
     media = Photo(helper.get_file('with-location.jpg'))
     path = filesystem.get_folder_path(media.get_metadata())
 
-    assert path == '2015-12-Dec/Sunnyvale', path
+    assert path == os.path.join('2015-12-Dec','Sunnyvale'), path
 
 def test_get_folder_path_with_location_and_title():
     filesystem = FileSystem()
     media = Photo(helper.get_file('with-location-and-title.jpg'))
     path = filesystem.get_folder_path(media.get_metadata())
 
-    assert path == '2015-12-Dec/Sunnyvale', path
+    assert path == os.path.join('2015-12-Dec','Sunnyvale'), path
 
 def test_process_file_plain():
     filesystem = FileSystem()
     temporary_folder, folder = helper.create_working_folder()
 
-    origin = '%s/photo.jpg' % folder
+    origin = os.path.join(folder,'photo.jpg')
     shutil.copyfile(helper.get_file('plain.jpg'), origin)
 
     media = Photo(origin)
@@ -193,7 +195,7 @@ def test_process_file_plain():
 
     assert origin_checksum is not None, origin_checksum
     assert origin_checksum == destination_checksum, destination_checksum
-    assert '2015-12-Dec/Unknown Location/2015-12-05_00-59-26-photo.jpg' in destination, destination
+    assert os.path.join('2015-12-Dec','Unknown Location','2015-12-05_00-59-26-photo.jpg') in destination, destination
 
 def test_process_file_with_title():
     filesystem = FileSystem()
@@ -213,13 +215,13 @@ def test_process_file_with_title():
 
     assert origin_checksum is not None, origin_checksum
     assert origin_checksum == destination_checksum, destination_checksum
-    assert '2015-12-Dec/Unknown Location/2015-12-05_00-59-26-photo-some-title.jpg' in destination, destination
+    assert os.path.join('2015-12-Dec','Unknown Location','2015-12-05_00-59-26-photo-some-title.jpg') in destination, destination
 
 def test_process_file_with_location():
     filesystem = FileSystem()
     temporary_folder, folder = helper.create_working_folder()
 
-    origin = '%s/photo.jpg' % folder
+    origin = os.path.join(folder,'photo.jpg')
     shutil.copyfile(helper.get_file('with-location.jpg'), origin)
 
     media = Photo(origin)
@@ -233,13 +235,13 @@ def test_process_file_with_location():
 
     assert origin_checksum is not None, origin_checksum
     assert origin_checksum == destination_checksum, destination_checksum
-    assert '2015-12-Dec/Sunnyvale/2015-12-05_00-59-26-photo.jpg' in destination, destination
+    assert os.path.join('2015-12-Dec','Sunnyvale','2015-12-05_00-59-26-photo.jpg') in destination, destination
 
 def test_process_file_with_location_and_title():
     filesystem = FileSystem()
     temporary_folder, folder = helper.create_working_folder()
 
-    origin = '%s/photo.jpg' % folder
+    origin = os.path.join(folder,'photo.jpg')
     shutil.copyfile(helper.get_file('with-location-and-title.jpg'), origin)
 
     media = Photo(origin)
@@ -253,13 +255,13 @@ def test_process_file_with_location_and_title():
 
     assert origin_checksum is not None, origin_checksum
     assert origin_checksum == destination_checksum, destination_checksum
-    assert '2015-12-Dec/Sunnyvale/2015-12-05_00-59-26-photo-some-title.jpg' in destination, destination
+    assert os.path.join('2015-12-Dec','Sunnyvale','2015-12-05_00-59-26-photo-some-title.jpg') in destination, destination
 
 def test_process_file_with_album():
     filesystem = FileSystem()
     temporary_folder, folder = helper.create_working_folder()
 
-    origin = '%s/photo.jpg' % folder
+    origin = os.path.join(folder,'photo.jpg')
     shutil.copyfile(helper.get_file('with-album.jpg'), origin)
 
     media = Photo(origin)
@@ -273,13 +275,13 @@ def test_process_file_with_album():
 
     assert origin_checksum is not None, origin_checksum
     assert origin_checksum == destination_checksum, destination_checksum
-    assert '2015-12-Dec/Test Album/2015-12-05_00-59-26-photo.jpg' in destination, destination
+    assert os.path.join('2015-12-Dec','Test Album','2015-12-05_00-59-26-photo.jpg') in destination, destination
 
 def test_process_file_with_album_and_title():
     filesystem = FileSystem()
     temporary_folder, folder = helper.create_working_folder()
 
-    origin = '%s/photo.jpg' % folder
+    origin = os.path.join(folder,'photo.jpg')
     shutil.copyfile(helper.get_file('with-album-and-title.jpg'), origin)
 
     media = Photo(origin)
@@ -293,13 +295,13 @@ def test_process_file_with_album_and_title():
 
     assert origin_checksum is not None, origin_checksum
     assert origin_checksum == destination_checksum, destination_checksum
-    assert '2015-12-Dec/Test Album/2015-12-05_00-59-26-photo-some-title.jpg' in destination, destination
+    assert os.path.join('2015-12-Dec','Test Album','2015-12-05_00-59-26-photo-some-title.jpg') in destination, destination
 
 def test_process_file_with_album_and_title_and_location():
     filesystem = FileSystem()
     temporary_folder, folder = helper.create_working_folder()
 
-    origin = '%s/photo.jpg' % folder
+    origin = os.path.join(folder,'photo.jpg')
     shutil.copyfile(helper.get_file('with-album-and-title-and-location.jpg'), origin)
 
     media = Photo(origin)
@@ -313,4 +315,4 @@ def test_process_file_with_album_and_title_and_location():
 
     assert origin_checksum is not None, origin_checksum
     assert origin_checksum == destination_checksum, destination_checksum
-    assert '2015-12-Dec/Test Album/2015-12-05_00-59-26-photo-some-title.jpg' in destination, destination
+    assert os.path.join('2015-12-Dec','Test Album','2015-12-05_00-59-26-photo-some-title.jpg') in destination, destination

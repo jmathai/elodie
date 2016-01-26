@@ -68,7 +68,7 @@ class FileSystem(object):
                     extensions is None or
                     filename.lower().endswith(extensions)
                 ):
-                    files.append('%s/%s' % (dirname, filename))
+                    files.append(os.path.join(dirname, filename))
         return files
 
     def get_current_directory(self):
@@ -164,7 +164,7 @@ class FileSystem(object):
             path.append('Unknown Location')
 
         # return '/'.join(path[::-1])
-        return '/'.join(path)
+        return os.path.join(*path)
 
     def process_file(self, _file, destination, media, **kwargs):
         move = False
@@ -179,9 +179,9 @@ class FileSystem(object):
 
         directory_name = self.get_folder_path(metadata)
 
-        dest_directory = '%s/%s' % (destination, directory_name)
+        dest_directory = os.path.join(destination, directory_name)
         file_name = self.get_file_name(media)
-        dest_path = '%s/%s' % (dest_directory, file_name)
+        dest_path = os.path.join(dest_directory, file_name)
 
         db = Db()
         checksum = db.checksum(_file)

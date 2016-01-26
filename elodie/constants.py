@@ -20,4 +20,4 @@ location_db = '{}/location.json'.format(application_directory)
 script_directory = path.dirname(path.dirname(path.abspath(__file__)))
 
 #: Path to Elodie's ExifTool config file.
-exiftool_config = '%s/configs/ExifTool_config' % script_directory
+exiftool_config = path.join(script_directory,'configs','ExifTool_config') 
