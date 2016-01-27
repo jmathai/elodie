@@ -186,3 +186,18 @@ button {
 small {
   font-size:.7em;
 }
+    #holder {
+      border: 4px dashed #ccc;
+      margin: 0 auto;
+      height: 100px;
+      color: #ccc;
+      font-size: 40px;
+      line-height: 100px;
+      text-align: center;
+      -webkit-user-select: none;
+    }
+    #holder.hover {
+      border: 4px dashed #999;
+      color: #eee;
+    }
+  

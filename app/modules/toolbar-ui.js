@@ -9,7 +9,7 @@ var menubar = require('menubar'),
 exports.app = app = menubar(
   {
     preloadWindow: true,
-    dir: __dirname.substr(0, __dirname.lastIndexOf('/')) + '/html',
+    dir: __dirname.substr(0, __dirname.lastIndexOf('\\')) + '\\html',
     index: 'index.html',
     pages: {
       'blank': 'blank.html',
@@ -18,7 +18,9 @@ exports.app = app = menubar(
     },
     width: 400,
     height: 500,
-    'window-position': 'trayCenter'
+    'window-position': 'trayCenter',
+	'frame': true,
+	'always-on-top': true
   }
 );
 
@@ -59,6 +61,21 @@ exports.ready = function() {
   });
 };
 
+exports.onDropFiles = function(event, args) {
+  console.log(args);
+  console.log('onDropFiles',args);
+  var files = args;
+  console.log('Hello',typeof(args));
+  loadUrl = app.getOption('pages')['location'];
+  app.showWindow();
+ 
+  app.window.webContents.on('did-finish-load', function() {
+  app.window.webContents.send('files', files);
+  app.window.webContents.send('preview', files);
+ });
+};
+ 
+
 exports.createWindow = function() {
   console.log('create-window')
 };
@@ -76,7 +93,7 @@ exports.show = function() {
 
   this.window.loadUrl('file://' + this.getOption('dir') + '/' + loadUrl);
   loadUrl = null;
-  //app.window.openDevTools();
+  app.window.openDevTools();
 };
 
 exports.afterShow = function() {

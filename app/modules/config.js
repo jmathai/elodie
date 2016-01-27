@@ -3,11 +3,11 @@ var fs = require('fs'),
     defaultConfigFile = (function() {
       var f = __dirname;
       for(var i=0; i<2; i++) {
-        f = f.substr(0, f.lastIndexOf('/'));
+        f = f.substr(0, f.lastIndexOf('\\'));
       }
-      return f + '/config.ini-sample';
+      return f + '\\config.ini-sample';
     })(),
-    configFile = (process.env.HOME || process.env.USERPROFILE) + '/.elodie/config.ini',
+    configFile = (process.env.HOME || process.env.USERPROFILE) + '\\.elodie\\config.ini',
     hasConfig,
     setConfig;
 
