@@ -156,7 +156,7 @@ class Video(Media):
 
         source = self.source
         process_output = subprocess.Popen(
-            [exiftool, source],
+            '%s "%s"' % (exiftool, source),
             stdout=subprocess.PIPE,
             shell=True,
             universal_newlines=True

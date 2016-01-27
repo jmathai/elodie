@@ -50,7 +50,7 @@ def test_create_directory_invalid_permissions():
     if os.name == 'nt':
        raise SkipTest("It isn't implemented on Windows")
     filesystem = FileSystem()
-    status = filesystem.create_directory(os.path.join('apathwhichdoesnotexist','afolderwhichdoesnotexist'))
+    status = filesystem.create_directory('/apathwhichdoesnotexist/afolderwhichdoesnotexist')
 
     assert status == False
 
