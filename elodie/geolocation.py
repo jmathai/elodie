@@ -161,7 +161,7 @@ def reverse_lookup(lat, lon):
 
     try:
         params = {'format': 'json', 'key': key, 'lat': lat, 'lon': lon}
-        headers = {"Accept-Language": "en-US,en;q=0.5"}
+        headers = {"Accept-Language": constants.accepted_language}
         r = requests.get(
             'http://open.mapquestapi.com/nominatim/v1/reverse.php?%s' %
             urllib.urlencode(params),headers=headers

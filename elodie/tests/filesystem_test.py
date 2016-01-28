@@ -19,18 +19,6 @@ from nose.plugins.skip import SkipTest
 
 os.environ['TZ'] = 'GMT'
 
-if os.name == 'nt':
-    tz_shift = (datetime.fromtimestamp(0) -
-                datetime.utcfromtimestamp(0)).seconds/3600
-else:
-    tz_shift = 0
-
-def path_tz_fix(s_path):
-   #some_prefix2015-12-05_00-59-26-with-title-some-title.jpg
-   m = re.search('(\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2})',s_path)
-   t_date = datetime.fromtimestamp(time.mktime(time.strptime(m.group(0), '%Y-%m-%d_%H-%M-%S')))
-   s_date_fix = (t_date-timedelta(hours=tz_shift)).strftime('%Y-%m-%d_%H-%M-%S')
-   return re.sub('\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}',s_date_fix,s_path)
 
 def test_create_directory_success():
     filesystem = FileSystem()
@@ -144,14 +132,14 @@ def test_get_file_name_plain():
     media = Photo(helper.get_file('plain.jpg'))
     file_name = filesystem.get_file_name(media)
 
-    assert file_name == path_tz_fix('2015-12-05_00-59-26-plain.jpg'), file_name
+    assert file_name == helper.path_tz_fix('2015-12-05_00-59-26-plain.jpg'), file_name
 
 def test_get_file_name_with_title():
     filesystem = FileSystem()
     media = Photo(helper.get_file('with-title.jpg'))
     file_name = filesystem.get_file_name(media)
 
-    assert file_name == path_tz_fix('2015-12-05_00-59-26-with-title-some-title.jpg'), file_name
+    assert file_name == helper.path_tz_fix('2015-12-05_00-59-26-with-title-some-title.jpg'), file_name
 
 def test_get_folder_name_by_date():
     filesystem = FileSystem()
@@ -211,7 +199,7 @@ def test_process_file_plain():
 
     assert origin_checksum is not None, origin_checksum
     assert origin_checksum == destination_checksum, destination_checksum
-    assert path_tz_fix(os.path.join('2015-12-Dec','Unknown Location','2015-12-05_00-59-26-photo.jpg')) in destination, destination
+    assert helper.path_tz_fix(os.path.join('2015-12-Dec','Unknown Location','2015-12-05_00-59-26-photo.jpg')) in destination, destination
 
 def test_process_file_with_title():
     filesystem = FileSystem()
@@ -231,7 +219,7 @@ def test_process_file_with_title():
 
     assert origin_checksum is not None, origin_checksum
     assert origin_checksum == destination_checksum, destination_checksum
-    assert path_tz_fix(os.path.join('2015-12-Dec','Unknown Location','2015-12-05_00-59-26-photo-some-title.jpg')) in destination, destination
+    assert helper.path_tz_fix(os.path.join('2015-12-Dec','Unknown Location','2015-12-05_00-59-26-photo-some-title.jpg')) in destination, destination
 
 def test_process_file_with_location():
     filesystem = FileSystem()
@@ -251,7 +239,7 @@ def test_process_file_with_location():
 
     assert origin_checksum is not None, origin_checksum
     assert origin_checksum == destination_checksum, destination_checksum
-    assert path_tz_fix(os.path.join('2015-12-Dec','Sunnyvale','2015-12-05_00-59-26-photo.jpg')) in destination, destination
+    assert helper.path_tz_fix(os.path.join('2015-12-Dec','Sunnyvale','2015-12-05_00-59-26-photo.jpg')) in destination, destination
 
 def test_process_file_with_location_and_title():
     filesystem = FileSystem()
@@ -271,7 +259,7 @@ def test_process_file_with_location_and_title():
 
     assert origin_checksum is not None, origin_checksum
     assert origin_checksum == destination_checksum, destination_checksum
-    assert path_tz_fix(os.path.join('2015-12-Dec','Sunnyvale','2015-12-05_00-59-26-photo-some-title.jpg')) in destination, destination
+    assert helper.path_tz_fix(os.path.join('2015-12-Dec','Sunnyvale','2015-12-05_00-59-26-photo-some-title.jpg')) in destination, destination
 
 def test_process_file_with_album():
     filesystem = FileSystem()
@@ -291,7 +279,7 @@ def test_process_file_with_album():
 
     assert origin_checksum is not None, origin_checksum
     assert origin_checksum == destination_checksum, destination_checksum
-    assert path_tz_fix(os.path.join('2015-12-Dec','Test Album','2015-12-05_00-59-26-photo.jpg')) in destination, destination
+    assert helper.path_tz_fix(os.path.join('2015-12-Dec','Test Album','2015-12-05_00-59-26-photo.jpg')) in destination, destination
 
 def test_process_file_with_album_and_title():
     filesystem = FileSystem()
@@ -311,7 +299,7 @@ def test_process_file_with_album_and_title():
 
     assert origin_checksum is not None, origin_checksum
     assert origin_checksum == destination_checksum, destination_checksum
-    assert path_tz_fix(os.path.join('2015-12-Dec','Test Album','2015-12-05_00-59-26-photo-some-title.jpg')) in destination, destination
+    assert helper.path_tz_fix(os.path.join('2015-12-Dec','Test Album','2015-12-05_00-59-26-photo-some-title.jpg')) in destination, destination
 
 def test_process_file_with_album_and_title_and_location():
     filesystem = FileSystem()
@@ -331,4 +319,4 @@ def test_process_file_with_album_and_title_and_location():
 
     assert origin_checksum is not None, origin_checksum
     assert origin_checksum == destination_checksum, destination_checksum
-    assert path_tz_fix(os.path.join('2015-12-Dec','Test Album','2015-12-05_00-59-26-photo-some-title.jpg')) in destination, destination
+    assert helper.path_tz_fix(os.path.join('2015-12-Dec','Test Album','2015-12-05_00-59-26-photo-some-title.jpg')) in destination, destination

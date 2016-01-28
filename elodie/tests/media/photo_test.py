@@ -4,7 +4,6 @@ import os
 import sys
 
 from datetime import datetime
-from datetime import timedelta
 import shutil
 import tempfile
 import time
@@ -19,14 +18,6 @@ from elodie.media.media import Media
 from elodie.media.photo import Photo
 
 os.environ['TZ'] = 'GMT'
-if os.name == 'nt':
-    tz_shift = (datetime.fromtimestamp(0) -
-                datetime.utcfromtimestamp(0)).seconds/3600
-else:
-    tz_shift = 0
-
-def time_convert(s_time):
-   return datetime.fromtimestamp(time.mktime(s_time))
 
 def test_photo_extensions():
     photo = Photo()
@@ -105,7 +96,7 @@ def test_get_date_taken():
     date_taken = photo.get_date_taken()
 
 #    assert date_taken == (2015, 12, 5, 0, 59, 26, 5, 339, 0), date_taken
-    assert time_convert(date_taken) == time_convert((2015, 12, 5, 0, 59, 26, 5, 339, 0)) - timedelta(hours = tz_shift), date_taken
+    assert date_taken == helper.time_convert((2015, 12, 5, 0, 59, 26, 5, 339, 0)), date_taken
 
 def test_get_date_taken_without_exif():
     source = helper.get_file('no-exif.jpg')
@@ -147,7 +138,7 @@ def test_set_date_taken_with_missing_datetimeoriginal():
     shutil.rmtree(folder)
 
     #assert date_taken == (2013, 9, 30, 7, 6, 5, 0, 273, 0), metadata['date_taken']
-    assert time_convert(date_taken) == time_convert((2013, 9, 30, 7, 6, 5, 0, 273, 0)) - timedelta(hours = tz_shift), metadata['date_taken']
+    assert date_taken == helper.time_convert((2013, 9, 30, 7, 6, 5, 0, 273, 0)), metadata['date_taken']
 
 def test_set_date_taken():
     temporary_folder, folder = helper.create_working_folder()
@@ -168,7 +159,7 @@ def test_set_date_taken():
     shutil.rmtree(folder)
 
     #assert date_taken == (2013, 9, 30, 7, 6, 5, 0, 273, 0), metadata['date_taken']
-    assert time_convert(date_taken) == time_convert((2013, 9, 30, 7, 6, 5, 0, 273, 0)) - timedelta(hours = tz_shift), metadata['date_taken']
+    assert date_taken == helper.time_convert((2013, 9, 30, 7, 6, 5, 0, 273, 0)), metadata['date_taken']
 
 def test_set_location():
     raise SkipTest('gh-31, precision is lost in conversion from decimal to dms')

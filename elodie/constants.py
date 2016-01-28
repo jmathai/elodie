@@ -21,3 +21,6 @@ script_directory = path.dirname(path.dirname(path.abspath(__file__)))
 
 #: Path to Elodie's ExifTool config file.
 exiftool_config = path.join(script_directory,'configs','ExifTool_config') 
+
+#: Accepted language in responses from MapQuest
+accepted_language = 'en'
