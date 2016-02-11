@@ -5,11 +5,15 @@ var menubar = require('menubar'),
     tray = require('tray'),
     config = require('./config.js'),
     loadUrl = null;
+var os = require('os')
 
+var s_dir = __dirname.substr(0,__dirname.lastIndexOf(os.platform() == 'win32' ? '\\' : '/')) + 
+                              (os.platform() == 'win32' ? '\\html' : '/html');
+                                              
 exports.app = app = menubar(
   {
     preloadWindow: true,
-    dir: __dirname.substr(0, __dirname.lastIndexOf('/')) + '/html',
+    dir: s_dir,
     index: 'index.html',
     pages: {
       'blank': 'blank.html',
@@ -18,7 +22,9 @@ exports.app = app = menubar(
     },
     width: 400,
     height: 500,
-    'window-position': 'trayCenter'
+    'window-position': 'trayCenter',
+	'frame': os.platform() == 'win32' ? true : false,
+	'always-on-top': os.platform() == 'win32' ? true : false
   }
 );
 
@@ -58,6 +64,18 @@ exports.ready = function() {
     });
   });
 };
+
+exports.onDropFiles = function(event, args) {
+  var files = args;
+  loadUrl = app.getOption('pages')['location'];
+  app.showWindow();
+ 
+  app.window.webContents.on('did-finish-load', function() {
+  app.window.webContents.send('files', files);
+  app.window.webContents.send('preview', files);
+ });
+};
+ 
 
 exports.createWindow = function() {
   console.log('create-window')

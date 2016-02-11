@@ -1,13 +1,14 @@
 var exports = module.exports = {};
 var fs = require('fs'),
+    os = require('os'),
     defaultConfigFile = (function() {
       var f = __dirname;
       for(var i=0; i<2; i++) {
-        f = f.substr(0, f.lastIndexOf('/'));
+        f = f.substr(0, f.lastIndexOf(os.platform() == 'win32' ? '\\' : '/'));
       }
-      return f + '/config.ini-sample';
+      return f + (os.platform() == 'win32' ? '\\config.ini-sample': '/config.ini-sample');
     })(),
-    configFile = (process.env.HOME || process.env.USERPROFILE) + '/.elodie/config.ini',
+    configFile = (process.env.HOME || process.env.USERPROFILE) + (os.platform() == 'win32' ? '\\.elodie\\config.ini' : '/.elodie/config.ini'),
     hasConfig,
     setConfig;
 

@@ -98,7 +98,7 @@ class Db(object):
         :returns: str or None
         """
         hasher = hashlib.sha256()
-        with open(file_path, 'r') as f:
+        with open(file_path, 'rb') as f:
             buf = f.read(blocksize)
 
             while len(buf) > 0:

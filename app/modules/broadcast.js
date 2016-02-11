@@ -1,5 +1,5 @@
 var exports = module.exports = {};
-
+var path = require('path');
 var exec = require('child_process').exec,
     config = require('./config.js');
 
@@ -24,7 +24,7 @@ exports.importPhotos = function(event, args) {
   args['source'] = args['source'].normalize();
   args['destination'] = args['destination'].normalize();
 
-  update_command = __dirname + '/../../dist/elodie/elodie import --source="' + args['source'] +  '" --destination="' + args['destination'] + '"';
+  update_command = path.normalize(__dirname + '/../../dist/elodie/elodie') + ' import --source="' + args['source'] +  '" --destination="' + args['destination'] + '"';
   //update_command = __dirname + '/../../elodie.py import --source="' + args['source'] +  '" --destination="' + args['destination'] + '"';
   
   console.log(update_command);
@@ -73,8 +73,8 @@ exports.updatePhotos = function(event, args) {
     return files
   }
   files = normalize(args['files'])
-
-  update_command = __dirname + '/../../dist/elodie/elodie update'
+  elodie_path = path.normalize(__dirname + '/../../dist/elodie/elodie');
+  update_command = elodie_path +' update'
   //update_command = __dirname + '/../../elodie.py update'
   if(args['location'].length > 0) {
     update_command += ' --location="' + args['location'] + '"';

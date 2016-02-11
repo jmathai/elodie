@@ -6,6 +6,8 @@ var __process__ = {};
 
 if(typeof(require) === 'function') {
   var ipc = require('ipc');
+  var path = require('path');
+  var os = require('os');
   ipc.on('files', function(files) {
     __process__.files = files;
   });
@@ -32,7 +34,11 @@ if(typeof(require) === 'function') {
     }
   });
   ipc.on('update-photos-success', function(args) {
-    var response = JSON.parse(args['stdout']);
+    if(os.platform() == 'win32'){
+        var response = JSON.parse(args['stdout'].replace(/\\/g, '\\\\'));
+    }else{
+        var response = JSON.parse(args['stdout']);
+    }
     handlers.setSuccessTitle();
     handlers.removeProgressIcons();
     handlers.updateStatus(response);
@@ -43,7 +49,28 @@ if(typeof(require) === 'function') {
       ipc.send(name, message);
     };
   }
-}
+  
+  window.onload = function () {
+    var broadcast = new Broadcast();
+    window.ondragover = function (e){ e.preventDefault(); return false };
+	window.ondragover = function (e){ e.preventDefault(); return false };
+	var holder = document.getElementById('content');
+	if(holder != null){
+        holder.ondrop = function (e) {
+          e.preventDefault();
+          files = []
+          for (var i = 0; i < e.dataTransfer.files.length; ++i) {
+            console.log(e.dataTransfer.files[i].path);
+			files.push(e.dataTransfer.files[i].path);
+          }
+          broadcast.send('load-update-photos', files);
+          return false;
+        };
+	  }
+	};
+	
+};
+
 
 function Handlers() {
   var self = this;
@@ -161,7 +188,7 @@ function Handlers() {
     html = '<label>You selected ' + (files.length > 1 ? 'these photos' : 'this photo') + '</label>';
     for(var i=0; i<files.length && i<16; i++) {
       if(files[i].match(/(mov|mp4|3gp|avi)/i) === null) {
-        html += '<div class="center-cropped" style="background-image:url(\'file://'+files[i]+'\');" title="'+files[i]+'"></div>';
+        html += '<div class="center-cropped" style="background-image:url(\'file://'+fileUrl(files[i])+'\');" title="'+files[i]+'"></div>';
       } else {
         html += '<div class="center-cropped video"></div>';
       }
@@ -200,6 +227,22 @@ function Handlers() {
       el.style.display = 'block';
     }
   };
+
+  function fileUrl(str) {
+    if (typeof str !== 'string') {
+        throw new Error('Expected a string');
+    }
+
+    var pathName = path.resolve(str).replace(/\\/g, '/');
+
+    // Windows drive letter must be prefixed with a slash
+    if (pathName[0] !== '/') {
+        pathName = '/' + pathName;
+    }
+
+    return encodeURI('file://' + pathName);
+};
+
 }
 var handlers = new Handlers();
 window.addEventListener('click', handlers.dispatch);

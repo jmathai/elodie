@@ -16,3 +16,4 @@ ipc.on('update-photos', broadcast.updatePhotos);
 ipc.on('launch-finder', broadcast.launchFinder);
 ipc.on('launch-url', broadcast.launchUrl);
 ipc.on('program-quit', broadcast.programQuit);
+ipc.on('load-update-photos', toolbarUi.onDropFiles);
