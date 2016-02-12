@@ -29,6 +29,11 @@ class Media(object):
 
     __name__ = 'Media'
 
+    d_coordinates = {
+            'latitude' : 'latitude_ref',
+            'longitude': 'longitude_ref'
+            }
+
     def __init__(self, source=None):
         self.source = source
         self.exif_map = {

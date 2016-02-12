@@ -92,3 +92,13 @@ def time_convert(s_time):
         return time.gmtime((time.mktime(s_time)))
     else:
         return s_time
+
+
+# isclose(a,b,rel_tol)
+# To compare float coordinates a and b
+# with relative tolerance c
+
+def isclose(a, b, rel_tol = 1e-8):
+    diff = abs(a - b)
+    return (diff <= abs(rel_tol * a) and
+            diff <= abs(rel_tol * b))
