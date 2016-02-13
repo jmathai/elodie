@@ -57,31 +57,31 @@ def test_get_coordinate_default():
     photo = Photo(helper.get_file('with-location.jpg'))
     coordinate = photo.get_coordinate()
 
-    assert coordinate == 37.3667027222, coordinate
+    assert helper.isclose(coordinate,37.3667027222), coordinate
 
 def test_get_coordinate_latitude():
     photo = Photo(helper.get_file('with-location.jpg'))
     coordinate = photo.get_coordinate('latitude')
 
-    assert coordinate == 37.3667027222, coordinate
+    assert helper.isclose(coordinate,37.3667027222), coordinate
 
 def test_get_coordinate_latitude_minus():
     photo = Photo(helper.get_file('with-location-inv.jpg'))
     coordinate = photo.get_coordinate('latitude')
 
-    assert coordinate == -37.3667027222, coordinate
+    assert helper.isclose(coordinate,-37.3667027222), coordinate
 
 def test_get_coordinate_longitude():
     photo = Photo(helper.get_file('with-location.jpg'))
     coordinate = photo.get_coordinate('longitude')
 
-    assert coordinate == -122.033383611, coordinate
+    assert helper.isclose(coordinate,-122.033383611), coordinate
 
 def test_get_coordinate_longitude_plus():
     photo = Photo(helper.get_file('with-location-inv.jpg'))
     coordinate = photo.get_coordinate('longitude')
 
-    assert coordinate == 122.033383611, coordinate
+    assert helper.isclose(coordinate,122.033383611), coordinate
 
 def test_get_coordinates_without_exif():
     photo = Photo(helper.get_file('no-exif.jpg'))

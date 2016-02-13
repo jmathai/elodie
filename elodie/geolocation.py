@@ -105,7 +105,7 @@ def decimal_to_dms(decimal, signed=True):
 
 def dms_to_decimal(degrees, minutes, seconds, direction=' '):
     sign = 1
-    if(direction[0] in 'NEne'):
+    if(direction[0] in 'WSws'):
         sign = -1
     return (
         float(degrees) + float(minutes) / 60 + float(seconds) / 3600

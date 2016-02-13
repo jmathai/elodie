@@ -6,7 +6,6 @@ image objects (JPG, DNG, etc.).
 """
 
 import imghdr
-import LatLon
 import os
 import pyexiv2
 import re
@@ -68,9 +67,7 @@ class Photo(Media):
         if(not self.is_valid()):
             return None
 
-        key = self.exif_map['latitude']
-        if(type == 'longitude'):
-            key = self.exif_map['longitude']
+        key = self.exif_map[type]
         exif = self.get_exif()
 
         if(key not in exif):
@@ -79,29 +76,12 @@ class Photo(Media):
         try:
             # this is a hack to get the proper direction by negating the
             #   values for S and W
-            latdir = 1
-            if(type == 'latitude' and str(exif[self.exif_map['latitude_ref']].value) == 'S'):  # noqa
-                latdir = -1
-
-            londir = 1
-            if(type == 'longitude' and str(exif[self.exif_map['longitude_ref']].value) == 'W'):  # noqa
-                londir = -1
-
             coords = exif[key].value
-            if(type == 'latitude'):
-                lat_val = LatLon.Latitude(
-                    degree=coords[0],
-                    minute=coords[1],
-                    second=coords[2]
-                )
-                return float(str(lat_val)) * latdir
-            else:
-                lon_val = LatLon.Longitude(
-                    degree=coords[0],
-                    minute=coords[1],
-                    second=coords[2]
-                )
-                return float(str(lon_val)) * londir
+            return geolocation.dms_to_decimal(
+                    *coords,
+                    direction = exif[self.exif_map[self.d_coordinates[type]]].value
+                    )
+
         except KeyError:
             return None
 
