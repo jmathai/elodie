@@ -32,7 +32,7 @@ class Video(Media):
     __name__ = 'Video'
 
     #: Valid extensions for video files.
-    extensions = ('avi', 'm4v', 'mov', 'mp4', '3gp')
+    extensions = ('avi', 'm4v', 'mov', 'mp4', 'mpg', 'mpeg', '3gp')
 
     def __init__(self, source=None):
         super(Video, self).__init__(source)
