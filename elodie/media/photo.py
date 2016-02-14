@@ -78,9 +78,9 @@ class Photo(Media):
             #   values for S and W
             coords = exif[key].value
             return geolocation.dms_to_decimal(
-                    *coords,
-                    direction = exif[self.exif_map[self.d_coordinates[type]]].value
-                    )
+                *coords,
+                direction=exif[self.exif_map[self.d_coordinates[type]]].value
+            )
 
         except KeyError:
             return None

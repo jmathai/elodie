@@ -181,6 +181,18 @@ def test_get_folder_path_with_location_and_title():
 
     assert path == os.path.join('2015-12-Dec','Sunnyvale'), path
 
+def test_process_file_invalid():
+    filesystem = FileSystem()
+    temporary_folder, folder = helper.create_working_folder()
+
+    origin = os.path.join(folder,'photo.jpg')
+    shutil.copyfile(helper.get_file('invalid.jpg'), origin)
+
+    media = Photo(origin)
+    destination = filesystem.process_file(origin, temporary_folder, media, allowDuplicate=True)
+
+    assert destination is None
+
 def test_process_file_plain():
     filesystem = FileSystem()
     temporary_folder, folder = helper.create_working_folder()

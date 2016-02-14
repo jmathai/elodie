@@ -53,6 +53,12 @@ def test_is_not_valid():
 
     assert not photo.is_valid()
 
+def test_get_metadata_of_invalid_photo():
+    photo = Photo(helper.get_file('invalid.jpg'))
+    metadata = photo.get_metadata()
+
+    assert metadata is None
+
 def test_get_coordinate_default():
     photo = Photo(helper.get_file('with-location.jpg'))
     coordinate = photo.get_coordinate()
