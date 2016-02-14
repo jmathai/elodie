@@ -175,6 +175,10 @@ class FileSystem(object):
         if('allowDuplicate' in kwargs):
             allow_duplicate = kwargs['allowDuplicate']
 
+        if(not media.is_valid()):
+            print '%s is not a valid media file. Skipping...' % _file
+            return
+
         metadata = media.get_metadata()
 
         directory_name = self.get_folder_path(metadata)
