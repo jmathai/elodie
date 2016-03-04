@@ -1,12 +1,13 @@
 # Project imports
 import os
-import sys
-
 import re
 import shutil
+import time
+import sys
 from datetime import datetime
 from datetime import timedelta
-import time
+
+import mock
 
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))))
 
@@ -31,7 +32,7 @@ def test_create_directory_success():
     assert status == True
     assert os.path.isdir(folder) == True
     assert os.path.exists(folder) == True
-    
+
     # Clean up
     shutil.rmtree(folder)
 
@@ -50,9 +51,15 @@ def test_create_directory_recursive_success():
 
     shutil.rmtree(folder)
 
-def test_create_directory_invalid_permissions():
+@mock.patch('elodie.filesystem.os.makedirs')
+def test_create_directory_invalid_permissions(mock_makedirs):
     if os.name == 'nt':
        raise SkipTest("It isn't implemented on Windows")
+
+    # Mock the case where makedirs raises an OSError because the user does
+    # not have permission to create the given directory.
+    mock_makedirs.side_effect = OSError()
+
     filesystem = FileSystem()
     status = filesystem.create_directory('/apathwhichdoesnotexist/afolderwhichdoesnotexist')
 
