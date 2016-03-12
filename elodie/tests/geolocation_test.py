@@ -1,3 +1,7 @@
+from __future__ import absolute_import
+from __future__ import division
+from builtins import range
+from past.utils import old_div
 # Project imports
 import os
 import random
@@ -6,7 +10,7 @@ import sys
 
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))))
 
-import helper
+from . import helper
 from elodie import geolocation
 
 os.environ['TZ'] = 'GMT'
@@ -18,7 +22,7 @@ def test_decimal_to_dms():
         target_decimal_value = random.uniform(0.0, 180.0)
         if(x % 2 == 1):
             target_decimal_value = target_decimal_value * -1
-    
+
         dms = geolocation.decimal_to_dms(target_decimal_value)
 
         check_value = (dms[0] + dms[1] / 60 + dms[2] / 3600) * dms[3]
@@ -34,7 +38,7 @@ def test_dms_string_latitude():
         target_decimal_value = random.uniform(0.0, 180.0)
         if(x % 2 == 1):
             target_decimal_value = target_decimal_value * -1
-    
+
         dms = geolocation.decimal_to_dms(target_decimal_value)
         dms_string = geolocation.dms_string(target_decimal_value, 'latitude')
 
@@ -49,7 +53,7 @@ def test_dms_string_longitude():
         target_decimal_value = random.uniform(0.0, 180.0)
         if(x % 2 == 1):
             target_decimal_value = target_decimal_value * -1
-    
+
         dms = geolocation.decimal_to_dms(target_decimal_value)
         dms_string = geolocation.dms_string(target_decimal_value, 'longitude')
 

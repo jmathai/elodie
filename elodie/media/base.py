@@ -13,6 +13,10 @@ are used to represent the actual files.
 import mimetypes
 import os
 
+try:
+      basestring
+except NameError:
+      basestring = str
 
 class Base(object):
 

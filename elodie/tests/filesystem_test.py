@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 # Project imports
 import os
 import re
@@ -11,7 +12,7 @@ import mock
 
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))))
 
-import helper
+from . import helper
 from elodie.filesystem import FileSystem
 from elodie.media.media import Media
 from elodie.media.photo import Photo
