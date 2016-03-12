@@ -273,8 +273,7 @@ class ExifTool(object):
         """
         if not self.running:
             raise ValueError("ExifTool instance not running.")
-        cmd_txt = b"\n".join(params + (b"-execute\n",))
-        self._process.stdin.write(cmd_txt.encode("utf-8"))
+        self._process.stdin.write(b"\n".join(params + (b"-execute\n",)))
         self._process.stdin.flush()
         output = b""
         fd = self._process.stdout.fileno()
@@ -403,11 +402,13 @@ class ExifTool(object):
                             "an iterable of strings")
                 
         params = []
+        params_b = []
         for tag, value in tags.items():
             params.append(u'-%s=%s' % (tag, value))
             
         params.extend(filenames)
-        return self.execute(*params)
+        params_b = [x.encode('utf-8') for x in params]
+        return self.execute(*params_b)
 
     def set_tags(self, tags, filename):
         """Writes the values of the specified tags for the given file.

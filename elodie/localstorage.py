@@ -1,6 +1,8 @@
 """
 Methods for interacting with information Elodie caches about stored media.
 """
+from builtins import map
+from builtins import object
 
 import hashlib
 import json
@@ -141,17 +143,17 @@ class Db(object):
             the given latitude and longitude.
         :returns: str, or None if a matching location couldn't be found.
         """
-        last_d = sys.maxint
+        last_d = sys.maxsize
         name = None
         for data in self.location_db:
             # As threshold is quite small use simple math
             # From http://stackoverflow.com/questions/15736995/how-can-i-quickly-estimate-the-distance-between-two-latitude-longitude-points  # noqa
             # convert decimal degrees to radians
 
-            lon1, lat1, lon2, lat2 = map(
+            lon1, lat1, lon2, lat2 = list(map(
                 radians,
                 [longitude, latitude, data['long'], data['lat']]
-            )
+            ))
 
             r = 6371000  # radius of the earth in m
             x = (lon2 - lon1) * cos(0.5 * (lat2 + lat1))

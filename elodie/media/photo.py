@@ -4,6 +4,9 @@ image objects (JPG, DNG, etc.).
 
 .. moduleauthor:: Jaisen Mathai <jaisen@jmathai.com>
 """
+from __future__ import print_function
+from __future__ import absolute_import
+from builtins import str
 
 import imghdr
 import os
@@ -15,7 +18,7 @@ from re import compile
 
 
 from elodie import constants
-from media import Media
+from .media import Media
 
 
 class Photo(Media):
@@ -95,7 +98,7 @@ class Photo(Media):
                         break
             except BaseException as e:
                 if(constants.debug is True):
-                    print e
+                    print(e)
                 pass
 
         if(seconds_since_epoch == 0):

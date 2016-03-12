@@ -1,30 +1,19 @@
 """Look up geolocation information for media objects."""
+from __future__ import print_function
+from __future__ import division
+from future import standard_library
+standard_library.install_aliases()
+from past.utils import old_div
 
 from os import path
-from ConfigParser import ConfigParser
+from configparser import ConfigParser
 import fractions
 
 import requests
-import urllib
+import urllib.request, urllib.parse, urllib.error
 
 from elodie import constants
 from elodie.localstorage import Db
-
-
-class Fraction(fractions.Fraction):
-
-    """Only create Fractions from floats.
-
-    Should be compatible with Python 2.6, though untested.
-
-    >>> Fraction(0.3)
-    Fraction(3, 10)
-    >>> Fraction(1.1)
-    Fraction(11, 10)
-    """
-
-    def __new__(cls, value, ignore=None):
-        return fractions.Fraction.from_float(value).limit_denominator(99999)
 
 
 def coordinates_by_name(name):
@@ -88,7 +77,7 @@ def dms_to_decimal(degrees, minutes, seconds, direction=' '):
     if(direction[0] in 'WSws'):
         sign = -1
     return (
-        float(degrees) + float(minutes) / 60 + float(seconds) / 3600
+        float(degrees) + old_div(float(minutes), 60) + old_div(float(seconds), 3600)
     ) * sign
 
 
@@ -159,17 +148,17 @@ def reverse_lookup(lat, lon):
         headers = {"Accept-Language": constants.accepted_language}
         r = requests.get(
             'http://open.mapquestapi.com/nominatim/v1/reverse.php?%s' %
-            urllib.urlencode(params), headers=headers
+            urllib.parse.urlencode(params),headers=headers
         )
         return r.json()
     except requests.exceptions.RequestException as e:
         if(constants.debug is True):
-            print e
+            print(e)
         return None
     except ValueError as e:
         if(constants.debug is True):
-            print r.text
-            print e
+            print(r.text)
+            print(e)
         return None
 
 
@@ -182,18 +171,18 @@ def lookup(name):
     try:
         params = {'format': 'json', 'key': key, 'location': name}
         if(constants.debug is True):
-            print 'http://open.mapquestapi.com/geocoding/v1/address?%s' % urllib.urlencode(params)  # noqa
+            print('http://open.mapquestapi.com/geocoding/v1/address?%s' % urllib.parse.urlencode(params))  # noqa
         r = requests.get(
             'http://open.mapquestapi.com/geocoding/v1/address?%s' %
-            urllib.urlencode(params)
+            urllib.parse.urlencode(params)
         )
         return r.json()
     except requests.exceptions.RequestException as e:
         if(constants.debug is True):
-            print e
+            print(e)
         return None
     except ValueError as e:
         if(constants.debug is True):
-            print r.text
-            print e
+            print(r.text)
+            print(e)
         return None
