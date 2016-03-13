@@ -43,8 +43,7 @@ class Media(object):
             'longitude': 'Exif.GPSInfo.GPSLongitude',
             'longitude_ref': 'Exif.GPSInfo.GPSLongitudeRef',
         }
-        self.exiftool_attributes = None
-        self.metadata = None
+        self.reset_cache()
 
     def get_album(self):
         """Get album from EXIF
@@ -211,6 +210,10 @@ class Media(object):
 
         return exiftool_attributes['title']
 
+    def reset_cache(self):
+        self.exiftool_attributes = None
+        self.metadata = None
+
     def set_album(self, name):
         """Set album for a photo
 
@@ -247,6 +250,7 @@ class Media(object):
             os.remove(exiftool_backup_file)
 
         self.set_metadata(album=name)
+        self.reset_cache()
         return True
 
     def set_album_from_folder(self):

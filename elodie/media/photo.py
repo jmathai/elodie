@@ -160,6 +160,7 @@ class Photo(Media):
                 exif_metadata[key] = pyexiv2.ExifTag(key, time)
 
         exif_metadata.write()
+        self.reset_cache()
         return True
 
     def set_location(self, latitude, longitude):
@@ -182,6 +183,7 @@ class Photo(Media):
         exif_metadata['Exif.GPSInfo.GPSLongitudeRef'] = pyexiv2.ExifTag('Exif.GPSInfo.GPSLongitudeRef', 'E' if longitude >= 0 else 'W')  # noqa
 
         exif_metadata.write()
+        self.reset_cache()
         return True
 
     def set_title(self, title):
@@ -200,4 +202,5 @@ class Photo(Media):
         exif_metadata['Xmp.dc.title'] = title
 
         exif_metadata.write()
+        self.reset_cache()
         return True
