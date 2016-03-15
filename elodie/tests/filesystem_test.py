@@ -339,3 +339,34 @@ def test_process_file_with_album_and_title_and_location():
     assert origin_checksum is not None, origin_checksum
     assert origin_checksum == destination_checksum, destination_checksum
     assert helper.path_tz_fix(os.path.join('2015-12-Dec','Test Album','2015-12-05_00-59-26-photo-some-title.jpg')) in destination, destination
+
+# gh-89 (setting album then title reverts album)
+def test_process_video_with_album_then_title():
+    if not can_edit_exif():
+        raise SkipTest('avmetareadwrite executable not found')
+
+    filesystem = FileSystem()
+    temporary_folder, folder = helper.create_working_folder()
+
+    origin = os.path.join(folder,'movie.mov')
+    shutil.copyfile(helper.get_file('video.mov'), origin)
+
+    origin_checksum = helper.checksum(origin)
+
+    media = Video(origin)
+    media.set_album('test_album')
+    media.set_title('test_title')
+    destination = filesystem.process_file(origin, temporary_folder, media, allowDuplicate=True)
+
+    destination_checksum = helper.checksum(destination)
+
+    shutil.rmtree(folder)
+    shutil.rmtree(os.path.dirname(os.path.dirname(destination)))
+
+    assert origin_checksum is not None, origin_checksum
+    assert origin_checksum != destination_checksum, destination_checksum
+    assert helper.path_tz_fix(os.path.join('2015-01-Jan','test_album','2015-01-19_12-45-11-movie-test_title.mov')) in destination, destination
+
+def can_edit_exif():
+    video = Video()
+    return video.get_avmetareadwrite()
