@@ -393,12 +393,13 @@ class Video(Media):
                 if(constants.debug is True):
                     print 'Something went wrong updating video metadata'
                 return False
-            
+ 
             # gh-89 Before we wrap up we check if an album was previously set
-            #   and if so we re-apply that album because avmetareadwrite clobbers it
+            #   and if so we re-apply that album because avmetareadwrite
+            #   clobbers it
             source_media = Media.get_class_by_file(source, [self.__class__])
             source_metadata = source_media.get_metadata()
-            if('album' in source_metadata and source_metadata['album'] is not None):
+            if(source_metadata['album'] is not None):
                 check_media.set_album(source_metadata['album'])
 
             # Copy file information from original source to temporary file
