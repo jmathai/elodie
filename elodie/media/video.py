@@ -393,7 +393,7 @@ class Video(Media):
                 if(constants.debug is True):
                     print 'Something went wrong updating video metadata'
                 return False
- 
+
             # gh-89 Before we wrap up we check if an album was previously set
             #   and if so we re-apply that album because avmetareadwrite
             #   clobbers it

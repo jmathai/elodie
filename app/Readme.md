@@ -3,11 +3,13 @@
 
 <p align="center"><img src ="../../../blob/master/creative/logo@300x.png" /></p>
 
+You can download [my latest GUI from the releases page](https://github.com/jmathai/elodie/releases).
+
 My GUI taskbar app sits nestled away in your taskbar until you need me.
 
 Let's say you took a few hundred photos in New York City. I'll have put the photos into a folder named *New York City*. You decide you'd rather organize those photos into a folder named *Summer in NYC*. What you'd do is select the photos using Finder and drag them onto my taskbar icon. I'll display a few options and one of them would be to *Create album*. Type in an album name and I'll add this to the EXIF of your photos and move them to a folder with the same name.
 
-*NOTE: I've extensively used the GUI but it's a work in progress. Feedback is welcome. Due to [gh-44](https://github.com/jmathai/elodie/issues/44) we're unable to provide executables for download but you can build it yourself.*
+*NOTE: I've extensively used the GUI but it's a work in progress.*
 
 ## See me in action
 
