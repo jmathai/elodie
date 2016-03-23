@@ -5,6 +5,7 @@ import string
 import tempfile
 import re
 import time
+import urllib
 
 from datetime import datetime
 from datetime import timedelta
@@ -27,7 +28,25 @@ def create_working_folder():
 
     return (temporary_folder, folder)
 
+def download_file(name, destination):
+    try:
+        final_name = '{}/{}{}'.format(destination, random_string(10), os.path.splitext(name)[1])
+        urllib.urlretrieve(
+            'https://s3.amazonaws.com/jmathai/github/elodie/{}'.format(name),
+            final_name
+        )
+        return final_name
+    except Exception as e:
+        return False
+    
 def get_file(name):
+    file_path = get_file_path(name)
+    if not os.path.isfile(file_path):
+        return False
+
+    return file_path
+
+def get_file_path(name):
     current_folder = os.path.dirname(os.path.realpath(__file__))
     return os.path.join(current_folder, 'files', name)
 

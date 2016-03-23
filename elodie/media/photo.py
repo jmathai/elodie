@@ -153,7 +153,7 @@ class Photo(Media):
 
         # Writing exif with pyexiv2 differs if the key already exists so we
         #   handle both cases here.
-        for key in ['Exif.Photo.DateTimeOriginal', 'Exif.Image.DateTime']:
+        for key in self.exif_map['date_taken']:
             if(key in exif_metadata):
                 exif_metadata[key].value = time
             else:

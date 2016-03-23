@@ -235,3 +235,111 @@ def test_set_title_non_ascii():
     shutil.rmtree(folder)
 
     assert metadata['title'] == utf8_title, metadata['title']
+
+def test_get_metadata_from_nef():
+    temporary_folder, folder = helper.create_working_folder()
+
+    photo_file = helper.get_file('photo.nef')
+    origin = '%s/photo.nef' % folder
+
+    if not photo_file:
+        photo_file = helper.download_file('photo.nef', folder)
+        if not photo_file or not os.path.isfile(photo_file):
+            raise SkipTest('nef file not downlaoded')
+
+        # downloading for each test is costly so we save it in the working directory
+        file_path_save_as = helper.get_file_path('photo.nef')
+        if os.path.isfile(photo_file):
+            shutil.copyfile(photo_file, file_path_save_as)
+
+    shutil.copyfile(photo_file, origin)
+
+    photo = Photo(origin)
+    metadata = photo.get_metadata()
+
+    shutil.rmtree(folder)
+
+    assert metadata['date_taken'] == helper.time_convert((2008, 10, 24, 9, 12, 56, 4, 298, 0)), metadata['date_taken']
+
+def test_set_metadata_on_nef():
+    temporary_folder, folder = helper.create_working_folder()
+
+    photo_file = helper.get_file('photo.nef')
+    origin = '%s/photo.nef' % folder
+
+    if not photo_file:
+        photo_file = helper.download_file('photo.nef', folder)
+        if not photo_file or not os.path.isfile(photo_file):
+            raise SkipTest('nef file not downlaoded')
+
+    shutil.copyfile(photo_file, origin)
+
+    photo = Photo(origin)
+    origin_metadata = photo.get_metadata()
+
+    status = photo.set_location(11.1111111111, 99.9999999999)
+
+    assert status == True, status
+
+    photo_new = Photo(origin)
+    metadata = photo_new.get_metadata()
+
+    shutil.rmtree(folder)
+
+    assert metadata['date_taken'] == helper.time_convert((2008, 10, 24, 9, 12, 56, 4, 298, 0)), metadata['date_taken']
+    assert helper.isclose(metadata['latitude'], 11.1111111111), metadata['latitude']
+    assert helper.isclose(metadata['longitude'], 99.9999999999), metadata['longitude']
+
+def test_get_metadata_from_dng():
+    temporary_folder, folder = helper.create_working_folder()
+
+    photo_file = helper.get_file('photo.dng')
+    origin = '%s/photo.dng' % folder
+
+    if not photo_file:
+        photo_file = helper.download_file('photo.dng', folder)
+        if not photo_file or not os.path.isfile(photo_file):
+            raise SkipTest('dng file not downlaoded')
+
+        # downloading for each test is costly so we save it in the working directory
+        file_path_save_as = helper.get_file_path('photo.dng')
+        if os.path.isfile(photo_file):
+            shutil.copyfile(photo_file, file_path_save_as)
+
+    shutil.copyfile(photo_file, origin)
+
+    photo = Photo(origin)
+    metadata = photo.get_metadata()
+
+    shutil.rmtree(folder)
+
+    assert metadata['date_taken'] == helper.time_convert((2009, 10, 20, 9, 10, 46, 1, 293, 0)), metadata['date_taken']
+
+def test_set_metadata_on_dng():
+    temporary_folder, folder = helper.create_working_folder()
+
+    photo_file = helper.get_file('photo.dng')
+    origin = '%s/photo.dng' % folder
+
+    if not photo_file:
+        photo_file = helper.download_file('photo.dng', folder)
+        if not photo_file or not os.path.isfile(photo_file):
+            raise SkipTest('dng file not downlaoded')
+
+    shutil.copyfile(photo_file, origin)
+
+    photo = Photo(origin)
+    origin_metadata = photo.get_metadata()
+
+    status = photo.set_location(11.1111111111, 99.9999999999)
+
+    assert status == True, status
+
+    photo_new = Photo(origin)
+    metadata = photo_new.get_metadata()
+
+    shutil.rmtree(folder)
+
+    assert metadata['date_taken'] == helper.time_convert((2009, 10, 20, 9, 10, 46, 1, 293, 0)), metadata['date_taken']
+    assert helper.isclose(metadata['latitude'], 11.1111111111), metadata['latitude']
+    assert helper.isclose(metadata['longitude'], 99.9999999999), metadata['longitude']

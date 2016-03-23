@@ -37,7 +37,7 @@ class Media(object):
     def __init__(self, source=None):
         self.source = source
         self.exif_map = {
-            'date_taken': ['Exif.Photo.DateTimeOriginal', 'Exif.Image.DateTime'],  # , 'EXIF FileDateTime'],  # noqa
+            'date_taken': ['Exif.Photo.DateTimeOriginal', 'Exif.Image.DateTime', 'Exif.Photo.DateTimeDigitized'],  # , 'EXIF FileDateTime'],  # noqa
             'latitude': 'Exif.GPSInfo.GPSLatitude',
             'latitude_ref': 'Exif.GPSInfo.GPSLatitudeRef',
             'longitude': 'Exif.GPSInfo.GPSLongitude',
@@ -255,8 +255,6 @@ class Media(object):
 
     def set_album_from_folder(self):
         metadata = self.get_metadata()
-
-        print 'huh/'
 
         # If this file has an album already set we do not overwrite EXIF
         if(metadata['album'] is not None):

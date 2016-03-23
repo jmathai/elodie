@@ -5,3 +5,5 @@
 dist/**
 docs/_build
 build/**
+**/*.nef
+**/*.dng
