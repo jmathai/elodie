@@ -295,6 +295,9 @@ class Media(object):
 
     @classmethod
     def get_class_by_file(cls, _file, classes):
+        if not isinstance(_file, basestring) or not os.path.isfile(_file):
+            return None
+
         extension = os.path.splitext(_file)[1][1:].lower()
 
         for i in classes:

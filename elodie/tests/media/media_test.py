@@ -43,8 +43,21 @@ def test_get_class_by_file_unsupported():
 
     assert media is None
 
-def test_get_class_by_file_empty():
+def test_get_class_by_file_ds_store():
     media = Media.get_class_by_file(helper.get_file('.DS_Store'),
+                                    [Photo, Video, Audio])
+    assert media is None
+
+def test_get_class_by_file_invalid_type():
+    media = Media.get_class_by_file(None,
+                                    [Photo, Video, Audio])
+    assert media is None
+
+    media = Media.get_class_by_file(False,
+                                    [Photo, Video, Audio])
+    assert media is None
+
+    media = Media.get_class_by_file(True,
                                     [Photo, Video, Audio])
     assert media is None
 
