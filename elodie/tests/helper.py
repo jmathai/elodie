@@ -118,6 +118,9 @@ def time_convert(s_time):
 # with relative tolerance c
 
 def isclose(a, b, rel_tol = 1e-8):
+    if not isinstance(a, (int, float)) or not isinstance(b, (int, float)):
+        return False
+
     diff = abs(a - b)
     return (diff <= abs(rel_tol * a) and
             diff <= abs(rel_tol * b))
