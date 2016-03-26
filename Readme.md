@@ -194,6 +194,13 @@ apt-get install libimage-exiftool-perl
 apt-get install python-pyexiv2
 ```
 
+On Fedora / Redhat you can install dependencies using `dnf` (fedora) or yum (redhat)
+
+```
+dnf install perl-Image-ExifTool
+dnf install pyexiv2
+```
+
 On Windows you can download and install pre-built binaries:
 
 * [exiftool](http://www.sno.phy.queensu.ca/~phil/exiftool/install.html)
