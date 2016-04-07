@@ -16,7 +16,9 @@ if not verify_dependencies():
 
 from elodie import constants
 from elodie import geolocation
+from elodie.media.base import Base
 from elodie.media.media import Media
+from elodie.media.text import Text
 from elodie.media.audio import Audio
 from elodie.media.photo import Photo
 from elodie.media.video import Video
@@ -38,7 +40,7 @@ def import_file(_file, destination, album_from_folder, trash):
             (_file, _file)
         return
 
-    media = Media.get_class_by_file(_file, [Audio, Photo, Video])
+    media = Media.get_class_by_file(_file, [Text, Audio, Photo, Video])
     if not media:
         if constants.debug:
             print 'Not a supported file (%s)' % _file
@@ -155,7 +157,7 @@ def _update(album, location, time, title, files):
         destination = os.path.expanduser(os.path.dirname(os.path.dirname(
                                          os.path.dirname(file_path))))
 
-        media = Media.get_class_by_file(file_path, [Audio, Photo, Video])
+        media = Media.get_class_by_file(file_path, [Text, Audio, Photo, Video])
         if not media:
             continue
 
@@ -194,7 +196,7 @@ def _update(album, location, time, title, files):
 
         if updated:
             updated_media = Media.get_class_by_file(file_path,
-                                                    [Audio, Photo, Video])
+                                                    [Text, Audio, Photo, Video])
             # See comments above on why we have to do this when titles
             # get updated.
             if remove_old_title_from_name and len(original_title) > 0:

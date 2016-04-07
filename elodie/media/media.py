@@ -1,5 +1,5 @@
 """
-The media module provides a base :class:`Media` class for all objects that
+The media module provides a base :class:`Media` class for media objects that
 are tracked by Elodie. The Media class provides some base functionality used
 by all the media types, but isn't itself used to represent anything. Its
 sub-classes (:class:`~elodie.media.audio.Audio`,
@@ -12,15 +12,15 @@ are used to represent the actual files.
 # load modules
 from elodie import constants
 from elodie.dependencies import get_exiftool
+from elodie.media.base import Base
 
-import mimetypes
 import os
 import pyexiv2
 import re
 import subprocess
 
 
-class Media(object):
+class Media(Base):
 
     """The base class for all media objects.
 
@@ -35,7 +35,7 @@ class Media(object):
     }
 
     def __init__(self, source=None):
-        self.source = source
+        super(Media, self).__init__(source)
         self.exif_map = {
             'date_taken': ['Exif.Photo.DateTimeOriginal', 'Exif.Image.DateTime', 'Exif.Photo.DateTimeDigitized'],  # , 'EXIF FileDateTime'],  # noqa
             'latitude': 'Exif.GPSInfo.GPSLatitude',
@@ -43,7 +43,6 @@ class Media(object):
             'longitude': 'Exif.GPSInfo.GPSLongitude',
             'longitude_ref': 'Exif.GPSInfo.GPSLongitudeRef',
         }
-        self.reset_cache()
 
     def get_album(self):
         """Get album from EXIF
@@ -58,23 +57,6 @@ class Media(object):
             return None
 
         return exiftool_attributes['album']
-
-    def get_file_path(self):
-        """Get the full path to the video.
-
-        :returns: string
-        """
-        return self.source
-
-    def is_valid(self):
-        """The default is_valid() always returns false.
-
-        This should be overridden in a child class to return true if the
-        source is valid, and false otherwise.
-
-        :returns: bool
-        """
-        return False
 
     def get_exif(self):
         """Read EXIF from a photo file.
@@ -140,61 +122,6 @@ class Media(object):
 
         return self.exiftool_attributes
 
-    def get_extension(self):
-        """Get the file extension as a lowercased string.
-
-        :returns: string or None for a non-video
-        """
-        if(not self.is_valid()):
-            return None
-
-        source = self.source
-        return os.path.splitext(source)[1][1:].lower()
-
-    def get_metadata(self, update_cache=False):
-        """Get a dictionary of metadata for a photo.
-
-        All keys will be present and have a value of None if not obtained.
-
-        :returns: dict or None for non-photo files
-        """
-        if(not self.is_valid()):
-            return None
-
-        if(self.metadata is not None and update_cache is False):
-            return self.metadata
-
-        source = self.source
-
-        self.metadata = {
-            'date_taken': self.get_date_taken(),
-            'latitude': self.get_coordinate('latitude'),
-            'longitude': self.get_coordinate('longitude'),
-            'album': self.get_album(),
-            'title': self.get_title(),
-            'mime_type': self.get_mimetype(),
-            'base_name': os.path.splitext(os.path.basename(source))[0],
-            'extension': self.get_extension(),
-            'directory_path': os.path.dirname(source)
-        }
-
-        return self.metadata
-
-    def get_mimetype(self):
-        """Get the mimetype of the file.
-
-        :returns: str or None for a non-video
-        """
-        if(not self.is_valid()):
-            return None
-
-        source = self.source
-        mimetype = mimetypes.guess_type(source)
-        if(mimetype is None):
-            return None
-
-        return mimetype[0]
-
     def get_title(self):
         """Get the title for a photo of video
 
@@ -211,8 +138,10 @@ class Media(object):
         return exiftool_attributes['title']
 
     def reset_cache(self):
+        """Resets any internal cache
+        """
         self.exiftool_attributes = None
-        self.metadata = None
+        super(Media, self).reset_cache()
 
     def set_album(self, name):
         """Set album for a photo
@@ -252,64 +181,3 @@ class Media(object):
         self.set_metadata(album=name)
         self.reset_cache()
         return True
-
-    def set_album_from_folder(self):
-        metadata = self.get_metadata()
-
-        # If this file has an album already set we do not overwrite EXIF
-        if(metadata['album'] is not None):
-            return False
-
-        folder = os.path.basename(metadata['directory_path'])
-        # If folder is empty we skip
-        if(len(folder) == 0):
-            return False
-
-        self.set_album(folder)
-        return True
-
-    def set_metadata_basename(self, new_basename):
-        """Update the basename attribute in the metadata dict for this instance.
-
-        This is used for when we update the EXIF title of a media file. Since
-        that determines the name of a file if we update the title of a file
-        more than once it appends to the file name.
-
-        i.e. 2015-12-31_00-00-00-my-first-title-my-second-title.jpg
-
-        :param str new_basename: New basename of file (with the old title
-            removed).
-        """
-        self.get_metadata()
-        self.metadata['base_name'] = new_basename
-
-    def set_metadata(self, **kwargs):
-        """Method to manually update attributes in metadata.
-
-        :params dict kwargs: Named parameters to update.
-        """
-        metadata = self.get_metadata()
-        for key in kwargs:
-            if(key in metadata):
-                self.metadata[key] = kwargs[key]
-
-    @classmethod
-    def get_class_by_file(cls, _file, classes):
-        if not isinstance(_file, basestring) or not os.path.isfile(_file):
-            return None
-
-        extension = os.path.splitext(_file)[1][1:].lower()
-
-        for i in classes:
-            if(extension in i.extensions):
-                return i(_file)
-
-        return None
-
-    @classmethod
-    def get_valid_extensions(cls):
-        """Static method to access static extensions variable.
-
-        :returns: tuple(str)
-        """
-        return cls.extensions
