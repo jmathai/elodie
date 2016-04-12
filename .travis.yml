@@ -8,9 +8,13 @@ before_install:
   - "sudo apt-get install python-dev python-pip python-pyexiv2 libimage-exiftool-perl -y"
 install:
   - "sudo pip install -r elodie/tests/requirements.txt"
+  - "sudo pip install coveralls"
 # command to run tests
 # test mapquest key
 before_script:
   - "mkdir ~/.elodie"
   - "sed 's/your-api-key-goes-here/x8wQLqGhW7qK3sFpjYtVTogVtoMK0S8s/g' config.ini-sample > ~/.elodie/config.ini"
-script: "nosetests -w elodie/tests"
+after_success:
+  - "coveralls"
+script: 
+  - "nosetests --with-coverage --cover-package=elodie -w elodie/tests"
