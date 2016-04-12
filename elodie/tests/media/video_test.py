@@ -52,7 +52,6 @@ def test_get_coordinate_longitude():
     assert coordinate == -119.9558, coordinate
 
 def test_get_date_taken():
-    raise SkipTest('gh-32 this test fails on travisci')
     video = Video(helper.get_file('video.mov'))
     date_taken = video.get_date_taken()
 
