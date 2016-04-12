@@ -19,6 +19,7 @@ import time
 from elodie import constants
 from elodie import plist_parser
 from elodie.dependencies import get_exiftool
+from media import Base
 from media import Media
 
 
@@ -162,16 +163,6 @@ class Video(Media):
             universal_newlines=True
         )
         return process_output.stdout.read()
-
-    def is_valid(self):
-        """Check the file extension against valid file extensions.
-
-        The list of valid file extensions come from self.extensions.
-
-        :returns: bool
-        """
-        source = self.source
-        return os.path.splitext(source)[1][1:].lower() in self.extensions
 
     def set_date_taken(self, date_taken_as_datetime):
         """
@@ -377,7 +368,7 @@ class Video(Media):
 
             # Before we do anything destructive we confirm that the
             #   file is in tact.
-            check_media = Media.get_class_by_file(temp_movie, [self.__class__])
+            check_media = Base.get_class_by_file(temp_movie, [self.__class__])
             check_metadata = check_media.get_metadata()
             if(
                 (
@@ -397,7 +388,7 @@ class Video(Media):
             # gh-89 Before we wrap up we check if an album was previously set
             #   and if so we re-apply that album because avmetareadwrite
             #   clobbers it
-            source_media = Media.get_class_by_file(source, [self.__class__])
+            source_media = Base.get_class_by_file(source, [self.__class__])
             source_metadata = source_media.get_metadata()
             if(source_metadata['album'] is not None):
                 check_media.set_album(source_metadata['album'])
