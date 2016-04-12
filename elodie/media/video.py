@@ -97,7 +97,7 @@ class Video(Media):
         # If the time is not found in EXIF we update EXIF
         seconds_since_epoch = min(os.path.getmtime(source), os.path.getctime(source))  # noqa
         exif_data = self.get_exif()
-        for key in ['Creation Date', 'Media Create Date']:
+        for key in ['Creation Date', 'Creation Date \(und-US\)', 'Media Create Date']:  # noqa
             date = re.search('%s +: +([0-9: ]+)' % key, exif_data)
             if(date is not None):
                 date_string = date.group(1)
