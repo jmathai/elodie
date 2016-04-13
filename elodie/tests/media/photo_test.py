@@ -397,3 +397,57 @@ def test_set_metadata_on_rw2():
     assert metadata['date_taken'] == helper.time_convert((2014, 11, 19, 23, 7, 44, 2, 323, 0)), metadata['date_taken']
     assert helper.isclose(metadata['latitude'], 11.1111111111), metadata['latitude']
     assert helper.isclose(metadata['longitude'], 99.9999999999), metadata['longitude']
+
+def test_get_metadata_from_arw():
+    temporary_folder, folder = helper.create_working_folder()
+
+    photo_file = helper.get_file('photo.arw')
+    origin = '%s/photo.arw' % folder
+
+    if not photo_file:
+        photo_file = helper.download_file('photo.arw', folder)
+        if not photo_file or not os.path.isfile(photo_file):
+            raise SkipTest('arw file not downlaoded')
+
+        # downloading for each test is costly so we save it in the working directory
+        file_path_save_as = helper.get_file_path('photo.arw')
+        if os.path.isfile(photo_file):
+            shutil.copyfile(photo_file, file_path_save_as)
+
+    shutil.copyfile(photo_file, origin)
+
+    photo = Photo(origin)
+    metadata = photo.get_metadata()
+
+    shutil.rmtree(folder)
+
+    assert metadata['date_taken'] == helper.time_convert((2007, 4, 8, 17, 41, 18, 6, 98, 0)), metadata['date_taken']
+
+def test_set_metadata_on_arw():
+    temporary_folder, folder = helper.create_working_folder()
+
+    photo_file = helper.get_file('photo.arw')
+    origin = '%s/photo.arw' % folder
+
+    if not photo_file:
+        photo_file = helper.download_file('photo.arw', folder)
+        if not photo_file or not os.path.isfile(photo_file):
+            raise SkipTest('arw file not downlaoded')
+
+    shutil.copyfile(photo_file, origin)
+
+    photo = Photo(origin)
+    origin_metadata = photo.get_metadata()
+
+    status = photo.set_location(11.1111111111, 99.9999999999)
+
+    assert status == True, status
+
+    photo_new = Photo(origin)
+    metadata = photo_new.get_metadata()
+
+    shutil.rmtree(folder)
+
+    assert metadata['date_taken'] == helper.time_convert((2007, 4, 8, 17, 41, 18, 6, 98, 0)), metadata['date_taken']
+    assert helper.isclose(metadata['latitude'], 11.1111111111), metadata['latitude']
+    assert helper.isclose(metadata['longitude'], 99.9999999999), metadata['longitude']

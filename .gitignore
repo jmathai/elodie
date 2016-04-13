@@ -5,6 +5,7 @@
 dist/**
 docs/_build
 build/**
-**/*.nef
+**/*.arw
 **/*.dng
+**/*.nef
 **/*.rw2
