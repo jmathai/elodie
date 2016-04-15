@@ -23,6 +23,8 @@ class Base(object):
 
     __name__ = 'Base'
 
+    extensions = ()
+
     def __init__(self, source=None):
         self.source = source
         self.reset_cache()
@@ -142,7 +144,7 @@ class Base(object):
         metadata = self.get_metadata()
 
         # If this file has an album already set we do not overwrite EXIF
-        if(metadata['album'] is not None):
+        if(not isinstance(metadata, dict) or metadata['album'] is not None):
             return False
 
         folder = os.path.basename(metadata['directory_path'])
