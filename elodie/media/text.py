@@ -33,7 +33,8 @@ class Text(Base):
 
     def get_album(self):
         self.parse_metadata_line()
-        if not self.metadata_line or 'album' not in self.metadata_line:
+        if(not isinstance(self.metadata_line, dict) or
+                'album' not in self.metadata_line):
             return None
 
         return self.metadata_line['album']
@@ -55,7 +56,8 @@ class Text(Base):
         self.parse_metadata_line()
 
         # We return the value if found in metadata
-        if self.metadata_line and 'date_taken' in self.metadata_line:
+        if(isinstance(self.metadata_line, dict) and
+                'date_taken' in self.metadata_line):
             return time.gmtime(self.metadata_line['date_taken'])
 
         # If there's no date_taken in the metadata we return
@@ -73,7 +75,8 @@ class Text(Base):
     def get_title(self):
         self.parse_metadata_line()
 
-        if not self.metadata_line or 'title' not in self.metadata_line:
+        if(not isinstance(self.metadata_line, dict) or
+                'title' not in self.metadata_line):
             return None
 
         return self.metadata_line['title']
@@ -104,7 +107,7 @@ class Text(Base):
         return status
 
     def parse_metadata_line(self):
-        if self.metadata_line:
+        if isinstance(self.metadata_line, dict):
             return self.metadata_line
 
         source = self.source
@@ -134,7 +137,7 @@ class Text(Base):
         # Check if self.metadata_line is set and use that instead
         metadata_line = {}
         has_metadata = False
-        if self.metadata_line:
+        if isinstance(self.metadata_line, dict):
             metadata_line = self.metadata_line
             has_metadata = True
 

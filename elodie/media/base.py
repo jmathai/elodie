@@ -73,7 +73,7 @@ class Base(object):
         if(not self.is_valid()):
             return None
 
-        if(self.metadata is not None and update_cache is False):
+        if(isinstance(self.metadata, dict) and update_cache is False):
             return self.metadata
 
         source = self.source
