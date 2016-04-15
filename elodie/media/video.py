@@ -390,7 +390,8 @@ class Video(Media):
             #   clobbers it
             source_media = Base.get_class_by_file(source, [self.__class__])
             source_metadata = source_media.get_metadata()
-            if(source_metadata['album'] is not None):
+            if(isinstance(source_metadata, dict) and
+                    source_metadata['album'] is not None):
                 check_media.set_album(source_metadata['album'])
 
             # Copy file information from original source to temporary file

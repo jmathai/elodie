@@ -57,6 +57,21 @@ def test_get_date_taken():
 
     assert date_taken == helper.time_convert((2016, 4, 7, 11, 15, 26, 3, 98, 0)), date_taken
 
+def test_get_date_taken_from_invalid():
+    origin = helper.get_file('valid-without-header.txt')
+    text = Text(origin)
+    text.get_metadata()
+
+    date_taken = text.get_date_taken()
+
+    seconds_since_epoch = min(
+        os.path.getmtime(origin),
+        os.path.getctime(origin)
+    )
+    expected_date_taken = time.gmtime(seconds_since_epoch)
+
+    assert date_taken == expected_date_taken, date_taken
+
 def test_set_album():
     temporary_folder, folder = helper.create_working_folder()
 
