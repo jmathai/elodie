@@ -72,6 +72,16 @@ def test_get_date_taken_from_invalid():
 
     assert date_taken == expected_date_taken, date_taken
 
+def test_get_metadata_with_numeric_header():
+    # See gh-98 for details
+    text = Text(helper.get_file('valid-with-numeric-header.txt'))
+
+    # Should not throw error
+    # TypeError: argument of type 'int' is not iterable
+    metadata = text.get_metadata()
+
+    assert metadata['mime_type'] == 'text/plain'
+
 def test_set_album():
     temporary_folder, folder = helper.create_working_folder()
 

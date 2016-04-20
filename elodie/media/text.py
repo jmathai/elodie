@@ -119,7 +119,8 @@ class Text(Base):
 
         try:
             parsed_json = loads(first_line)
-            self.metadata_line = parsed_json
+            if isinstance(parsed_json, dict):
+                self.metadata_line = parsed_json
         except ValueError:
             if(constants.debug is True):
                 print 'Could not parse JSON from first line: %s' % first_line
