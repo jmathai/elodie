@@ -187,9 +187,10 @@ class Base(object):
 
         extension = os.path.splitext(_file)[1][1:].lower()
 
-        for i in classes:
-            if(extension in i.extensions):
-                return i(_file)
+        if len(extension) > 0:
+            for i in classes:
+                if(extension in i.extensions):
+                    return i(_file)
 
         return None
 

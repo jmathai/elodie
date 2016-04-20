@@ -15,6 +15,11 @@ sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.realp
 
 import helper
 from elodie.media.base import Base
+from elodie.media.media import Media
+from elodie.media.audio import Audio
+from elodie.media.text import Text
+from elodie.media.photo import Photo
+from elodie.media.video import Video
 
 os.environ['TZ'] = 'GMT'
 
@@ -33,3 +38,9 @@ def test_set_album_from_folder_invalid_file():
 
     assert status == False, status
 
+def test_get_class_by_file_without_extension():
+    base_file = helper.get_file('withoutextension')
+
+    cls = Base.get_class_by_file(base_file, [Audio, Text, Photo, Video])
+    
+    assert cls is None, cls
