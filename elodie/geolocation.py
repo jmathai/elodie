@@ -126,6 +126,11 @@ def get_key():
 
 
 def place_name(lat, lon):
+    # Convert lat/lon to floats
+    if not isinstance(lat, float):
+        lat = float(lat)
+    if not isinstance(lon, float):
+        lon = float(lon)
 
     # Try to get cached location first
     db = Db()
