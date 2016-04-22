@@ -13,6 +13,10 @@ import helper
 elodie = load_source('elodie', os.path.abspath('{}/../../elodie.py'.format(os.path.dirname(os.path.realpath(__file__)))))
 
 from elodie import constants
+from elodie.media.audio import Audio
+from elodie.media.photo import Photo
+from elodie.media.text import Text
+from elodie.media.video import Video
 
 os.environ['TZ'] = 'GMT'
 
@@ -82,6 +86,112 @@ def test_import_file_video():
 
     assert helper.path_tz_fix(os.path.join('2015-01-Jan','California','2015-01-19_12-45-11-video.mov')) in dest_path, dest_path
 
+def test_update_location_on_audio():
+    if not can_edit_exif():
+        raise SkipTest('avmetareadwrite executable not found')
+
+    temporary_folder, folder = helper.create_working_folder()
+    temporary_folder_destination, folder_destination = helper.create_working_folder()
+
+    origin = '%s/audio.m4a' % folder
+    shutil.copyfile(helper.get_file('audio.m4a'), origin)
+
+    audio = Audio(origin)
+    metadata = audio.get_metadata()
+
+    reset_hash_db()
+    status = elodie.update_location(audio, origin, 'Sunnyvale, CA')
+    restore_hash_db()
+
+    audio_processed = Audio(origin)
+    metadata_processed = audio_processed.get_metadata()
+
+    shutil.rmtree(folder)
+    shutil.rmtree(folder_destination)
+
+    assert status, status
+    assert metadata['latitude'] != metadata_processed['latitude']
+    assert helper.isclose(metadata_processed['latitude'], 37.3688305556), metadata_processed['latitude']
+    assert helper.isclose(metadata_processed['longitude'], -122.03635), metadata_processed['longitude']
+
+def test_update_location_on_photo():
+    temporary_folder, folder = helper.create_working_folder()
+    temporary_folder_destination, folder_destination = helper.create_working_folder()
+
+    origin = '%s/plain.jpg' % folder
+    shutil.copyfile(helper.get_file('plain.jpg'), origin)
+
+    photo = Photo(origin)
+    metadata = photo.get_metadata()
+
+    reset_hash_db()
+    status = elodie.update_location(photo, origin, 'Sunnyvale, CA')
+    restore_hash_db()
+
+    photo_processed = Photo(origin)
+    metadata_processed = photo_processed.get_metadata()
+
+    shutil.rmtree(folder)
+    shutil.rmtree(folder_destination)
+
+    assert status, status
+    assert metadata['latitude'] != metadata_processed['latitude']
+    assert helper.isclose(metadata_processed['latitude'], 37.36883), metadata_processed['latitude']
+    assert helper.isclose(metadata_processed['longitude'], -122.03635), metadata_processed['longitude']
+
+def test_update_location_on_text():
+    temporary_folder, folder = helper.create_working_folder()
+    temporary_folder_destination, folder_destination = helper.create_working_folder()
+
+    origin = '%s/text.txt' % folder
+    shutil.copyfile(helper.get_file('text.txt'), origin)
+
+    text = Text(origin)
+    metadata = text.get_metadata()
+
+    reset_hash_db()
+    status = elodie.update_location(text, origin, 'Sunnyvale, CA')
+    restore_hash_db()
+
+    text_processed = Text(origin)
+    metadata_processed = text_processed.get_metadata()
+
+    shutil.rmtree(folder)
+    shutil.rmtree(folder_destination)
+
+    assert status, status
+    assert metadata['latitude'] != metadata_processed['latitude']
+    assert helper.isclose(metadata_processed['latitude'], 37.36883), metadata_processed['latitude']
+    assert helper.isclose(metadata_processed['longitude'], -122.03635), metadata_processed['longitude']
+
+def test_update_location_on_video():
+    if not can_edit_exif():
+        raise SkipTest('avmetareadwrite executable not found')
+
+    temporary_folder, folder = helper.create_working_folder()
+    temporary_folder_destination, folder_destination = helper.create_working_folder()
+
+    origin = '%s/video.mov' % folder
+    shutil.copyfile(helper.get_file('video.mov'), origin)
+
+    video = Video(origin)
+    metadata = video.get_metadata()
+
+    reset_hash_db()
+    status = elodie.update_location(video, origin, 'Sunnyvale, CA')
+    restore_hash_db()
+
+    video_processed = Video(origin)
+    metadata_processed = video_processed.get_metadata()
+
+    shutil.rmtree(folder)
+    shutil.rmtree(folder_destination)
+
+    assert status, status
+    assert metadata['latitude'] != metadata_processed['latitude']
+    assert helper.isclose(metadata_processed['latitude'], 37.3688305556), metadata_processed['latitude']
+    assert helper.isclose(metadata_processed['longitude'], -122.03635), metadata_processed['longitude']
+
 def reset_hash_db():
     hash_db = constants.hash_db
     if os.path.isfile(hash_db):
@@ -91,3 +201,7 @@ def restore_hash_db():
     hash_db = '{}-test'.format(constants.hash_db)
     if os.path.isfile(hash_db):
         os.rename(hash_db, hash_db.replace('-test', ''))
+
+def can_edit_exif():
+    video = Video()
+    return video.get_avmetareadwrite()
