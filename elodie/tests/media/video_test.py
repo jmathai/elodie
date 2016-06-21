@@ -33,17 +33,21 @@ def test_video_extensions():
 
     assert extensions == valid_extensions, valid_extensions
 
+def test_empty_album():
+    video = Video(helper.get_file('video.mov'))
+    assert video.get_album() is None
+
 def test_get_coordinate():
     video = Video(helper.get_file('video.mov'))
     coordinate = video.get_coordinate()
 
-    assert coordinate == 38.189299999999996, coordinate
+    assert coordinate == 38.1893, coordinate
 
 def test_get_coordinate_latitude():
     video = Video(helper.get_file('video.mov'))
     coordinate = video.get_coordinate('latitude')
 
-    assert coordinate == 38.189299999999996, coordinate
+    assert coordinate == 38.1893, coordinate
 
 def test_get_coordinate_longitude():
     video = Video(helper.get_file('video.mov'))
@@ -57,11 +61,12 @@ def test_get_date_taken():
 
     assert date_taken == (2015, 1, 19, 12, 45, 11, 0, 19, 0), date_taken
 
-def test_get_exif():
+def test_get_exiftool_attributes():
     video = Video(helper.get_file('video.mov'))
-    exif = video.get_exif()
+    exif = video.get_exiftool_attributes()
 
     assert exif is not None, exif
+    assert exif is not False, exif
 
 def test_is_valid():
     video = Video(helper.get_file('video.mov'))
@@ -72,6 +77,28 @@ def test_is_not_valid():
     video = Video(helper.get_file('text.txt'))
 
     assert not video.is_valid()
+
+def test_set_album():
+    temporary_folder, folder = helper.create_working_folder()
+
+    origin = '%s/video.mov' % folder
+    shutil.copyfile(helper.get_file('video.mov'), origin)
+
+    video = Video(origin)
+    metadata = video.get_metadata()
+
+    assert metadata['album'] is None, metadata['album']
+
+    status = video.set_album('Test Album')
+
+    assert status == True, status
+
+    video_new = Video(origin)
+    metadata_new = video_new.get_metadata()
+
+    shutil.rmtree(folder)
+
+    assert metadata_new['album'] == 'Test Album', metadata_new['album']
 
 def test_set_date_taken():
     if not can_edit_exif():
