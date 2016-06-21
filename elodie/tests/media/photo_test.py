@@ -101,7 +101,7 @@ def test_get_date_taken():
     photo = Photo(helper.get_file('plain.jpg'))
     date_taken = photo.get_date_taken()
 
-#    assert date_taken == (2015, 12, 5, 0, 59, 26, 5, 339, 0), date_taken
+    #assert date_taken == (2015, 12, 5, 0, 59, 26, 5, 339, 0), date_taken
     assert date_taken == helper.time_convert((2015, 12, 5, 0, 59, 26, 5, 339, 0)), date_taken
 
 def test_get_date_taken_without_exif():
@@ -122,6 +122,28 @@ def test_is_not_valid():
     photo = Photo(helper.get_file('text.txt'))
 
     assert not photo.is_valid()
+
+def test_set_album():
+    temporary_folder, folder = helper.create_working_folder()
+
+    origin = '%s/photo.jpg' % folder
+    shutil.copyfile(helper.get_file('plain.jpg'), origin)
+
+    photo = Photo(origin)
+    metadata = photo.get_metadata()
+
+    assert metadata['album'] is None, metadata['album']
+
+    status = photo.set_album('Test Album')
+
+    assert status == True, status
+
+    photo_new = Photo(origin)
+    metadata_new = photo_new.get_metadata()
+
+    shutil.rmtree(folder)
+
+    assert metadata_new['album'] == 'Test Album', metadata_new['album']
 
 def test_set_date_taken_with_missing_datetimeoriginal():
     # When datetimeoriginal (or other key) is missing we have to add it gh-74
@@ -193,6 +215,32 @@ def test_set_location():
     assert helper.isclose(metadata['latitude'], 11.1111111111), metadata['latitude']
     assert helper.isclose(metadata['longitude'], 99.9999999999), metadata['longitude']
 
+def test_set_location_minus():
+    temporary_folder, folder = helper.create_working_folder()
+
+    origin = '%s/photo.jpg' % folder
+    shutil.copyfile(helper.get_file('plain.jpg'), origin)
+
+    photo = Photo(origin)
+    origin_metadata = photo.get_metadata()
+
+    # Verify that original photo has different location info that what we
+    #   will be setting and checking
+    assert not helper.isclose(origin_metadata['latitude'], 11.1111111111), origin_metadata['latitude']
+    assert not helper.isclose(origin_metadata['longitude'], 99.9999999999), origin_metadata['longitude']
+
+    status = photo.set_location(-11.1111111111, -99.9999999999)
+
+    assert status == True, status
+
+    photo_new = Photo(origin)
+    metadata = photo_new.get_metadata()
+
+    shutil.rmtree(folder)
+
+    assert helper.isclose(metadata['latitude'], -11.1111111111), metadata['latitude']
+    assert helper.isclose(metadata['longitude'], -99.9999999999), metadata['longitude']
+
 def test_set_title():
     temporary_folder, folder = helper.create_working_folder()
 
@@ -223,7 +271,6 @@ def test_set_title_non_ascii():
     origin_metadata = photo.get_metadata()
 
     unicode_title = u'形声字 / 形聲字'
-    utf8_title = unicode_title.encode('utf-8')
 
     status = photo.set_title(unicode_title)
     assert status == True, status
@@ -233,7 +280,7 @@ def test_set_title_non_ascii():
 
     shutil.rmtree(folder)
 
-    assert metadata['title'] == utf8_title, metadata['title']
+    assert metadata['title'] == unicode_title, metadata['title']
 
 def test_get_metadata_from_nef():
     temporary_folder, folder = helper.create_working_folder()

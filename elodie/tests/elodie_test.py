@@ -111,7 +111,7 @@ def test_update_location_on_audio():
 
     assert status == True, status
     assert metadata['latitude'] != metadata_processed['latitude']
-    assert helper.isclose(metadata_processed['latitude'], 37.3688305556), metadata_processed['latitude']
+    assert helper.isclose(metadata_processed['latitude'], 37.36883), metadata_processed['latitude']
     assert helper.isclose(metadata_processed['longitude'], -122.03635), metadata_processed['longitude']
 
 def test_update_location_on_photo():
@@ -189,7 +189,7 @@ def test_update_location_on_video():
 
     assert status == True, status
     assert metadata['latitude'] != metadata_processed['latitude']
-    assert helper.isclose(metadata_processed['latitude'], 37.3688305556), metadata_processed['latitude']
+    assert helper.isclose(metadata_processed['latitude'], 37.36883), metadata_processed['latitude']
     assert helper.isclose(metadata_processed['longitude'], -122.03635), metadata_processed['longitude']
 
 def test_update_time_on_audio():

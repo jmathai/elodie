@@ -7,14 +7,17 @@ image objects (JPG, DNG, etc.).
 
 import imghdr
 import os
-import pyexiv2
 import re
 import subprocess
 import time
+from datetime import datetime
+from re import compile
+
 
 from elodie import constants
-from media import Media
 from elodie import geolocation
+from elodie.external.pyexiftool import ExifTool
+from media import Media
 
 
 class Photo(Media):
@@ -57,34 +60,6 @@ class Photo(Media):
                 ).group(1).replace('.', ':')
         return None
 
-    def get_coordinate(self, type='latitude'):
-        """Get latitude or longitude of photo from EXIF
-
-        :param str type: Type of coordinate to get. Either "latitude" or
-            "longitude".
-        :returns: float or None if not present in EXIF or a non-photo file
-        """
-        if(not self.is_valid()):
-            return None
-
-        key = self.exif_map[type]
-        exif = self.get_exif()
-
-        if(key not in exif):
-            return None
-
-        try:
-            # this is a hack to get the proper direction by negating the
-            #   values for S and W
-            coords = exif[key].value
-            return geolocation.dms_to_decimal(
-                *coords,
-                direction=exif[self.exif_map[self.d_coordinates[type]]].value
-            )
-
-        except KeyError:
-            return None
-
     def get_date_taken(self):
         """Get the date which the photo was taken.
 
@@ -94,22 +69,31 @@ class Photo(Media):
         """
         if(not self.is_valid()):
             return None
-
+        
         source = self.source
         seconds_since_epoch = min(os.path.getmtime(source), os.path.getctime(source))  # noqa
+
+        exif = self.get_exiftool_attributes()
+        if not exif:
+            return seconds_since_epoch
+
         # We need to parse a string from EXIF into a timestamp.
         # EXIF DateTimeOriginal and EXIF DateTime are both stored
         #   in %Y:%m:%d %H:%M:%S format
-        # we use date.strptime -> .timetuple -> time.mktime to do
+        # we use split on a space and then r':|-' -> convert to int -> .timetuple()
         #   the conversion in the local timezone
         # EXIF DateTime is already stored as a timestamp
         # Sourced from https://github.com/photo/frontend/blob/master/src/libraries/models/Photo.php#L500  # noqa
-        exif = self.get_exif()
         for key in self.exif_map['date_taken']:
             try:
                 if(key in exif):
-                    if(re.match('\d{4}(-|:)\d{2}(-|:)\d{2}', str(exif[key].value)) is not None):  # noqa
-                        seconds_since_epoch = time.mktime(exif[key].value.timetuple())  # noqa
+                    if(re.match('\d{4}(-|:)\d{2}(-|:)\d{2}', exif[key]) is not None):  # noqa
+                        dt, tm = exif[key].split(' ')
+                        dt_list = compile(r'-|:').split(dt)
+                        dt_list = dt_list + compile(r'-|:').split(tm)
+                        dt_list = map(int, dt_list)
+                        time_tuple = datetime(*dt_list).timetuple()
+                        seconds_since_epoch = time.mktime(time_tuple)
                         break
             except BaseException as e:
                 if(constants.debug is True):
@@ -137,70 +121,3 @@ class Photo(Media):
             return False
 
         return os.path.splitext(source)[1][1:].lower() in self.extensions
-
-    def set_date_taken(self, time):
-        """Set the date/time a photo was taken.
-
-        :param datetime time: datetime object of when the photo was taken
-        :returns: bool
-        """
-        if(time is None):
-            return False
-
-        source = self.source
-        exif_metadata = pyexiv2.ImageMetadata(source)
-        exif_metadata.read()
-
-        # Writing exif with pyexiv2 differs if the key already exists so we
-        #   handle both cases here.
-        for key in self.exif_map['date_taken']:
-            if(key in exif_metadata):
-                exif_metadata[key].value = time
-            else:
-                exif_metadata[key] = pyexiv2.ExifTag(key, time)
-
-        exif_metadata.write()
-        self.reset_cache()
-        return True
-
-    def set_location(self, latitude, longitude):
-        """Set latitude and longitude for a photo.
-
-        :param float latitude: Latitude of the file
-        :param float longitude: Longitude of the file
-        :returns: bool
-        """
-        if(latitude is None or longitude is None):
-            return False
-
-        source = self.source
-        exif_metadata = pyexiv2.ImageMetadata(source)
-        exif_metadata.read()
-
-        exif_metadata['Exif.GPSInfo.GPSLatitude'] = geolocation.decimal_to_dms(latitude, False)  # noqa
-        exif_metadata['Exif.GPSInfo.GPSLatitudeRef'] = pyexiv2.ExifTag('Exif.GPSInfo.GPSLatitudeRef', 'N' if latitude >= 0 else 'S')  # noqa
-        exif_metadata['Exif.GPSInfo.GPSLongitude'] = geolocation.decimal_to_dms(longitude, False)  # noqa
-        exif_metadata['Exif.GPSInfo.GPSLongitudeRef'] = pyexiv2.ExifTag('Exif.GPSInfo.GPSLongitudeRef', 'E' if longitude >= 0 else 'W')  # noqa
-
-        exif_metadata.write()
-        self.reset_cache()
-        return True
-
-    def set_title(self, title):
-        """Set title for a photo.
-
-        :param str title: Title of the photo.
-        :returns: bool
-        """
-        if(title is None):
-            return False
-
-        source = self.source
-        exif_metadata = pyexiv2.ImageMetadata(source)
-        exif_metadata.read()
-
-        exif_metadata['Xmp.dc.title'] = title
-
-        exif_metadata.write()
-        self.reset_cache()
-        return True

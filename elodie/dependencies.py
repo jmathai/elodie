@@ -16,16 +16,6 @@ Please take a look at the installation steps in the readme:
 https://github.com/jmathai/elodie#install-everything-you-need
 """.lstrip()
 
-#: Template for the error to print when pyexiv2 can't be found.
-PYEXIV2_ERROR = u"""
-{error_class_name}: {error}
-
-It looks like you don't have pyexiv2 installed, which Elodie requires for
-geolocation. Please take a look at the installation steps in the readme:
-
-https://github.com/jmathai/elodie#install-everything-you-need
-""".lstrip()
-
 
 def get_exiftool():
     """Get path to executable exiftool binary.
@@ -54,13 +44,6 @@ def verify_dependencies():
     exiftool = get_exiftool()
     if exiftool is None:
         print >>sys.stderr, EXIFTOOL_ERROR
-        return False
-
-    try:
-        import pyexiv2  # noqa
-    except ImportError as e:
-        print >>sys.stderr, PYEXIV2_ERROR.format(
-            error_class_name=e.__class__.__name__, error=e)
         return False
 
     return True
