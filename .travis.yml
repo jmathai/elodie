@@ -1,11 +1,12 @@
 language: python
+dist: trusty
 python:
   - "2.7"
 virtualenv:
   system_site_packages: true
 before_install:
   - "sudo apt-get update -qq"
-  - "sudo apt-get install python-dev python-pip python-pyexiv2 libimage-exiftool-perl -y"
+  - "sudo apt-get install python-dev python-pip libimage-exiftool-perl -y"
 install:
   - "sudo pip install -r elodie/tests/requirements.txt"
   - "sudo pip install coveralls"

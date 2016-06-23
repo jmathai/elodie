@@ -59,11 +59,12 @@ def test_get_date_taken():
     print '%r' % date_taken
     assert date_taken == (2016, 1, 4, 5, 24, 15, 0, 19, 0), date_taken
 
-def test_get_exif():
-    audio = Audio(helper.get_file('audio.m4a'))
-    exif = audio.get_exif()
+def test_get_exiftool_attributes():
+    audio = Video(helper.get_file('audio.m4a'))
+    exif = audio.get_exiftool_attributes()
 
     assert exif is not None, exif
+    assert exif is not False, exif
 
 def test_is_valid():
     audio = Audio(helper.get_file('audio.m4a'))
@@ -126,6 +127,35 @@ def test_set_location():
 
     assert helper.isclose(metadata['latitude'], 11.1111111111), metadata['latitude']
     assert helper.isclose(metadata['longitude'], 99.9999999999), metadata['longitude']
+
+def test_set_location_minus():
+    if not can_edit_exif():
+        raise SkipTest('avmetareadwrite executable not found')
+
+    temporary_folder, folder = helper.create_working_folder()
+
+    origin = '%s/audio.m4a' % folder
+    shutil.copyfile(helper.get_file('audio.m4a'), origin)
+
+    audio = Audio(origin)
+    origin_metadata = audio.get_metadata()
+
+    # Verify that original audio has different location info that what we
+    #   will be setting and checking
+    assert not helper.isclose(origin_metadata['latitude'], 11.111111), origin_metadata['latitude']
+    assert not helper.isclose(origin_metadata['longitude'], 99.999999), origin_metadata['longitude']
+
+    status = audio.set_location(-11.111111, -99.999999)
+
+    assert status == True, status
+
+    audio_new = Audio(origin)
+    metadata = audio_new.get_metadata()
+
+    shutil.rmtree(folder)
+
+    assert helper.isclose(metadata['latitude'], -11.111111), metadata['latitude']
+    assert helper.isclose(metadata['longitude'], -99.999999), metadata['longitude']
 
 def test_set_title():
     if not can_edit_exif():

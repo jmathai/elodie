@@ -3,6 +3,51 @@
 
 [![Build Status](https://travis-ci.org/jmathai/elodie.svg?branch=master)](https://travis-ci.org/jmathai/elodie) [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/jmathai/elodie/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/jmathai/elodie/?branch=master) [![Coverage Status](https://coveralls.io/repos/github/jmathai/elodie/badge.svg?branch=master)](https://coveralls.io/github/jmathai/elodie?branch=master)
 
+## Quickstart guide
+
+Getting started takes just a few minutes.
+
+### Install ExifTool
+
+Elodie relies on the great [ExifTool library by Phil Harvey](http://www.sno.phy.queensu.ca/~phil/exiftool/). You'll need to install it for your platform. Some features for video files will only work with newer versions of ExifTool and have been tested on version 10.15 or higher. Check your version by typing `exiftool -ver` and see the [manual installation instructions for ExifTool](http://www.sno.phy.queensu.ca/~phil/exiftool/install.html#Unix) if needed.
+
+```
+# OSX (uses homebrew, http://brew.sh/)
+brew install exiftool
+
+# Debian / Ubuntu
+apt-get install libimage-exiftool-perl
+
+# Fedora / Redhat
+dnf install perl-Image-ExifTool
+
+# Windows users can install the binary
+# http://www.sno.phy.queensu.ca/~phil/exiftool/install.html
+```
+
+### Clone the Elodie repository
+
+You can clone Elodie from GitHub. You'll need `git` installed ([instructions](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)).
+
+```
+git clone https://github.com/jmathai/elodie.git
+cd elodie
+pip install -r requirements.txt
+```
+
+### Give Elodie a test drive
+
+Now that you've got the minimum dependencies installed you can start using Elodie. You'll need a photo, video or audio file and a folder you'd like Elodie to organize them into.
+
+```
+# Run these commands from the root of the repository you just cloned.
+./elodie.py import --destination="/where/i/want/my/photos/to/go" /where/my/photo/is.jpg
+```
+
+You'll notice that the photo was organized into an *Unknown Location* folder. That's because you haven't set up your MapQuest API ([instructions](#using-openstreetmap-data-from-mapquest).
+
+Now you're ready to learn more about Elodie.
+
 <p align="center"><img src ="creative/logo@300x.png" /></p>
 
 [Read a 3 part blog post on why I was created](https://medium.com/vantage/understanding-my-need-for-an-automated-photo-workflow-a2ff95b46f8f#.dmwyjlc57) and how [I can be used with Google Photos](https://medium.com/@jmathai/my-automated-photo-workflow-using-google-photos-and-elodie-afb753b8c724).
@@ -42,16 +87,16 @@ Updating EXIF of photos from the command line.
 
 I'm most helpful when I'm fully utilized to keep your photos organized. My parents had ambitious aspirations for me even when I was growing in my momma's belly . They're dreamers and so am I.
 
-Here's dada's (very asynchronous) setup.
-* Specify a folder in his Dropbox to store the organized photo library.
+Here's an example of a very asynchronous setup.
+* Specify a folder in your Dropbox to store the organized photo library.
 * Set up a Hazel rule to notify me when photos arrive in `~/Downloads` so I can import them.
-  * The rule waits 1 minute before processing the photo which gives him a chance to move it elsewhere if it's not something he wants in the library.
-* Use AirDrop to transfer files from his or momma's iPhone to his laptop. That goes to `~/Downloads` for the Hazel rule to process.
-  * AirDrop is fast, easy for momma to use and once the transfer is finished they don't have to stick around. I'll move it to Dropbox and Dropbox will sync it to their servers.
+  * The rule waits 1 minute before processing the photo which gives you a chance to move it elsewhere if it's not something you want in the library.
+* Use AirDrop to transfer files from any iPhone to your laptop. That goes to `~/Downloads` for the Hazel rule to process.
+  * AirDrop is fast, easy for anyone to use and once the transfer is finished your don't have to stick around. I'll move it to Dropbox and Dropbox will sync it to their servers.
 * Periodically recategorize photos by fixing their location or date or by adding them to an album.
 * Have a Synology at home set to automatically sync down from Dropbox.
 
-This setup means dada can quickly get photos off his or momma's phone and know that they'll be organized and backed up by the time they're ready to view them.
+This setup means you can quickly get photos off your or anyone's phone and know that they'll be organized and backed up in 3 locations by the time they're ready to view them.
 
 ## Let's organize your existing photos
 
@@ -164,52 +209,20 @@ I'm simple. I put a photo into its proper location. I can update a photo to have
 
 I don't do anything else so don't bother asking.
 
-## Install everything you need
+## EXIF and XMP tags
 
-You'll need to clone this repository and install a few dependencies. Let's start by cloning.
+When I organize photos I look at the embedded metadata. Here are the details of how I determine what information to use.
+| Dimension | Fields | Notes |
+|---|---|---|
+| Date Taken (photo) | EXIF:DateTimeOriginal,EXIF:DateTime, EXIF:DateTimeDigitized, file created, file modified |   |
+| Date Taken (video, audio) | QuickTime:CreationDate, QuickTime:CreationDate-und-US, QuickTime:MediaCreateDate, file created, file modified |   |
+| Location (photo) | EXIF:GPSLatitude/EXIF:GPSLatitudeRef, EXIF:GPSLongitude/EXIF:GPSLongitudeRef  |   |
+| Location (video, audio) | XMP:GPSLatitude, Composite:GPSLatitude, XMP:GPSLongitude, Composite:GPSLongitude | Composite tags are read-only |
+| Title (photo) | XMP:Title |   |
+| Title (video, audio) | XMP:DisplayName |   |
+| Album | XMP:Album | User defined tag in `configs/ExifTool_config` |
 
-```
-git clone https://github.com/jmathai/elodie.git
-```
-
-The commands on this page assume you're running them from the root of this repository. I don't have any submodules but you'll need to install the following packages.
-
-```
-pip install -r requirements.txt
-```
-
-You'll need to install *exiftool* *pyexiv2* using  `homebrew` on OSX. If you're running another operating system you're sort of on your own but my pal Google should be able to help. Some folks may be able to simply run these commands. Installing *boost* is a drag and can take up to 30 minutes. Don't say I didn't warn you.
-
-```
-brew update
-brew install exiftool
-brew install boost --build-from-source
-brew install pyexiv2
-```
-
-On Debian and Ubuntu you can install dependencies using `apt-get`.
-
-```
-apt-get install libimage-exiftool-perl
-apt-get install python-pyexiv2
-```
-
-On Fedora / Redhat you can install dependencies using `dnf` (fedora) or yum (redhat)
-
-```
-dnf install perl-Image-ExifTool
-dnf install pyexiv2
-```
-
-On Windows you can download and install pre-built binaries:
-
-* [exiftool](http://www.sno.phy.queensu.ca/~phil/exiftool/install.html)
-* [pyexiv2](http://tilloy.net/dev/pyexiv2/download.html)
-
-
-If you have problems you can run the following commands which the fine folks at StackOverflow [suggested to me once](http://stackoverflow.com/a/18817419/1318758).
-
-### Using OpenStreetMap data from MapQuest
+## Using OpenStreetMap data from MapQuest
 
 I use MapQuest to help me organize your photos by location. You'll need to sign up for a [free developer account](https://developer.mapquest.com/plan_purchase/steps/business_edition/business_edition_free) and get an API key. They give you 15,000 calls per month so I can't do any more than that unless you shell out some big bucks to them. Once I hit my limit the best I'll be able to do is *Unknown Location* until the following month.
 
