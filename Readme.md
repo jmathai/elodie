@@ -9,7 +9,9 @@ Getting started takes just a few minutes.
 
 ### Install ExifTool
 
-Elodie relies on the great [ExifTool library by Phil Harvey](http://www.sno.phy.queensu.ca/~phil/exiftool/). You'll need to install it for your platform. Some features for video files will only work with newer versions of ExifTool and have been tested on version 10.15 or higher. Check your version by typing `exiftool -ver` and see the [manual installation instructions for ExifTool](http://www.sno.phy.queensu.ca/~phil/exiftool/install.html#Unix) if needed.
+Elodie relies on the great [ExifTool library by Phil Harvey](http://www.sno.phy.queensu.ca/~phil/exiftool/). You'll need to install it for your platform.
+
+Some features for video files will only work with newer versions of ExifTool and have been tested on version 10.15 or higher. Check your version by typing `exiftool -ver` and see the [manual installation instructions for ExifTool](http://www.sno.phy.queensu.ca/~phil/exiftool/install.html#Unix) if needed.
 
 ```
 # OSX (uses homebrew, http://brew.sh/)
@@ -212,6 +214,7 @@ I don't do anything else so don't bother asking.
 ## EXIF and XMP tags
 
 When I organize photos I look at the embedded metadata. Here are the details of how I determine what information to use.
+
 | Dimension | Fields | Notes |
 |---|---|---|
 | Date Taken (photo) | EXIF:DateTimeOriginal,EXIF:DateTime, EXIF:DateTimeDigitized, file created, file modified |   |
