@@ -46,7 +46,7 @@ Now that you've got the minimum dependencies installed you can start using Elodi
 ./elodie.py import --destination="/where/i/want/my/photos/to/go" /where/my/photo/is.jpg
 ```
 
-You'll notice that the photo was organized into an *Unknown Location* folder. That's because you haven't set up your MapQuest API ([instructions](#using-openstreetmap-data-from-mapquest).
+You'll notice that the photo was organized into an *Unknown Location* folder. That's because you haven't set up your MapQuest API ([instructions](#using-openstreetmap-data-from-mapquest)).
 
 Now you're ready to learn more about Elodie.
 
@@ -63,7 +63,7 @@ I only do 3 things.
 * Second I help make it easy for all the photos you haven't taken yet to flow into the exact location they belong.
 * Third but not least I promise to do all this without a yucky propietary database that some friends of mine use.
 
-*NOTE: make sure you've installed everything I need before running the commands below. [Instructions](#install-everything-you-need) at the bottom of this page.*
+*NOTE: make sure you've installed everything I need before running the commands below. [Instructions](#quickstart-guide) at the top of this page.*
 
 ## Two interfaces, same result
 
@@ -87,18 +87,20 @@ Updating EXIF of photos from the command line.
 
 ## The dream setup I am optimized for
 
-I'm most helpful when I'm fully utilized to keep your photos organized. My parents had ambitious aspirations for me even when I was growing in my momma's belly . They're dreamers and so am I.
+I'm most helpful when I'm fully utilized to keep your photos organized.
 
 Here's an example of a very asynchronous setup.
-* Specify a folder in your Dropbox to store the organized photo library.
+* Specify a folder in your Dropbox/Google Drive to store the organized photo library.
 * Set up a Hazel rule to notify me when photos arrive in `~/Downloads` so I can import them.
   * The rule waits 1 minute before processing the photo which gives you a chance to move it elsewhere if it's not something you want in the library.
 * Use AirDrop to transfer files from any iPhone to your laptop. That goes to `~/Downloads` for the Hazel rule to process.
-  * AirDrop is fast, easy for anyone to use and once the transfer is finished your don't have to stick around. I'll move it to Dropbox and Dropbox will sync it to their servers.
+  * AirDrop is fast, easy for anyone to use and once the transfer is finished your don't have to stick around. I'll move it to Dropbox/Google Drive and Dropbox/Google Drive will sync it to their servers.
 * Periodically recategorize photos by fixing their location or date or by adding them to an album.
-* Have a Synology at home set to automatically sync down from Dropbox.
+* Have a Synology at home set to automatically sync down from Dropbox/Google Drive.
 
 This setup means you can quickly get photos off your or anyone's phone and know that they'll be organized and backed up in 3 locations by the time they're ready to view them.
+
+<p align="center"><img src ="creative/workflow-simplified-white-bg.png" /></p>
 
 ## Let's organize your existing photos
 
@@ -213,7 +215,7 @@ I don't do anything else so don't bother asking.
 
 ## EXIF and XMP tags
 
-When I organize photos I look at the embedded metadata. Here are the details of how I determine what information to use.
+When I organize photos I look at the embedded metadata. Here are the details of how I determine what information to use in order of precedence.
 
 | Dimension | Fields | Notes |
 |---|---|---|
@@ -230,3 +232,13 @@ When I organize photos I look at the embedded metadata. Here are the details of 
 I use MapQuest to help me organize your photos by location. You'll need to sign up for a [free developer account](https://developer.mapquest.com/plan_purchase/steps/business_edition/business_edition_free) and get an API key. They give you 15,000 calls per month so I can't do any more than that unless you shell out some big bucks to them. Once I hit my limit the best I'll be able to do is *Unknown Location* until the following month.
 
 Once you sign up you'll have to get an API key and copy it into a file named `~/.elodie/config.ini`. I've included a `config.ini-sample` file which you can copy to `config.ini`.
+
+```
+mkdir ~/.elodie
+cp config.ini-sample ~/.elodie/config.ini
+# now you're ready to add your MapQuest key
+```
+
+## Questions, comments or concerns?
+
+The best ways to provide feedback is by reaching out on Twitter at [@getelodie](https://twitter.com/getelodie), opening a [GitHub issue](https://github.com/jmathai/elodie/issues) or emailing me at [jaisen@jmathai.com](mailto:jaisen@jmathai.com).
