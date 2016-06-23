@@ -3,7 +3,6 @@
 from os import path
 from ConfigParser import ConfigParser
 import fractions
-import pyexiv2
 
 import requests
 import urllib
@@ -74,33 +73,14 @@ def coordinates_by_name(name):
     return None
 
 
-def decimal_to_dms(decimal, signed=True):
-    # if decimal is negative we need to make the degrees and minutes
-    #   negative also
-    sign = 1
-    if(decimal < 0):
-        sign = -1
-
-    # http://anothergisblog.blogspot.com/2011/11/convert-decimal-degree-to-degrees.html # noqa
-    degrees = int(decimal)
-    subminutes = abs((decimal - int(decimal)) * 60)
-    minutes = int(subminutes) * sign
-    subseconds = abs((subminutes - int(subminutes)) * 60) * sign
-    subseconds_fraction = Fraction(subseconds)
-
-    if(signed is False):
-        degrees = abs(degrees)
-        minutes = abs(minutes)
-        subseconds_fraction = Fraction(abs(subseconds))
-
-    return (
-        pyexiv2.Rational(degrees, 1),
-        pyexiv2.Rational(minutes, 1),
-        pyexiv2.Rational(
-            subseconds_fraction.numerator,
-            subseconds_fraction.denominator
-        )
-    )
+def decimal_to_dms(decimal):
+    decimal = float(decimal)
+    decimal_abs = abs(decimal)
+    minutes,seconds = divmod(decimal_abs*3600,60)
+    degrees,minutes = divmod(minutes,60)
+    degrees = degrees
+    sign = 1 if decimal >= 0 else -1
+    return (degrees,minutes,seconds, sign)
 
 
 def dms_to_decimal(degrees, minutes, seconds, direction=' '):
@@ -110,6 +90,16 @@ def dms_to_decimal(degrees, minutes, seconds, direction=' '):
     return (
         float(degrees) + float(minutes) / 60 + float(seconds) / 3600
     ) * sign
+
+
+def dms_string(decimal, type='latitude'):
+    # Example string -> 38 deg 14' 27.82" S
+    dms = decimal_to_dms(decimal)
+    if type == 'latitude':
+        direction = 'N' if decimal >= 0 else 'S'
+    elif type == 'longitude':
+        direction = 'E' if decimal >= 0 else 'W'
+    return '{} deg {}\' {}" {}'.format(dms[0], dms[1], dms[2], direction)
 
 
 def get_key():
