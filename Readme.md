@@ -225,7 +225,7 @@ When I organize photos I look at the embedded metadata. Here are the details of 
 | Location (video, audio) | XMP:GPSLatitude, Composite:GPSLatitude, XMP:GPSLongitude, Composite:GPSLongitude | Composite tags are read-only |
 | Title (photo) | XMP:Title |   |
 | Title (video, audio) | XMP:DisplayName |   |
-| Album | XMP:Album | User defined tag in `configs/ExifTool_config` |
+| Album | XMP-xmpDM:Album, XMP:Album | XMP:Album is user defined in `configs/ExifTool_config` for backwards compatability |
 
 ## Using OpenStreetMap data from MapQuest
 
