@@ -416,7 +416,6 @@ def test_get_metadata_from_rw2():
     assert metadata['date_taken'] == helper.time_convert((2014, 11, 19, 23, 7, 44, 2, 323, 0)), metadata['date_taken']
 
 def test_set_metadata_on_rw2():
-    raise SkipTest('gh-94 Writing to RW2 images is not supported')
     temporary_folder, folder = helper.create_working_folder()
 
     photo_file = helper.get_file('photo.rw2')
