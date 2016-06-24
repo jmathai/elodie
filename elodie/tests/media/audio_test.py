@@ -77,9 +77,6 @@ def test_is_not_valid():
     assert not audio.is_valid()
 
 def test_set_date_taken():
-    if not can_edit_exif():
-        raise SkipTest('avmetareadwrite executable not found')
-
     temporary_folder, folder = helper.create_working_folder()
 
     origin = '%s/audio.m4a' % folder
@@ -100,9 +97,6 @@ def test_set_date_taken():
     assert date_taken == (2013, 9, 30, 7, 6, 5, 0, 273, 0), metadata['date_taken']
 
 def test_set_location():
-    if not can_edit_exif():
-        raise SkipTest('avmetareadwrite executable not found')
-
     temporary_folder, folder = helper.create_working_folder()
 
     origin = '%s/audio.m4a' % folder
@@ -129,9 +123,6 @@ def test_set_location():
     assert helper.isclose(metadata['longitude'], 99.9999999999), metadata['longitude']
 
 def test_set_location_minus():
-    if not can_edit_exif():
-        raise SkipTest('avmetareadwrite executable not found')
-
     temporary_folder, folder = helper.create_working_folder()
 
     origin = '%s/audio.m4a' % folder
@@ -158,9 +149,6 @@ def test_set_location_minus():
     assert helper.isclose(metadata['longitude'], -99.999999), metadata['longitude']
 
 def test_set_title():
-    if not can_edit_exif():
-        raise SkipTest('avmetareadwrite executable not found')
-
     temporary_folder, folder = helper.create_working_folder()
 
     origin = '%s/audio.m4a' % folder
@@ -181,9 +169,6 @@ def test_set_title():
     assert metadata['title'] == 'my audio title', metadata['title']
 
 def test_set_title_non_ascii():
-    if not can_edit_exif():
-        raise SkipTest('avmetareadwrite executable not found')
-
     raise SkipTest('gh-27, non-ascii characters')
     temporary_folder, folder = helper.create_working_folder()
 
@@ -203,7 +188,3 @@ def test_set_title_non_ascii():
     shutil.rmtree(folder)
 
     assert metadata['title'] == '形声字 / 形聲字', metadata['title']
-
-def can_edit_exif():
-    audio = Audio()
-    return audio.get_avmetareadwrite()
