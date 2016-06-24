@@ -35,8 +35,8 @@ class Media(Base):
         self.exif_map = {
             'date_taken': [
                 'EXIF:DateTimeOriginal',
-                'EXIF:DateTime',
-                'EXIF:DateTimeDigitized'
+                'EXIF:CreateDate',
+                'EXIF:ModifyDate'
             ]
         }
         self.album_keys = ['XMP-xmpDM:Album', 'XMP:Album']

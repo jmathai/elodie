@@ -219,7 +219,7 @@ When I organize photos I look at the embedded metadata. Here are the details of 
 
 | Dimension | Fields | Notes |
 |---|---|---|
-| Date Taken (photo) | EXIF:DateTimeOriginal,EXIF:DateTime, EXIF:DateTimeDigitized, file created, file modified |   |
+| Date Taken (photo) | EXIF:DateTimeOriginal, EXIF:CreateDate, EXIF:ModifyDate, file created, file modified |   |
 | Date Taken (video, audio) | QuickTime:CreationDate, QuickTime:CreationDate-und-US, QuickTime:MediaCreateDate, file created, file modified |   |
 | Location (photo) | EXIF:GPSLatitude/EXIF:GPSLatitudeRef, EXIF:GPSLongitude/EXIF:GPSLongitudeRef  |   |
 | Location (video, audio) | XMP:GPSLatitude, Composite:GPSLatitude, XMP:GPSLongitude, Composite:GPSLongitude | Composite tags are read-only |
