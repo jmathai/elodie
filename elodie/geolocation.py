@@ -76,11 +76,11 @@ def coordinates_by_name(name):
 def decimal_to_dms(decimal):
     decimal = float(decimal)
     decimal_abs = abs(decimal)
-    minutes,seconds = divmod(decimal_abs*3600,60)
-    degrees,minutes = divmod(minutes,60)
+    minutes, seconds = divmod(decimal_abs*3600, 60)
+    degrees, minutes = divmod(minutes, 60)
     degrees = degrees
     sign = 1 if decimal >= 0 else -1
-    return (degrees,minutes,seconds, sign)
+    return (degrees, minutes, seconds, sign)
 
 
 def dms_to_decimal(degrees, minutes, seconds, direction=' '):
