@@ -39,7 +39,7 @@ class Media(Base):
                 'EXIF:DateTimeDigitized'
             ]
         }
-        self.album_key = 'XMP:Album'
+        self.album_keys = ['XMP-xmpDM:Album', 'XMP:Album']
         self.title_key = 'XMP:Title'
         self.latitude_keys = ['EXIF:GPSLatitude']
         self.longitude_keys = ['EXIF:GPSLongitude']
@@ -64,10 +64,11 @@ class Media(Base):
         if exiftool_attributes is None:
             return None
 
-        if self.album_key not in exiftool_attributes:
-            return None
+        for album_key in self.album_keys:
+            if album_key in exiftool_attributes:
+                return exiftool_attributes[album_key]
 
-        return exiftool_attributes[self.album_key]
+        return None
 
     def get_coordinate(self, type='latitude'):
         """Get latitude or longitude of media from EXIF
@@ -153,9 +154,7 @@ class Media(Base):
         if(not self.is_valid()):
             return None
 
-        source = self.source
-
-        tags = {self.album_key: album}
+        tags = {self.album_keys[0]: album}
         status = self.__set_tags(tags)
         self.reset_cache()
 
