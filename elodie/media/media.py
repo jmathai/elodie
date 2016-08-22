@@ -8,6 +8,7 @@ are used to represent the actual files.
 
 .. moduleauthor:: Jaisen Mathai <jaisen@jmathai.com>
 """
+from __future__ import print_function
 
 # load modules
 from elodie import constants

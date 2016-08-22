@@ -4,6 +4,9 @@ objects (AVI, MOV, etc.).
 
 .. moduleauthor:: Jaisen Mathai <jaisen@jmathai.com>
 """
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import division
 
 # load modules
 from distutils.spawn import find_executable
@@ -13,7 +16,7 @@ import os
 import re
 import time
 
-from media import Media
+from .media import Media
 
 
 class Video(Media):

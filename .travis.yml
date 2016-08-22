@@ -2,14 +2,15 @@ language: python
 dist: trusty
 python:
   - "2.7"
+  - "3.4"
 virtualenv:
   system_site_packages: true
 before_install:
   - "sudo apt-get update -qq"
   - "sudo apt-get install python-dev python-pip libimage-exiftool-perl -y"
 install:
-  - "sudo pip install -r elodie/tests/requirements.txt"
-  - "sudo pip install coveralls"
+  - "pip install -r elodie/tests/requirements.txt"
+  - "pip install coveralls"
 # command to run tests
 # test mapquest key
 before_script:
@@ -25,5 +26,5 @@ before_script:
   - "cd ${ELODIE_DIR}"
 after_success:
   - "coveralls"
-script: 
+script:
   - "nosetests --with-coverage --cover-package=elodie -w elodie/tests"
