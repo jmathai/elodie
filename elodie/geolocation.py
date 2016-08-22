@@ -2,15 +2,17 @@
 from __future__ import print_function
 from __future__ import division
 from future import standard_library
-standard_library.install_aliases()
 from past.utils import old_div
 
 from os import path
 from configparser import ConfigParser
-import fractions
+
+standard_library.install_aliases()  # noqa
 
 import requests
-import urllib.request, urllib.parse, urllib.error
+import urllib.request
+import urllib.parse
+import urllib.error
 
 from elodie import constants
 from elodie.localstorage import Db
@@ -77,7 +79,8 @@ def dms_to_decimal(degrees, minutes, seconds, direction=' '):
     if(direction[0] in 'WSws'):
         sign = -1
     return (
-        float(degrees) + old_div(float(minutes), 60) + old_div(float(seconds), 3600)
+        float(degrees) + old_div(float(minutes), 60) +
+        old_div(float(seconds), 3600)
     ) * sign
 
 
@@ -148,7 +151,7 @@ def reverse_lookup(lat, lon):
         headers = {"Accept-Language": constants.accepted_language}
         r = requests.get(
             'http://open.mapquestapi.com/nominatim/v1/reverse.php?%s' %
-            urllib.parse.urlencode(params),headers=headers
+            urllib.parse.urlencode(params), headers=headers
         )
         return r.json()
     except requests.exceptions.RequestException as e:

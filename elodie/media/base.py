@@ -13,10 +13,11 @@ are used to represent the actual files.
 import mimetypes
 import os
 
-try:
-      basestring
+try:        # Py3k compatibility
+    basestring
 except NameError:
-      basestring = str
+    basestring = (bytes, str)
+
 
 class Base(object):
 
