@@ -1,3 +1,7 @@
+from __future__ import division
+from __future__ import unicode_literals
+from builtins import range
+from past.utils import old_div
 import hashlib
 import os
 import random
@@ -12,7 +16,7 @@ from datetime import timedelta
 
 def checksum(file_path, blocksize=65536):
     hasher = hashlib.sha256()
-    with open(file_path, 'r') as f:
+    with open(file_path, 'rb') as f:
         buf = f.read(blocksize)
 
         while len(buf) > 0:
@@ -73,7 +77,7 @@ def random_decimal():
 
 def random_coordinate(coordinate, precision):
     # Here we add to the decimal section of the coordinate by a given precision
-    return coordinate + ((10.0 / (10.0**precision)) * random_decimal())
+    return coordinate + ((old_div(10.0, (10.0**precision))) * random_decimal())
 
 def temp_dir():
     return tempfile.gettempdir()
@@ -91,8 +95,8 @@ def is_windows():
 def path_tz_fix(file_name):
   if is_windows():
       # Calculate the offset between UTC and local time
-      tz_shift = (datetime.fromtimestamp(0) -
-                  datetime.utcfromtimestamp(0)).seconds/3600
+      tz_shift = old_div((datetime.fromtimestamp(0) -
+                  datetime.utcfromtimestamp(0)).seconds,3600)
       # replace timestamp in file_name
       m = re.search('(\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2})',file_name)
       t_date = datetime.fromtimestamp(time.mktime(time.strptime(m.group(0), '%Y-%m-%d_%H-%M-%S')))
