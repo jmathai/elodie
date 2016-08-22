@@ -9,7 +9,6 @@ are used to represent the actual files.
 .. moduleauthor:: Jaisen Mathai <jaisen@jmathai.com>
 """
 from __future__ import print_function
-from builtins import object
 
 # load modules
 from elodie import constants

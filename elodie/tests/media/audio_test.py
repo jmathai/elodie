@@ -57,7 +57,6 @@ def test_get_date_taken():
     audio = Audio(helper.get_file('audio.m4a'))
     date_taken = audio.get_date_taken()
 
-    print('%r' % date_taken)
     assert date_taken == (2016, 1, 4, 5, 24, 15, 0, 19, 0), date_taken
 
 def test_get_exiftool_attributes():

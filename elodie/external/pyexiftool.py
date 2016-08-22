@@ -402,13 +402,13 @@ class ExifTool(object):
                             "an iterable of strings")
                 
         params = []
-        params_b = []
+        params_utf8 = []
         for tag, value in tags.items():
             params.append(u'-%s=%s' % (tag, value))
             
         params.extend(filenames)
-        params_b = [x.encode('utf-8') for x in params]
-        return self.execute(*params_b)
+        params_utf8 = [x.encode('utf-8') for x in params]
+        return self.execute(*params_utf8)
 
     def set_tags(self, tags, filename):
         """Writes the values of the specified tags for the given file.
