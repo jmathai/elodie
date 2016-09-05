@@ -1,10 +1,12 @@
+from __future__ import print_function
+from __future__ import absolute_import
 # Project imports
 import os
 import sys
 
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))))
 
-import helper
+from . import helper
 from elodie.localstorage import Db
 from elodie import constants
 
@@ -154,10 +156,10 @@ def test_get_location_name_within_threshold():
     latitude, longitude, name = helper.get_test_location()
     db.add_location(latitude, longitude, name)
 
-    print latitude
+    print(latitude)
     new_latitude = helper.random_coordinate(latitude, 4)
     new_longitude = helper.random_coordinate(longitude, 4)
-    print new_latitude
+    print(new_latitude)
 
     # 10 miles
     retrieved_name = db.get_location_name(new_latitude, new_longitude, 1600*10)

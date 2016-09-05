@@ -123,7 +123,7 @@ class Text(Base):
                 self.metadata_line = parsed_json
         except ValueError:
             if(constants.debug is True):
-                print 'Could not parse JSON from first line: %s' % first_line
+                print('Could not parse JSON from first line: %s' % first_line)
             pass
 
     def write_metadata(self, **kwargs):

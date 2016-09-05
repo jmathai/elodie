@@ -4,23 +4,19 @@ objects (AVI, MOV, etc.).
 
 .. moduleauthor:: Jaisen Mathai <jaisen@jmathai.com>
 """
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import division
 
 # load modules
 from distutils.spawn import find_executable
-import tempfile
 from datetime import datetime
 
 import os
 import re
-import shutil
-import subprocess
 import time
 
-from elodie import constants
-from elodie import plist_parser
-from elodie.dependencies import get_exiftool
-from media import Base
-from media import Media
+from .media import Media
 
 
 class Video(Media):
@@ -45,12 +41,12 @@ class Video(Media):
         self.title_key = 'XMP:DisplayName'
         self.latitude_keys = [
             'XMP:GPSLatitude',
-            #'QuickTime:GPSLatitude',
+            # 'QuickTime:GPSLatitude',
             'Composite:GPSLatitude'
         ]
         self.longitude_keys = [
             'XMP:GPSLongitude',
-            #'QuickTime:GPSLongitude',
+            # 'QuickTime:GPSLongitude',
             'Composite:GPSLongitude'
         ]
         self.latitude_ref_key = 'EXIF:GPSLatitudeRef'
@@ -81,7 +77,7 @@ class Video(Media):
         """
         if(not self.is_valid()):
             return None
-        
+
         source = self.source
         seconds_since_epoch = min(os.path.getmtime(source), os.path.getctime(source))  # noqa
 
@@ -107,7 +103,7 @@ class Video(Media):
                             if date_offset is not None:
                                 offset_parts = date_offset[1:].split(':')
                                 offset_seconds = int(offset_parts[0]) * 3600
-                                offset_seconds = offset_seconds + int(offset_parts[1]) * 60 #noqa
+                                offset_seconds = offset_seconds + int(offset_parts[1]) * 60  # noqa
                                 if date_offset[0] == '-':
                                     seconds_since_epoch - offset_seconds
                                 elif date_offset[0] == '+':

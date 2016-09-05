@@ -3,6 +3,8 @@ General file system methods.
 
 .. moduleauthor:: Jaisen Mathai <jaisen@jmathai.com>
 """
+from __future__ import print_function
+from builtins import object
 
 import os
 import re
@@ -176,7 +178,7 @@ class FileSystem(object):
             allow_duplicate = kwargs['allowDuplicate']
 
         if(not media.is_valid()):
-            print '%s is not a valid media file. Skipping...' % _file
+            print('%s is not a valid media file. Skipping...' % _file)
             return
 
         metadata = media.get_metadata()
@@ -191,17 +193,17 @@ class FileSystem(object):
         checksum = db.checksum(_file)
         if(checksum is None):
             if(constants.debug is True):
-                print 'Could not get checksum for %s. Skipping...' % _file
+                print('Could not get checksum for %s. Skipping...' % _file)
             return
 
         # If duplicates are not allowed and this hash exists in the db then we
         #   return
         if(allow_duplicate is False and db.check_hash(checksum) is True):
             if(constants.debug is True):
-                print '%s already exists at %s. Skipping...' % (
+                print('%s already exists at %s. Skipping...' % (
                     _file,
                     db.get_hash(checksum)
-                )
+                ))
             return
 
         self.create_directory(dest_directory)

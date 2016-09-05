@@ -4,6 +4,8 @@ image objects (JPG, DNG, etc.).
 
 .. moduleauthor:: Jaisen Mathai <jaisen@jmathai.com>
 """
+from __future__ import print_function
+from __future__ import absolute_import
 
 import imghdr
 import os
@@ -15,9 +17,7 @@ from re import compile
 
 
 from elodie import constants
-from elodie import geolocation
-from elodie.external.pyexiftool import ExifTool
-from media import Media
+from .media import Media
 
 
 class Photo(Media):
@@ -69,7 +69,7 @@ class Photo(Media):
         """
         if(not self.is_valid()):
             return None
-        
+
         source = self.source
         seconds_since_epoch = min(os.path.getmtime(source), os.path.getctime(source))  # noqa
 
@@ -80,7 +80,7 @@ class Photo(Media):
         # We need to parse a string from EXIF into a timestamp.
         # EXIF DateTimeOriginal and EXIF DateTime are both stored
         #   in %Y:%m:%d %H:%M:%S format
-        # we use split on a space and then r':|-' -> convert to int -> .timetuple()
+        # we split on a space and then r':|-' -> convert to int -> .timetuple()
         #   the conversion in the local timezone
         # EXIF DateTime is already stored as a timestamp
         # Sourced from https://github.com/photo/frontend/blob/master/src/libraries/models/Photo.php#L500  # noqa
@@ -97,7 +97,7 @@ class Photo(Media):
                         break
             except BaseException as e:
                 if(constants.debug is True):
-                    print e
+                    print(e)
                 pass
 
         if(seconds_since_epoch == 0):
