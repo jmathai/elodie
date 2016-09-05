@@ -24,11 +24,14 @@ def test_photo_extensions():
     photo = Photo()
     extensions = photo.extensions
 
+    assert 'arw' in extensions
+    assert 'cr2' in extensions
+    assert 'dng' in extensions
+    assert 'gif' in extensions
     assert 'jpg' in extensions
     assert 'jpeg' in extensions
     assert 'nef' in extensions
-    assert 'dng' in extensions
-    assert 'gif' in extensions
+    assert 'rw2' in extensions
 
     valid_extensions = Photo.get_valid_extensions()
 
@@ -283,19 +286,41 @@ def test_set_title_non_ascii():
 
     assert metadata['title'] == unicode_title, metadata['title']
 
-def test_get_metadata_from_nef():
+# This is a test generator that will test reading and writing to
+# various RAW formats. Each sample file has a different date which
+# is the only information which needs to be added to run the tests
+# for that file type.
+# https://nose.readthedocs.io/en/latest/writing_tests.html#test-generators
+def test_various_types():
+    types = Photo.extensions
+    #extensions = ('arw', 'cr2', 'dng', 'gif', 'jpeg', 'jpg', 'nef', 'rw2')
+    dates = {
+        'arw': (2007, 4, 8, 17, 41, 18, 6, 98, 0),
+        'cr2': (2005, 10, 29, 16, 14, 44, 5, 302, 0),
+        'dng': (2009, 10, 20, 9, 10, 46, 1, 293, 0),
+        'nef': (2008, 10, 24, 9, 12, 56, 4, 298, 0),
+        'rw2': (2014, 11, 19, 23, 7, 44, 2, 323, 0)
+    }
+
+    for type in types:
+        if type in dates:
+            yield (_test_photo_type_get, type, dates[type])
+            yield (_test_photo_type_set, type, dates[type])
+
+def _test_photo_type_get(type, date):
     temporary_folder, folder = helper.create_working_folder()
 
-    photo_file = helper.get_file('photo.nef')
-    origin = '%s/photo.nef' % folder
+    photo_name = 'photo.{}'.format(type)
+    photo_file = helper.get_file(photo_name)
+    origin = '{}/{}'.format(folder, photo_name)
 
     if not photo_file:
-        photo_file = helper.download_file('photo.nef', folder)
+        photo_file = helper.download_file(photo_name, folder)
         if not photo_file or not os.path.isfile(photo_file):
             raise SkipTest('nef file not downlaoded')
 
         # downloading for each test is costly so we save it in the working directory
-        file_path_save_as = helper.get_file_path('photo.nef')
+        file_path_save_as = helper.get_file_path(photo_name)
         if os.path.isfile(photo_file):
             shutil.copyfile(photo_file, file_path_save_as)
 
@@ -306,18 +331,19 @@ def test_get_metadata_from_nef():
 
     shutil.rmtree(folder)
 
-    assert metadata['date_taken'] == helper.time_convert((2008, 10, 24, 9, 12, 56, 4, 298, 0)), metadata['date_taken']
+    assert metadata['date_taken'] == helper.time_convert(date), '{} date {}'.format(type, metadata['date_taken'])
 
-def test_set_metadata_on_nef():
+def _test_photo_type_set(type, date):
     temporary_folder, folder = helper.create_working_folder()
 
-    photo_file = helper.get_file('photo.nef')
-    origin = '%s/photo.nef' % folder
+    photo_name = 'photo.{}'.format(type)
+    photo_file = helper.get_file(photo_name)
+    origin = '{}/{}'.format(folder, photo_name)
 
     if not photo_file:
-        photo_file = helper.download_file('photo.nef', folder)
+        photo_file = helper.download_file(photo_name, folder)
         if not photo_file or not os.path.isfile(photo_file):
-            raise SkipTest('nef file not downlaoded')
+            raise SkipTest('{} file not downlaoded'.format(type))
 
     shutil.copyfile(photo_file, origin)
 
@@ -333,222 +359,6 @@ def test_set_metadata_on_nef():
 
     shutil.rmtree(folder)
 
-    assert metadata['date_taken'] == helper.time_convert((2008, 10, 24, 9, 12, 56, 4, 298, 0)), metadata['date_taken']
-    assert helper.isclose(metadata['latitude'], 11.1111111111), metadata['latitude']
-    assert helper.isclose(metadata['longitude'], 99.9999999999), metadata['longitude']
-
-def test_get_metadata_from_dng():
-    temporary_folder, folder = helper.create_working_folder()
-
-    photo_file = helper.get_file('photo.dng')
-    origin = '%s/photo.dng' % folder
-
-    if not photo_file:
-        photo_file = helper.download_file('photo.dng', folder)
-        if not photo_file or not os.path.isfile(photo_file):
-            raise SkipTest('dng file not downlaoded')
-
-        # downloading for each test is costly so we save it in the working directory
-        file_path_save_as = helper.get_file_path('photo.dng')
-        if os.path.isfile(photo_file):
-            shutil.copyfile(photo_file, file_path_save_as)
-
-    shutil.copyfile(photo_file, origin)
-
-    photo = Photo(origin)
-    metadata = photo.get_metadata()
-
-    shutil.rmtree(folder)
-
-    assert metadata['date_taken'] == helper.time_convert((2009, 10, 20, 9, 10, 46, 1, 293, 0)), metadata['date_taken']
-
-def test_set_metadata_on_dng():
-    temporary_folder, folder = helper.create_working_folder()
-
-    photo_file = helper.get_file('photo.dng')
-    origin = '%s/photo.dng' % folder
-
-    if not photo_file:
-        photo_file = helper.download_file('photo.dng', folder)
-        if not photo_file or not os.path.isfile(photo_file):
-            raise SkipTest('dng file not downlaoded')
-
-    shutil.copyfile(photo_file, origin)
-
-    photo = Photo(origin)
-    origin_metadata = photo.get_metadata()
-
-    status = photo.set_location(11.1111111111, 99.9999999999)
-
-    assert status == True, status
-
-    photo_new = Photo(origin)
-    metadata = photo_new.get_metadata()
-
-    shutil.rmtree(folder)
-
-    assert metadata['date_taken'] == helper.time_convert((2009, 10, 20, 9, 10, 46, 1, 293, 0)), metadata['date_taken']
-    assert helper.isclose(metadata['latitude'], 11.1111111111), metadata['latitude']
-    assert helper.isclose(metadata['longitude'], 99.9999999999), metadata['longitude']
-
-def test_get_metadata_from_rw2():
-    temporary_folder, folder = helper.create_working_folder()
-
-    photo_file = helper.get_file('photo.rw2')
-    origin = '%s/photo.rw2' % folder
-
-    if not photo_file:
-        photo_file = helper.download_file('photo.rw2', folder)
-        if not photo_file or not os.path.isfile(photo_file):
-            raise SkipTest('rw2 file not downlaoded')
-
-        # downloading for each test is costly so we save it in the working directory
-        file_path_save_as = helper.get_file_path('photo.rw2')
-        if os.path.isfile(photo_file):
-            shutil.copyfile(photo_file, file_path_save_as)
-
-    shutil.copyfile(photo_file, origin)
-
-    photo = Photo(origin)
-    metadata = photo.get_metadata()
-
-    shutil.rmtree(folder)
-
-    assert metadata['date_taken'] == helper.time_convert((2014, 11, 19, 23, 7, 44, 2, 323, 0)), metadata['date_taken']
-
-def test_set_metadata_on_rw2():
-    temporary_folder, folder = helper.create_working_folder()
-
-    photo_file = helper.get_file('photo.rw2')
-    origin = '%s/photo.rw2' % folder
-
-    if not photo_file:
-        photo_file = helper.download_file('photo.rw2', folder)
-        if not photo_file or not os.path.isfile(photo_file):
-            raise SkipTest('rw2 file not downlaoded')
-
-    shutil.copyfile(photo_file, origin)
-
-    photo = Photo(origin)
-    origin_metadata = photo.get_metadata()
-
-    status = photo.set_location(11.1111111111, 99.9999999999)
-
-    assert status == True, status
-
-    photo_new = Photo(origin)
-    metadata = photo_new.get_metadata()
-
-    shutil.rmtree(folder)
-
-    assert metadata['date_taken'] == helper.time_convert((2014, 11, 19, 23, 7, 44, 2, 323, 0)), metadata['date_taken']
-    assert helper.isclose(metadata['latitude'], 11.1111111111), metadata['latitude']
-    assert helper.isclose(metadata['longitude'], 99.9999999999), metadata['longitude']
-
-def test_get_metadata_from_arw():
-    temporary_folder, folder = helper.create_working_folder()
-
-    photo_file = helper.get_file('photo.arw')
-    origin = '%s/photo.arw' % folder
-
-    if not photo_file:
-        photo_file = helper.download_file('photo.arw', folder)
-        if not photo_file or not os.path.isfile(photo_file):
-            raise SkipTest('arw file not downlaoded')
-
-        # downloading for each test is costly so we save it in the working directory
-        file_path_save_as = helper.get_file_path('photo.arw')
-        if os.path.isfile(photo_file):
-            shutil.copyfile(photo_file, file_path_save_as)
-
-    shutil.copyfile(photo_file, origin)
-
-    photo = Photo(origin)
-    metadata = photo.get_metadata()
-
-    shutil.rmtree(folder)
-
-    assert metadata['date_taken'] == helper.time_convert((2007, 4, 8, 17, 41, 18, 6, 98, 0)), metadata['date_taken']
-
-def test_set_metadata_on_arw():
-    temporary_folder, folder = helper.create_working_folder()
-
-    photo_file = helper.get_file('photo.arw')
-    origin = '%s/photo.arw' % folder
-
-    if not photo_file:
-        photo_file = helper.download_file('photo.arw', folder)
-        if not photo_file or not os.path.isfile(photo_file):
-            raise SkipTest('arw file not downlaoded')
-
-    shutil.copyfile(photo_file, origin)
-
-    photo = Photo(origin)
-    origin_metadata = photo.get_metadata()
-
-    status = photo.set_location(11.1111111111, 99.9999999999)
-
-    assert status == True, status
-
-    photo_new = Photo(origin)
-    metadata = photo_new.get_metadata()
-
-    shutil.rmtree(folder)
-
-    assert metadata['date_taken'] == helper.time_convert((2007, 4, 8, 17, 41, 18, 6, 98, 0)), metadata['date_taken']
-    assert helper.isclose(metadata['latitude'], 11.1111111111), metadata['latitude']
-    assert helper.isclose(metadata['longitude'], 99.9999999999), metadata['longitude']
-
-def test_get_metadata_from_cr2():
-    temporary_folder, folder = helper.create_working_folder()
-
-    photo_file = helper.get_file('photo.cr2')
-    origin = '%s/photo.cr2' % folder
-
-    if not photo_file:
-        photo_file = helper.download_file('photo.cr2', folder)
-        if not photo_file or not os.path.isfile(photo_file):
-            raise SkipTest('cr2 file not downlaoded')
-
-        # downloading for each test is costly so we save it in the working directory
-        file_path_save_as = helper.get_file_path('photo.cr2')
-        if os.path.isfile(photo_file):
-            shutil.copyfile(photo_file, file_path_save_as)
-
-    shutil.copyfile(photo_file, origin)
-
-    photo = Photo(origin)
-    metadata = photo.get_metadata()
-
-    shutil.rmtree(folder)
-
-    assert metadata['date_taken'] == helper.time_convert((2005, 10, 29, 16, 14, 44, 5, 302, 0)), metadata['date_taken']
-
-def test_set_metadata_on_cr2():
-    temporary_folder, folder = helper.create_working_folder()
-
-    photo_file = helper.get_file('photo.cr2')
-    origin = '%s/photo.cr2' % folder
-
-    if not photo_file:
-        photo_file = helper.download_file('photo.cr2', folder)
-        if not photo_file or not os.path.isfile(photo_file):
-            raise SkipTest('cr2 file not downlaoded')
-
-    shutil.copyfile(photo_file, origin)
-
-    photo = Photo(origin)
-    origin_metadata = photo.get_metadata()
-
-    status = photo.set_location(11.1111111111, 99.9999999999)
-
-    assert status == True, status
-
-    photo_new = Photo(origin)
-    metadata = photo_new.get_metadata()
-
-    shutil.rmtree(folder)
-
-    assert metadata['date_taken'] == helper.time_convert((2005, 10, 29, 16, 14, 44, 5, 302, 0)), metadata['date_taken']
-    assert helper.isclose(metadata['latitude'], 11.1111111111), metadata['latitude']
-    assert helper.isclose(metadata['longitude'], 99.9999999999), metadata['longitude']
+    assert metadata['date_taken'] == helper.time_convert(date), '{} date {}'.format(type, metadata['date_taken'])
+    assert helper.isclose(metadata['latitude'], 11.1111111111), '{} lat {}'.format(type, metadata['latitude'])
+    assert helper.isclose(metadata['longitude'], 99.9999999999), '{} lon {}'.format(type, metadata['latitude'])
