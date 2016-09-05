@@ -8,16 +8,13 @@ are used to represent the actual files.
 
 .. moduleauthor:: Jaisen Mathai <jaisen@jmathai.com>
 """
+from __future__ import print_function
 
 # load modules
 from elodie import constants
 from elodie.dependencies import get_exiftool
 from elodie.external.pyexiftool import ExifTool
 from elodie.media.base import Base
-
-import os
-import re
-import subprocess
 
 
 class Media(Base):
@@ -39,11 +36,11 @@ class Media(Base):
         self.exif_map = {
             'date_taken': [
                 'EXIF:DateTimeOriginal',
-                'EXIF:DateTime',
-                'EXIF:DateTimeDigitized'
+                'EXIF:CreateDate',
+                'EXIF:ModifyDate'
             ]
         }
-        self.album_key = 'XMP:Album'
+        self.album_keys = ['XMP-xmpDM:Album', 'XMP:Album']
         self.title_key = 'XMP:Title'
         self.latitude_keys = ['EXIF:GPSLatitude']
         self.longitude_keys = ['EXIF:GPSLongitude']
@@ -68,10 +65,11 @@ class Media(Base):
         if exiftool_attributes is None:
             return None
 
-        if self.album_key not in exiftool_attributes:
-            return None
+        for album_key in self.album_keys:
+            if album_key in exiftool_attributes:
+                return exiftool_attributes[album_key]
 
-        return exiftool_attributes[self.album_key]
+        return None
 
     def get_coordinate(self, type='latitude'):
         """Get latitude or longitude of media from EXIF
@@ -92,12 +90,16 @@ class Media(Base):
         for key in self.latitude_keys + self.longitude_keys:
             # TODO: verify that we need to check ref key
             #   when self.set_gps_ref != True
-            if type == 'latitude' and key in self.latitude_keys and key in exif:
-                if self.latitude_ref_key in exif and exif[self.latitude_ref_key] == 'S': #noqa
+            if type == 'latitude' and key in self.latitude_keys and \
+                    key in exif:
+                if self.latitude_ref_key in exif and \
+                        exif[self.latitude_ref_key] == 'S':
                     direction_multiplier = -1
                 return exif[key] * direction_multiplier
-            elif type == 'longitude' and key in self.longitude_keys and key in exif: #noqa
-                if self.longitude_ref_key in exif and exif[self.longitude_ref_key] == 'W': #noqa
+            elif type == 'longitude' and key in self.longitude_keys and \
+                    key in exif:
+                if self.longitude_ref_key in exif and \
+                        exif[self.longitude_ref_key] == 'W':
                     direction_multiplier = -1
                 return exif[key] * direction_multiplier
 
@@ -153,9 +155,7 @@ class Media(Base):
         if(not self.is_valid()):
             return None
 
-        source = self.source
-
-        tags = {self.album_key: album}
+        tags = {self.album_keys[0]: album}
         status = self.__set_tags(tags)
         self.reset_cache()
 
@@ -170,8 +170,6 @@ class Media(Base):
         if(time is None):
             return False
 
-        source = self.source
-
         tags = {}
         formatted_time = time.strftime('%Y:%m:%d %H:%M:%S')
         for key in self.exif_map['date_taken']:
@@ -184,8 +182,6 @@ class Media(Base):
     def set_location(self, latitude, longitude):
         if(not self.is_valid()):
             return None
-
-        source = self.source
 
         # The lat/lon _keys array has an order of precedence.
         # The first key is writable and we will give the writable
@@ -221,8 +217,6 @@ class Media(Base):
 
         if(title is None):
             return None
-
-        source = self.source
 
         tags = {self.title_key: title}
         status = self.__set_tags(tags)

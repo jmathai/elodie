@@ -11,7 +11,7 @@ Getting started takes just a few minutes.
 
 Elodie relies on the great [ExifTool library by Phil Harvey](http://www.sno.phy.queensu.ca/~phil/exiftool/). You'll need to install it for your platform.
 
-Some features for video files will only work with newer versions of ExifTool and have been tested on version 10.15 or higher. Check your version by typing `exiftool -ver` and see the [manual installation instructions for ExifTool](http://www.sno.phy.queensu.ca/~phil/exiftool/install.html#Unix) if needed.
+Some features for video files will only work with newer versions of ExifTool and have been tested on version 10.20 or higher. Check your version by typing `exiftool -ver` and see the [manual installation instructions for ExifTool](http://www.sno.phy.queensu.ca/~phil/exiftool/install.html#Unix) if needed.
 
 ```
 # OSX (uses homebrew, http://brew.sh/)
@@ -98,7 +98,7 @@ Here's an example of a very asynchronous setup.
 * Periodically recategorize photos by fixing their location or date or by adding them to an album.
 * Have a Synology at home set to automatically sync down from Dropbox/Google Drive.
 
-This setup means you can quickly get photos off your or anyone's phone and know that they'll be organized and backed up in 3 locations by the time they're ready to view them.
+This setup means you can quickly get photos off your or anyone's phone and know that they'll be organized and backed up in 3 locations by the time you're ready to view them.
 
 <p align="center"><img src ="creative/workflow-simplified-white-bg.png" /></p>
 
@@ -189,7 +189,7 @@ Organizing your existing photos is great. But I'd be lying if I said I was the o
 
 In order to sort new photos that I haven't already organized I need someone to tell me about them. There's no single way to do this. You could use inotify, cron, Automator or my favorite app - Hazel; it doesn't matter.
 
-If you'd like to let me know of a specific photo or group of photos to add to your library you would run one of the following command. Use fully qualified paths for everything since you won't be running this manually.
+If you'd like to let me know of a specific photo or group of photos to add to your library you would run one of the following commands. Use fully qualified paths for everything since you won't be running this manually.
 
 ```
 # I can import a single file into your library.
@@ -219,13 +219,13 @@ When I organize photos I look at the embedded metadata. Here are the details of 
 
 | Dimension | Fields | Notes |
 |---|---|---|
-| Date Taken (photo) | EXIF:DateTimeOriginal,EXIF:DateTime, EXIF:DateTimeDigitized, file created, file modified |   |
+| Date Taken (photo) | EXIF:DateTimeOriginal, EXIF:CreateDate, EXIF:ModifyDate, file created, file modified |   |
 | Date Taken (video, audio) | QuickTime:CreationDate, QuickTime:CreationDate-und-US, QuickTime:MediaCreateDate, file created, file modified |   |
 | Location (photo) | EXIF:GPSLatitude/EXIF:GPSLatitudeRef, EXIF:GPSLongitude/EXIF:GPSLongitudeRef  |   |
 | Location (video, audio) | XMP:GPSLatitude, Composite:GPSLatitude, XMP:GPSLongitude, Composite:GPSLongitude | Composite tags are read-only |
 | Title (photo) | XMP:Title |   |
 | Title (video, audio) | XMP:DisplayName |   |
-| Album | XMP:Album | User defined tag in `configs/ExifTool_config` |
+| Album | XMP-xmpDM:Album, XMP:Album | XMP:Album is user defined in `configs/ExifTool_config` for backwards compatability |
 
 ## Using OpenStreetMap data from MapQuest
 

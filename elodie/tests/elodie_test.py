@@ -87,9 +87,6 @@ def test_import_file_video():
     assert helper.path_tz_fix(os.path.join('2015-01-Jan','California','2015-01-19_12-45-11-video.mov')) in dest_path, dest_path
 
 def test_update_location_on_audio():
-    if not can_edit_exif():
-        raise SkipTest('avmetareadwrite executable not found')
-
     temporary_folder, folder = helper.create_working_folder()
     temporary_folder_destination, folder_destination = helper.create_working_folder()
 
@@ -165,9 +162,6 @@ def test_update_location_on_text():
     assert helper.isclose(metadata_processed['longitude'], -122.03635), metadata_processed['longitude']
 
 def test_update_location_on_video():
-    if not can_edit_exif():
-        raise SkipTest('avmetareadwrite executable not found')
-
     temporary_folder, folder = helper.create_working_folder()
     temporary_folder_destination, folder_destination = helper.create_working_folder()
 
@@ -193,9 +187,6 @@ def test_update_location_on_video():
     assert helper.isclose(metadata_processed['longitude'], -122.03635), metadata_processed['longitude']
 
 def test_update_time_on_audio():
-    if not can_edit_exif():
-        raise SkipTest('avmetareadwrite executable not found')
-
     temporary_folder, folder = helper.create_working_folder()
     temporary_folder_destination, folder_destination = helper.create_working_folder()
 
@@ -268,9 +259,6 @@ def test_update_time_on_text():
     assert metadata_processed['date_taken'] == helper.time_convert((2000, 1, 1, 12, 0, 0, 5, 1, 0)), metadata_processed['date_taken']
 
 def test_update_time_on_video():
-    if not can_edit_exif():
-        raise SkipTest('avmetareadwrite executable not found')
-
     temporary_folder, folder = helper.create_working_folder()
     temporary_folder_destination, folder_destination = helper.create_working_folder()
 
@@ -303,7 +291,3 @@ def restore_hash_db():
     hash_db = '{}-test'.format(constants.hash_db)
     if os.path.isfile(hash_db):
         os.rename(hash_db, hash_db.replace('-test', ''))
-
-def can_edit_exif():
-    video = Video()
-    return video.get_avmetareadwrite()

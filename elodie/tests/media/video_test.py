@@ -101,9 +101,6 @@ def test_set_album():
     assert metadata_new['album'] == 'Test Album', metadata_new['album']
 
 def test_set_date_taken():
-    if not can_edit_exif():
-        raise SkipTest('avmetareadwrite executable not found')
-
     temporary_folder, folder = helper.create_working_folder()
 
     origin = '%s/video.mov' % folder
@@ -124,9 +121,6 @@ def test_set_date_taken():
     assert date_taken == (2013, 9, 30, 7, 6, 5, 0, 273, 0), metadata['date_taken']
 
 def test_set_location():
-    if not can_edit_exif():
-        raise SkipTest('avmetareadwrite executable not found')
-
     temporary_folder, folder = helper.create_working_folder()
 
     origin = '%s/video.mov' % folder
@@ -153,9 +147,6 @@ def test_set_location():
     assert helper.isclose(metadata['longitude'], 99.9999999999), metadata['longitude']
 
 def test_set_title():
-    if not can_edit_exif():
-        raise SkipTest('avmetareadwrite executable not found')
-
     temporary_folder, folder = helper.create_working_folder()
 
     origin = '%s/video.mov' % folder
@@ -176,9 +167,6 @@ def test_set_title():
     assert metadata['title'] == 'my video title', metadata['title']
 
 def test_set_title_non_ascii():
-    if not can_edit_exif():
-        raise SkipTest('avmetareadwrite executable not found')
-
     raise SkipTest('gh-27, non-ascii characters')
     temporary_folder, folder = helper.create_working_folder()
 
@@ -198,7 +186,3 @@ def test_set_title_non_ascii():
     shutil.rmtree(folder)
 
     assert metadata['title'] == '形声字 / 形聲字', metadata['title']
-
-def can_edit_exif():
-    video = Video()
-    return video.get_avmetareadwrite()

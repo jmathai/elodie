@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
 import os
 import re
 import sys
@@ -35,16 +36,16 @@ def import_file(_file, destination, album_from_folder, trash):
     """
     if not os.path.exists(_file):
         if constants.debug:
-            print 'Could not find %s' % _file
-        print '{"source":"%s", "error_msg":"Could not find %s"}' % \
-            (_file, _file)
+            print('Could not find %s' % _file)
+        print('{"source":"%s", "error_msg":"Could not find %s"}' % \
+            (_file, _file))
         return
 
     media = Media.get_class_by_file(_file, [Text, Audio, Photo, Video])
     if not media:
         if constants.debug:
-            print 'Not a supported file (%s)' % _file
-        print '{"source":"%s", "error_msg":"Not a supported file"}' % _file
+            print('Not a supported file (%s)' % _file)
+        print('{"source":"%s", "error_msg":"Not a supported file"}' % _file)
         return
 
     if media.__name__ == 'Video':
@@ -56,7 +57,7 @@ def import_file(_file, destination, album_from_folder, trash):
     dest_path = FILESYSTEM.process_file(_file, destination,
         media, allowDuplicate=False, move=False)
     if dest_path:
-        print '%s -> %s' % (_file, dest_path)
+        print('%s -> %s' % (_file, dest_path))
     if trash:
         send2trash(_file)
 
@@ -109,9 +110,9 @@ def update_location(media, file_path, location_name):
             'latitude'], location_coords['longitude'])
         if not location_status:
             if constants.debug:
-                print 'Failed to update location'
-            print ('{"source":"%s",' % file_path,
-                '"error_msg":"Failed to update location"}')
+                print('Failed to update location')
+            print(('{"source":"%s",' % file_path,
+                '"error_msg":"Failed to update location"}'))
             sys.exit(1)
     return True
 
@@ -125,8 +126,8 @@ def update_time(media, file_path, time_string):
     elif re.match(r'^\d{4}-\d{2}-\d{2} \d{2}:\d{2}\d{2}$', time_string):
         msg = ('Invalid time format. Use YYYY-mm-dd hh:ii:ss or YYYY-mm-dd')
         if constants.debug:
-            print msg
-        print '{"source":"%s", "error_msg":"%s"}' % (file_path, msg)
+            print(msg)
+        print('{"source":"%s", "error_msg":"%s"}' % (file_path, msg))
         sys.exit(1)
 
     time = datetime.strptime(time_string, time_format)
@@ -150,9 +151,9 @@ def _update(album, location, time, title, files):
     for file_path in files:
         if not os.path.exists(file_path):
             if constants.debug:
-                print 'Could not find %s' % file_path
-            print '{"source":"%s", "error_msg":"Could not find %s"}' % \
-                (file_path, file_path)
+                print('Could not find %s' % file_path)
+            print('{"source":"%s", "error_msg":"Could not find %s"}' % \
+                (file_path, file_path))
             continue
 
         file_path = os.path.expanduser(file_path)
@@ -209,9 +210,9 @@ def _update(album, location, time, title, files):
             dest_path = FILESYSTEM.process_file(file_path, destination,
                 updated_media, move=True, allowDuplicate=True)
             if constants.debug:
-                print u'%s -> %s' % (file_path, dest_path)
-            print '{"source":"%s", "destination":"%s"}' % (file_path,
-                dest_path)
+                print(u'%s -> %s' % (file_path, dest_path))
+            print('{"source":"%s", "destination":"%s"}' % (file_path,
+                dest_path))
             # If the folder we moved the file out of or its parent are empty
             # we delete it.
             FILESYSTEM.delete_directory_if_empty(os.path.dirname(file_path))
