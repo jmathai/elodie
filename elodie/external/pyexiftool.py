@@ -304,7 +304,14 @@ class ExifTool(object):
         as Unicode strings in Python 3.x.
         """
         params = map(fsencode, params)
-        return json.loads(self.execute(b"-j", *params).decode("utf-8"))
+        # Some latin bytes won't decode to utf-8.
+        # Try utf-8 and fallback to latin.
+        # http://stackoverflow.com/a/5552623/1318758
+        # https://github.com/jmathai/elodie/issues/127
+        try:
+            return json.loads(self.execute(b"-j", *params).decode("utf-8"))
+        except UnicodeDecodeError as e:
+            return json.loads(self.execute(b"-j", *params).decode("latin-1"))
 
     def get_metadata_batch(self, filenames):
         """Return all meta-data for the given files.
