@@ -29,7 +29,7 @@ def test_import_file_text():
     shutil.copyfile(helper.get_file('valid.txt'), origin)
 
     reset_hash_db()
-    dest_path = elodie.import_file(origin, folder_destination, False, False)
+    dest_path = elodie.import_file(origin, folder_destination, False, False, False)
     restore_hash_db()
 
     shutil.rmtree(folder)
@@ -46,7 +46,7 @@ def test_import_file_audio():
     shutil.copyfile(helper.get_file('audio.m4a'), origin)
 
     reset_hash_db()
-    dest_path = elodie.import_file(origin, folder_destination, False, False)
+    dest_path = elodie.import_file(origin, folder_destination, False, False, False)
     restore_hash_db()
 
     shutil.rmtree(folder)
@@ -62,7 +62,7 @@ def test_import_file_photo():
     shutil.copyfile(helper.get_file('plain.jpg'), origin)
 
     reset_hash_db()
-    dest_path = elodie.import_file(origin, folder_destination, False, False)
+    dest_path = elodie.import_file(origin, folder_destination, False, False, False)
     restore_hash_db()
 
     shutil.rmtree(folder)
@@ -78,13 +78,50 @@ def test_import_file_video():
     shutil.copyfile(helper.get_file('video.mov'), origin)
 
     reset_hash_db()
-    dest_path = elodie.import_file(origin, folder_destination, False, False)
+    dest_path = elodie.import_file(origin, folder_destination, False, False, False)
     restore_hash_db()
 
     shutil.rmtree(folder)
     shutil.rmtree(folder_destination)
 
     assert helper.path_tz_fix(os.path.join('2015-01-Jan','California','2015-01-19_12-45-11-video.mov')) in dest_path, dest_path
+
+def test_import_file_allow_duplicate_false():
+    temporary_folder, folder = helper.create_working_folder()
+    temporary_folder_destination, folder_destination = helper.create_working_folder()
+
+    origin = '%s/valid.txt' % folder
+    shutil.copyfile(helper.get_file('valid.txt'), origin)
+
+    reset_hash_db()
+    dest_path1 = elodie.import_file(origin, folder_destination, False, False, False)
+    dest_path2 = elodie.import_file(origin, folder_destination, False, False, False)
+    restore_hash_db()
+
+    shutil.rmtree(folder)
+    shutil.rmtree(folder_destination)
+
+    assert dest_path1 is not None
+    assert dest_path2 is None
+
+def test_import_file_allow_duplicate_true():
+    temporary_folder, folder = helper.create_working_folder()
+    temporary_folder_destination, folder_destination = helper.create_working_folder()
+
+    origin = '%s/valid.txt' % folder
+    shutil.copyfile(helper.get_file('valid.txt'), origin)
+
+    reset_hash_db()
+    dest_path1 = elodie.import_file(origin, folder_destination, False, False, True)
+    dest_path2 = elodie.import_file(origin, folder_destination, False, False, True)
+    restore_hash_db()
+
+    shutil.rmtree(folder)
+    shutil.rmtree(folder_destination)
+
+    assert dest_path1 is not None
+    assert dest_path2 is not None
+    assert dest_path1 == dest_path2
 
 def test_update_location_on_audio():
     temporary_folder, folder = helper.create_working_folder()
