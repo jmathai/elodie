@@ -31,7 +31,7 @@ DB = Db()
 FILESYSTEM = FileSystem()
 
 
-def import_file(_file, destination, album_from_folder, trash):
+def import_file(_file, destination, album_from_folder, trash, allow_duplicates):
     """Set file metadata and move it to destination.
     """
     if not os.path.exists(_file):
@@ -55,7 +55,7 @@ def import_file(_file, destination, album_from_folder, trash):
         media.set_album_from_folder()
 
     dest_path = FILESYSTEM.process_file(_file, destination,
-        media, allowDuplicate=False, move=False)
+        media, allowDuplicate=allow_duplicates, move=False)
     if dest_path:
         print('%s -> %s' % (_file, dest_path))
     if trash:
@@ -75,8 +75,10 @@ def import_file(_file, destination, album_from_folder, trash):
               help="Use images' folders as their album names.")
 @click.option('--trash', default=False, is_flag=True,
               help='After copying files, move the old files to the trash.')
+@click.option('--allow-duplicates', default=False, is_flag=True,
+              help='Import the file even if it\'s already been imported.')
 @click.argument('paths', nargs=-1, type=click.Path())
-def _import(destination, source, file, album_from_folder, trash, paths):
+def _import(destination, source, file, album_from_folder, trash, paths, allow_duplicates):
     """Import files or directories.
     """
     destination = os.path.expanduser(destination)
@@ -96,7 +98,7 @@ def _import(destination, source, file, album_from_folder, trash, paths):
 
     for current_file in files:
         import_file(current_file, destination, album_from_folder,
-                    trash)
+                    trash, allow_duplicates)
 
 
 def update_location(media, file_path, location_name):
