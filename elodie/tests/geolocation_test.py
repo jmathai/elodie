@@ -32,6 +32,20 @@ def test_decimal_to_dms():
 
         assert target_decimal_value == check_value, '%s does not match %s' % (check_value, target_decimal_value)
 
+def test_dms_to_decimal_positive_sign():
+    decimal = geolocation.dms_to_decimal(10, 20, 100, 'NE')
+    assert helper.isclose(decimal, 10.3611111111)
+
+    decimal = geolocation.dms_to_decimal(10, 20, 100, 'ne')
+    assert helper.isclose(decimal, 10.3611111111)
+
+def test_dms_to_decimal_negative_sign():
+    decimal = geolocation.dms_to_decimal(10, 20, 100, 'SW')
+    assert helper.isclose(decimal, -10.3611111111)
+
+    decimal = geolocation.dms_to_decimal(10, 20, 100, 'sw')
+    assert helper.isclose(decimal, -10.3611111111)
+
 def test_dms_string_latitude():
 
     for x in range(0, 5):
