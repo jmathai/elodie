@@ -10,7 +10,6 @@ from __future__ import absolute_import
 import imghdr
 import os
 import re
-import subprocess
 import time
 from datetime import datetime
 from re import compile
@@ -37,28 +36,6 @@ class Photo(Media):
 
         # We only want to parse EXIF once so we store it here
         self.exif = None
-
-    def get_duration(self):
-        """Get the duration of a photo in seconds. Uses ffmpeg/ffprobe.
-
-        :returns: str or None for a non-photo file
-        """
-        if(not self.is_valid()):
-            return None
-
-        source = self.source
-        result = subprocess.Popen(
-            ['ffprobe', source],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT
-        )
-        for key in result.stdout.readlines():
-            if 'Duration' in key:
-                return re.search(
-                    '(\d{2}:\d{2}.\d{2})',
-                    key
-                ).group(1).replace('.', ':')
-        return None
 
     def get_date_taken(self):
         """Get the date which the photo was taken.
