@@ -48,6 +48,44 @@ Now that you've got the minimum dependencies installed you can start using Elodi
 
 You'll notice that the photo was organized into an *Unknown Location* folder. That's because you haven't set up your MapQuest API ([instructions](#using-openstreetmap-data-from-mapquest)).
 
+### Usage Instructions
+
+You can view these instructions on the command line by typing `./elodie.py import --help` or `./elodie.py update --help`.
+
+```
+Usage: elodie.py import [OPTIONS] [PATHS]...
+
+  Import files or directories by reading their EXIF and organizing them
+  accordingly.
+
+Options:
+  --destination DIRECTORY  Copy imported files into this directory.
+                           [required]
+  --source DIRECTORY       Import files from this directory, if specified.
+  --file PATH              Import this file, if specified.
+  --album-from-folder      Use images' folders as their album names.
+  --trash                  After copying files, move the old files to the
+                           trash.
+  --allow-duplicates       Import the file even if it's already been imported.
+  --help                   Show this message and exit.
+```
+
+```
+Usage: elodie.py update [OPTIONS] FILES...
+
+  Update a file's EXIF. Automatically modifies the file's location and file
+  name accordingly.
+
+Options:
+  --album TEXT     Update the image album.
+  --location TEXT  Update the image location. Location should be the name of a
+                   place, like "Las Vegas, NV".
+  --time TEXT      Update the image time. Time should be in YYYY-mm-dd
+                   hh:ii:ss or YYYY-mm-dd format.
+  --title TEXT     Update the image title.
+  --help           Show this message and exit.
+```
+
 Now you're ready to learn more about Elodie.
 
 <p align="center"><img src ="creative/logo@300x.png" /></p>
