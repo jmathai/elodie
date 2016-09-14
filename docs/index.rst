@@ -52,12 +52,6 @@ elodie.media
 .. automodule:: elodie.media.video
     :members:
 
-elodie.arguments
-----------------
-
-.. automodule:: elodie.arguments
-    :members:
-
 elodie.constants
 ----------------
 

@@ -9,7 +9,6 @@ from __future__ import absolute_import
 from __future__ import division
 
 # load modules
-from distutils.spawn import find_executable
 from datetime import datetime
 
 import os
@@ -52,21 +51,6 @@ class Video(Media):
         self.latitude_ref_key = 'EXIF:GPSLatitudeRef'
         self.longitude_ref_key = 'EXIF:GPSLongitudeRef'
         self.set_gps_ref = False
-
-    def get_avmetareadwrite(self):
-        """Get path to executable avmetareadwrite binary.
-
-        We wrap this since we call it in a few places and we do a fallback.
-
-        :returns: None or string
-        """
-        avmetareadwrite = find_executable('avmetareadwrite')
-        if(avmetareadwrite is None):
-            avmetareadwrite = '/usr/bin/avmetareadwrite'
-            if(not os.path.isfile(avmetareadwrite) or not os.access(avmetareadwrite, os.X_OK)):  # noqa
-                return None
-
-        return avmetareadwrite
 
     def get_date_taken(self):
         """Get the date which the photo was taken.
