@@ -24,6 +24,14 @@ from elodie.media.video import Video
 os.environ['TZ'] = 'GMT'
 
 
+
+def test_get_class_by_file_without_extension():
+    base_file = helper.get_file('withoutextension')
+
+    cls = Base.get_class_by_file(base_file, [Audio, Text, Photo, Video])
+    
+    assert cls is None, cls
+
 def test_set_album_from_folder_invalid_file():
     temporary_folder, folder = helper.create_working_folder()
 
@@ -38,9 +46,63 @@ def test_set_album_from_folder_invalid_file():
 
     assert status == False, status
 
-def test_get_class_by_file_without_extension():
-    base_file = helper.get_file('withoutextension')
+def test_set_album_from_folder():
+    temporary_folder, folder = helper.create_working_folder()
 
-    cls = Base.get_class_by_file(base_file, [Audio, Text, Photo, Video])
-    
-    assert cls is None, cls
+    origin = '%s/photo.jpg' % folder
+    shutil.copyfile(helper.get_file('plain.jpg'), origin)
+
+    photo = Photo(origin)
+    metadata = photo.get_metadata()
+
+    assert metadata['album'] is None, metadata['album']
+
+    new_album_name = os.path.split(folder)[1]
+    status = photo.set_album_from_folder()
+
+    assert status == True, status
+
+    photo_new = Photo(origin)
+    metadata_new = photo_new.get_metadata()
+
+    shutil.rmtree(folder)
+
+    assert metadata_new['album'] == new_album_name, metadata_new['album']
+
+def test_set_metadata():
+    temporary_folder, folder = helper.create_working_folder()
+
+    origin = '%s/photo.jpg' % folder
+    shutil.copyfile(helper.get_file('plain.jpg'), origin)
+
+    photo = Photo(origin)
+
+    metadata = photo.get_metadata()
+
+    assert metadata['title'] == None, metadata['title']
+
+    new_title = 'Some Title'
+    photo.set_metadata(title = new_title)
+
+    new_metadata = photo.get_metadata()
+
+    assert new_metadata['title'] == new_title, new_metadata['title']
+
+def test_set_metadata_basename():
+    temporary_folder, folder = helper.create_working_folder()
+
+    origin = '%s/photo.jpg' % folder
+    shutil.copyfile(helper.get_file('plain.jpg'), origin)
+
+    photo = Photo(origin)
+
+    metadata = photo.get_metadata()
+
+    assert metadata['base_name'] == 'photo', metadata['base_name']
+
+    new_basename = 'Some Base Name'
+    photo.set_metadata_basename(new_basename)
+
+    new_metadata = photo.get_metadata()
+
+    assert new_metadata['base_name'] == new_basename, new_metadata['base_name']
