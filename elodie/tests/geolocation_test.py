@@ -75,3 +75,13 @@ def test_dms_string_longitude():
 
         assert check_value in dms_string, '%s not in %s' % (check_value, dms_string)
         assert str(dms[0]) in dms_string, '%s not in %s' % (dms[0], dms_string)
+
+def test_reverse_lookup_with_invalid_key():
+    geolocation.__KEY__ = 'invalid_key'
+    res = geolocation.reverse_lookup(123.45, 123.45)
+    assert res is None, res
+
+def test_lookup_with_invalid_key():
+    geolocation.__KEY__ = 'invalid_key'
+    res = geolocation.lookup('foo')
+    assert res is None, res
