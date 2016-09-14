@@ -17,6 +17,8 @@ import urllib.error
 from elodie import constants
 from elodie.localstorage import Db
 
+__KEY__ = None
+
 
 def coordinates_by_name(name):
     # Try to get cached location first
@@ -95,6 +97,10 @@ def dms_string(decimal, type='latitude'):
 
 
 def get_key():
+    global __KEY__
+    if __KEY__ is not None:
+        return __KEY__
+
     config_file = '%s/config.ini' % constants.application_directory
     if not path.exists(config_file):
         return None
@@ -104,7 +110,8 @@ def get_key():
     if('MapQuest' not in config.sections()):
         return None
 
-    return config.get('MapQuest', 'key')
+    __KEY__ = config.get('MapQuest', 'key')
+    return __KEY__
 
 
 def place_name(lat, lon):
