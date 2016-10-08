@@ -153,6 +153,9 @@ def reverse_lookup(lat, lon):
 
     key = get_key()
 
+    if(key is None):
+        return None
+
     try:
         params = {'format': 'json', 'key': key, 'lat': lat, 'lon': lon}
         headers = {"Accept-Language": constants.accepted_language}
@@ -177,6 +180,9 @@ def lookup(name):
         return None
 
     key = get_key()
+
+    if(key is None):
+        return None
 
     try:
         params = {'format': 'json', 'key': key, 'location': name}
