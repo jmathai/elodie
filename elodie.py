@@ -79,7 +79,7 @@ def import_file(_file, destination, album_from_folder, trash, allow_duplicates):
               help='Import the file even if it\'s already been imported.')
 @click.argument('paths', nargs=-1, type=click.Path())
 def _import(destination, source, file, album_from_folder, trash, paths, allow_duplicates):
-    """Import files or directories.
+    """Import files or directories by reading their EXIF and organizing them accordingly.
     """
     destination = os.path.expanduser(destination)
 
@@ -148,7 +148,7 @@ def update_time(media, file_path, time_string):
 @click.argument('files', nargs=-1, type=click.Path(dir_okay=False),
                 required=True)
 def _update(album, location, time, title, files):
-    """Update files.
+    """Update a file's EXIF. Automatically modifies the file's location and file name accordingly.
     """
     for file_path in files:
         if not os.path.exists(file_path):

@@ -7,6 +7,7 @@ import os
 import random
 import re
 import sys
+from mock import patch
 
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))))
 
@@ -81,7 +82,19 @@ def test_reverse_lookup_with_invalid_key():
     res = geolocation.reverse_lookup(123.45, 123.45)
     assert res is None, res
 
+@patch('elodie.geolocation.constants')
+def test_reverse_lookup_with_no_key(mock_constants):
+    mock_constants.application_directory = 'invalid path'
+    res = geolocation.reverse_lookup(123.45, 123.45)
+    assert res is None, res
+
 def test_lookup_with_invalid_key():
     geolocation.__KEY__ = 'invalid_key'
+    res = geolocation.lookup('foo')
+    assert res is None, res
+
+@patch('elodie.geolocation.constants')
+def test_lookup_with_no_key(mock_constants):
+    mock_constants.application_directory = 'invalid path'
     res = geolocation.lookup('foo')
     assert res is None, res
