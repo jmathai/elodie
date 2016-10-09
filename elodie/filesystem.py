@@ -14,6 +14,11 @@ import time
 from elodie import geolocation
 from elodie import constants
 from elodie.localstorage import Db
+from elodie.media.media import Media
+from elodie.media.text import Text
+from elodie.media.audio import Audio
+from elodie.media.photo import Photo
+from elodie.media.video import Video
 
 
 class FileSystem(object):
@@ -213,13 +218,38 @@ class FileSystem(object):
             shutil.move(_file, dest_path)
             os.utime(dest_path, (stat.st_atime, stat.st_mtime))
         else:
-            shutil.copy2(_file, dest_path)
+            shutil.copy(_file, dest_path)
+            self.set_date_from_filename(dest_path)
 
         db.add_hash(checksum, dest_path)
         db.update_hash_db()
 
         return dest_path
 
+    def set_date_from_filename(self, file):
+        """ Set the modification time on the file base on the file name.
+        """
+    
+        date_taken = None
+        file_name = os.path.basename(file)
+        # Initialize date taken to what's returned from the metadata function.
+        # If the folder and file name follow a time format of
+        #   YYYY-MM/DD-IMG_0001.JPG then we override the date_taken
+        (year, month, day) = [None] * 3
+        year_month_day_match = re.search('(\d{4})-(\d{2})-(\d{2})', file_name)
+        if(year_month_day_match is not None):
+            (year, month, day) = year_month_day_match.groups()        
+
+        # check if the file system path indicated a date and if so we
+        #   override the metadata value
+        if(year is not None and month is not None and day is not None):
+                date_taken = time.strptime(
+                    '{}-{}-{}'.format(year, month, day),
+                    '%Y-%m-%d'
+                )            
+        
+                os.utime(file, (time.time(), time.mktime(date_taken)))
+    
     def set_date_from_path_video(self, video):
         """Set the modification time on the file based on the file path.
 
