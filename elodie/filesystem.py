@@ -235,17 +235,17 @@ class FileSystem(object):
         # Initialize date taken to what's returned from the metadata function.
         # If the folder and file name follow a time format of
         #   YYYY-MM/DD-IMG_0001.JPG then we override the date_taken
-        (year, month, day) = [None] * 3
-        year_month_day_match = re.search('(\d{4})-(\d{2})-(\d{2})', file_name)
+        (year, month, day, hour, minute, second) = [None] * 6
+        year_month_day_match = re.search('(\d{4})-(\d{2})-(\d{2})_(\d{2})-(\d{2})-(\d{2})', file_name)
         if(year_month_day_match is not None):
-            (year, month, day) = year_month_day_match.groups()        
+            (year, month, day, hour, minute, second) = year_month_day_match.groups()        
 
         # check if the file system path indicated a date and if so we
         #   override the metadata value
-        if(year is not None and month is not None and day is not None):
+        if(year is not None and month is not None and day is not None and hour is not None and minute is not None and second is not None):
                 date_taken = time.strptime(
-                    '{}-{}-{}'.format(year, month, day),
-                    '%Y-%m-%d'
+                    '{}-{}-{} {}:{}:{}'.format(year, month, day, hour, minute, second),
+                    '%Y-%m-%d %H:%M:%S'
                 )            
         
                 os.utime(file, (time.time(), time.mktime(date_taken)))
