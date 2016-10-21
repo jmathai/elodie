@@ -15,10 +15,6 @@ from elodie import geolocation
 from elodie import constants
 from elodie.localstorage import Db
 from elodie.media.media import Media
-from elodie.media.text import Text
-from elodie.media.audio import Audio
-from elodie.media.photo import Photo
-from elodie.media.video import Video
 
 
 class FileSystem(object):
@@ -218,6 +214,8 @@ class FileSystem(object):
             shutil.move(_file, dest_path)
             os.utime(dest_path, (stat.st_atime, stat.st_mtime))
         else:
+            # Do not use copy2(), will have an issue when copying to a network/mounted drive
+            # using copy and manual set_date_from_filename gets the job done
             shutil.copy(_file, dest_path)
             self.set_date_from_filename(dest_path)
 
@@ -234,7 +232,7 @@ class FileSystem(object):
         file_name = os.path.basename(file)
         # Initialize date taken to what's returned from the metadata function.
         # If the folder and file name follow a time format of
-        #   YYYY-MM/DD-IMG_0001.JPG then we override the date_taken
+        #   YYYY-MM-DD_HH-MM-SS-IMG_0001.JPG then we override the date_taken
         (year, month, day, hour, minute, second) = [None] * 6
         year_month_day_match = re.search('(\d{4})-(\d{2})-(\d{2})_(\d{2})-(\d{2})-(\d{2})', file_name)
         if(year_month_day_match is not None):
