@@ -14,6 +14,7 @@ import time
 from elodie import geolocation
 from elodie import constants
 from elodie.localstorage import Db
+from elodie.media.media import Media
 
 
 class FileSystem(object):
@@ -213,13 +214,40 @@ class FileSystem(object):
             shutil.move(_file, dest_path)
             os.utime(dest_path, (stat.st_atime, stat.st_mtime))
         else:
-            shutil.copy2(_file, dest_path)
+            # Do not use copy2(), will have an issue when copying to a network/mounted drive
+            # using copy and manual set_date_from_filename gets the job done
+            shutil.copy(_file, dest_path)
+            self.set_date_from_filename(dest_path)
 
         db.add_hash(checksum, dest_path)
         db.update_hash_db()
 
         return dest_path
 
+    def set_date_from_filename(self, file):
+        """ Set the modification time on the file base on the file name.
+        """
+    
+        date_taken = None
+        file_name = os.path.basename(file)
+        # Initialize date taken to what's returned from the metadata function.
+        # If the folder and file name follow a time format of
+        #   YYYY-MM-DD_HH-MM-SS-IMG_0001.JPG then we override the date_taken
+        (year, month, day, hour, minute, second) = [None] * 6
+        year_month_day_match = re.search('(\d{4})-(\d{2})-(\d{2})_(\d{2})-(\d{2})-(\d{2})', file_name)
+        if(year_month_day_match is not None):
+            (year, month, day, hour, minute, second) = year_month_day_match.groups()        
+
+        # check if the file system path indicated a date and if so we
+        #   override the metadata value
+        if(year is not None and month is not None and day is not None and hour is not None and minute is not None and second is not None):
+                date_taken = time.strptime(
+                    '{}-{}-{} {}:{}:{}'.format(year, month, day, hour, minute, second),
+                    '%Y-%m-%d %H:%M:%S'
+                )            
+        
+                os.utime(file, (time.time(), time.mktime(date_taken)))
+    
     def set_date_from_path_video(self, video):
         """Set the modification time on the file based on the file path.
 
