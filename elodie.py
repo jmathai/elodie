@@ -48,9 +48,6 @@ def import_file(_file, destination, album_from_folder, trash, allow_duplicates):
         print('{"source":"%s", "error_msg":"Not a supported file"}' % _file)
         return
 
-    if media.__name__ == 'Video':
-        FILESYSTEM.set_date_from_path_video(media)
-
     if album_from_folder:
         media.set_album_from_folder()
 
