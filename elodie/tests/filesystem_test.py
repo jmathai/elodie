@@ -364,3 +364,61 @@ def test_process_video_with_album_then_title():
     assert origin_checksum is not None, origin_checksum
     assert origin_checksum != destination_checksum, destination_checksum
     assert helper.path_tz_fix(os.path.join('2015-01-Jan','test_album','2015-01-19_12-45-11-movie-test_title.mov')) in destination, destination
+
+def test_set_utime_with_exif_date():
+    filesystem = FileSystem()
+    temporary_folder, folder = helper.create_working_folder()
+
+    origin = os.path.join(folder,'photo.jpg')
+    shutil.copyfile(helper.get_file('plain.jpg'), origin)
+
+    media_initial = Photo(origin)
+    metadata_initial = media_initial.get_metadata()
+
+    initial_stat = os.stat(origin)
+    initial_time = int(min(initial_stat.st_mtime, initial_stat.st_ctime))
+    initial_checksum = helper.checksum(origin)
+
+    assert initial_time != time.mktime(metadata_initial['date_taken'])
+
+    filesystem.set_utime(media_initial)
+    final_stat = os.stat(origin)
+    final_checksum = helper.checksum(origin)
+
+    media_final = Photo(origin)
+    metadata_final = media_final.get_metadata()
+
+    shutil.rmtree(folder)
+
+    assert initial_stat.st_mtime != final_stat.st_mtime
+    assert final_stat.st_mtime == time.mktime(metadata_final['date_taken'])
+    assert initial_checksum == final_checksum
+
+def test_set_utime_without_exif_date():
+    filesystem = FileSystem()
+    temporary_folder, folder = helper.create_working_folder()
+
+    origin = os.path.join(folder,'photo.jpg')
+    shutil.copyfile(helper.get_file('no-exif.jpg'), origin)
+
+    media_initial = Photo(origin)
+    metadata_initial = media_initial.get_metadata()
+
+    initial_stat = os.stat(origin)
+    initial_time = int(min(initial_stat.st_mtime, initial_stat.st_ctime))
+    initial_checksum = helper.checksum(origin)
+
+    assert initial_time == time.mktime(metadata_initial['date_taken'])
+
+    filesystem.set_utime(media_initial)
+    final_stat = os.stat(origin)
+    final_checksum = helper.checksum(origin)
+
+    media_final = Photo(origin)
+    metadata_final = media_final.get_metadata()
+
+    shutil.rmtree(folder)
+
+    assert initial_time == final_stat.st_mtime
+    assert final_stat.st_mtime == time.mktime(metadata_final['date_taken']), (final_stat.st_mtime, time.mktime(metadata_final['date_taken']))
+    assert initial_checksum == final_checksum
