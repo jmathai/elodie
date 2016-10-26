@@ -213,53 +213,42 @@ class FileSystem(object):
             shutil.move(_file, dest_path)
             os.utime(dest_path, (stat.st_atime, stat.st_mtime))
         else:
-            shutil.copy2(_file, dest_path)
+            # Do not use copy2(), will have an issue when copying to a
+            # network/mounted drive using copy and manual
+            # set_date_from_filename gets the job done
+            shutil.copy(_file, dest_path)
+            self.set_utime(media)
 
         db.add_hash(checksum, dest_path)
         db.update_hash_db()
 
         return dest_path
 
-    def set_date_from_path_video(self, video):
-        """Set the modification time on the file based on the file path.
-
-        Noop if the path doesn't match the format YYYY-MM/DD-IMG_0001.JPG.
-
-        :param elodie.media.video.Video video: An instance of Video.
+    def set_utime(self, media):
+        """ Set the modification time on the file base on the file name.
         """
-        date_taken = None
-
-        video_file_path = video.get_file_path()
 
         # Initialize date taken to what's returned from the metadata function.
         # If the folder and file name follow a time format of
-        #   YYYY-MM/DD-IMG_0001.JPG then we override the date_taken
-        (year, month, day) = [None] * 3
-        directory = os.path.dirname(video_file_path)
-        # If the directory matches we get back a match with
-        #   groups() = (year, month)
-        year_month_match = re.search('(\d{4})-(\d{2})', directory)
-        if(year_month_match is not None):
-            (year, month) = year_month_match.groups()
-        day_match = re.search(
-            '^(\d{2})',
-            os.path.basename(video.get_file_path())
+        #   YYYY-MM-DD_HH-MM-SS-IMG_0001.JPG then we override the date_taken
+        file_path = media.get_file_path()
+        metadata = media.get_metadata()
+        date_taken = metadata['date_taken']
+        base_name = metadata['base_name']
+        year_month_day_match = re.search(
+            '^(\d{4})-(\d{2})-(\d{2})_(\d{2})-(\d{2})-(\d{2})',
+            base_name
         )
-        if(day_match is not None):
-            day = day_match.group(1)
+        if(year_month_day_match is not None):
+            (year, month, day, hour, minute, second) = year_month_day_match.groups()  # noqa
+            date_taken = time.strptime(
+                '{}-{}-{} {}:{}:{}'.format(year, month, day, hour, minute, second),  # noqa
+                '%Y-%m-%d %H:%M:%S'
+            )
 
-        # check if the file system path indicated a date and if so we
-        #   override the metadata value
-        if(year is not None and month is not None):
-            if(day is not None):
-                date_taken = time.strptime(
-                    '{}-{}-{}'.format(year, month, day),
-                    '%Y-%m-%d'
-                )
-            else:
-                date_taken = time.strptime(
-                    '{}-{}'.format(year, month),
-                    '%Y-%m'
-                )
-
-            os.utime(video_file_path, (time.time(), time.mktime(date_taken)))
+            os.utime(file_path, (time.time(), time.mktime(date_taken)))
+        else:
+            # We don't make any assumptions about time zones and
+            # assume local time zone.
+            date_taken_in_seconds = time.mktime(date_taken)
+            os.utime(file_path, (time.time(), (date_taken_in_seconds)))
