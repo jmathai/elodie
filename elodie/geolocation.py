@@ -31,7 +31,7 @@ def coordinates_by_name(name):
         }
 
     # If the name is not cached then we go ahead with an API lookup
-    geolocation_info = lookup(name)
+    geolocation_info = lookup(location=name)
 
     if(geolocation_info is not None):
         if(
@@ -129,7 +129,7 @@ def place_name(lat, lon):
         return cached_place_name
 
     lookup_place_name = None
-    geolocation_info = reverse_lookup(lat, lon)
+    geolocation_info = lookup(lat=lat, lon=lon)
     if(geolocation_info is not None):
         if('address' in geolocation_info):
             address = geolocation_info['address']
@@ -147,8 +147,12 @@ def place_name(lat, lon):
     return lookup_place_name
 
 
-def reverse_lookup(lat, lon):
-    if(lat is None or lon is None):
+def lookup(**kwargs):
+    if(
+        'location' not in kwargs and
+        'lat' not in kwargs and
+        'lon' not in kwargs
+    ):
         return None
 
     key = get_key()
@@ -157,13 +161,19 @@ def reverse_lookup(lat, lon):
         return None
 
     try:
-        params = {'format': 'json', 'key': key, 'lat': lat, 'lon': lon}
-        headers = {"Accept-Language": constants.accepted_language}
-        r = requests.get(
-            'http://open.mapquestapi.com/nominatim/v1/reverse.php?%s' %
-            urllib.parse.urlencode(params), headers=headers
-        )
-        return r.json()
+        params = {'format': 'json', 'key': key}
+        params.update(kwargs)
+        path = '/geocoding/v1/address'
+        if('lat' in kwargs and 'lon' in kwargs):
+            path = '/nominatim/v1/reverse.php'
+        url = 'http://open.mapquestapi.com%s?%s' % (
+                    path,
+                    urllib.parse.urlencode(params)
+              )
+        if(constants.debug is True):
+            print(url)
+        r = requests.get(url)
+        return parse_result(r.json())
     except requests.exceptions.RequestException as e:
         if(constants.debug is True):
             print(e)
@@ -175,30 +185,19 @@ def reverse_lookup(lat, lon):
         return None
 
 
-def lookup(name):
-    if(name is None or len(name) == 0):
+def parse_result(result):
+    if('error' in result):
         return None
 
-    key = get_key()
+    if(
+        'results' in result and
+        len(result['results']) > 0 and
+        'locations' in result['results'][0]
+        and len(result['results'][0]['locations']) > 0 and
+        'latLng' in result['results'][0]['locations'][0]
+    ):
+        latLng = result['results'][0]['locations'][0]['latLng']
+        if(latLng['lat'] == 39.78373 and latLng['lng'] == -100.445882):
+            return None
 
-    if(key is None):
-        return None
-
-    try:
-        params = {'format': 'json', 'key': key, 'location': name}
-        if(constants.debug is True):
-            print('http://open.mapquestapi.com/geocoding/v1/address?%s' % urllib.parse.urlencode(params))  # noqa
-        r = requests.get(
-            'http://open.mapquestapi.com/geocoding/v1/address?%s' %
-            urllib.parse.urlencode(params)
-        )
-        return r.json()
-    except requests.exceptions.RequestException as e:
-        if(constants.debug is True):
-            print(e)
-        return None
-    except ValueError as e:
-        if(constants.debug is True):
-            print(r.text)
-            print(e)
-        return None
+    return result
