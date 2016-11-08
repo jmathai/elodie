@@ -38,7 +38,6 @@ def test_import_file_text():
     assert helper.path_tz_fix(os.path.join('2016-04-Apr','Unknown Location','2016-04-07_11-15-26-valid-sample-title.txt')) in dest_path, dest_path
 
 def test_import_file_audio():
-    raise SkipTest('gh-61 this test fails on travisci')
     temporary_folder, folder = helper.create_working_folder()
     temporary_folder_destination, folder_destination = helper.create_working_folder()
 
@@ -52,7 +51,7 @@ def test_import_file_audio():
     shutil.rmtree(folder)
     shutil.rmtree(folder_destination)
 
-    assert helper.path_tz_fix(os.path.join('2016-01-Jan','Houston','2016-01-04_05-28-15-audio-test-audio.m4a')) in dest_path, dest_path
+    assert helper.path_tz_fix(os.path.join('2016-01-Jan','Houston','2016-01-04_05-28-15-audio.m4a')) in dest_path, dest_path
 
 def test_import_file_photo():
     temporary_folder, folder = helper.create_working_folder()
