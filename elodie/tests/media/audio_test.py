@@ -32,32 +32,28 @@ def test_audio_extensions():
     assert extensions == valid_extensions, valid_extensions
 
 def test_get_coordinate():
-    raise SkipTest('gh-61 this test fails on travisci')
     audio = Audio(helper.get_file('audio.m4a'))
     coordinate = audio.get_coordinate()
 
-    assert coordinate == 29.75893888888889, coordinate
+    assert helper.isclose(coordinate, 29.758938), coordinate
 
 def test_get_coordinate_latitude():
-    raise SkipTest('gh-61 this test fails on travisci')
     audio = Audio(helper.get_file('audio.m4a'))
     coordinate = audio.get_coordinate('latitude')
 
-    assert coordinate == 29.75893888888889, coordinate
+    assert helper.isclose(coordinate, 29.758938), coordinate
 
 def test_get_coordinate_longitude():
-    raise SkipTest('gh-61 this test fails on travisci')
     audio = Audio(helper.get_file('audio.m4a'))
     coordinate = audio.get_coordinate('longitude')
 
-    assert coordinate == -95.3677, coordinate
+    assert helper.isclose(coordinate, -95.3677), coordinate
 
 def test_get_date_taken():
-    raise SkipTest('gh-32 this test fails on travisci')
     audio = Audio(helper.get_file('audio.m4a'))
     date_taken = audio.get_date_taken()
 
-    assert date_taken == (2016, 1, 4, 5, 24, 15, 0, 19, 0), date_taken
+    assert date_taken == (2016, 1, 4, 5, 28, 15, 0, 4, 0), date_taken
 
 def test_get_exiftool_attributes():
     audio = Video(helper.get_file('audio.m4a'))
