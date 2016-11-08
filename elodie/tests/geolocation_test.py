@@ -101,6 +101,16 @@ def test_lookup_with_invalid_location():
     res = geolocation.lookup(location='foobar dne')
     assert res is None, res
 
+def test_lookup_with_invalid_location():
+    res = geolocation.lookup(location='foobar dne')
+    assert res is None, res
+
+def test_lookup_with_valid_key():
+    res = geolocation.lookup(location='Sunnyvale, CA')
+    latLng = res['results'][0]['locations'][0]['latLng']
+    assert latLng['lat'] == 37.36883, latLng
+    assert latLng['lng'] == -122.03635, latLng
+
 @mock.patch('elodie.geolocation.__KEY__', 'invalid_key')
 def test_lookup_with_invalid_key():
     res = geolocation.lookup(location='Sunnyvale, CA')

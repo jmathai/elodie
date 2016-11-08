@@ -196,15 +196,26 @@ class FileSystem(object):
                 print('Could not get checksum for %s. Skipping...' % _file)
             return
 
-        # If duplicates are not allowed and this hash exists in the db then we
-        #   return
-        if(allow_duplicate is False and db.check_hash(checksum) is True):
-            if(constants.debug is True):
-                print('%s already exists at %s. Skipping...' % (
-                    _file,
-                    db.get_hash(checksum)
-                ))
-            return
+        # If duplicates are not allowed then we check if we've seen this file
+        #  before via checksum. We also check that the file exists at the
+        #   location we believe it to be.
+        # If we find a checksum match but the file doesn't exist where we
+        #  believe it to be then we write a debug log and proceed to import.
+        checksum_file = db.get_hash(checksum)
+        if(allow_duplicate is False and checksum_file is not None):
+            if(os.path.isfile(checksum_file)):
+                if(constants.debug is True):
+                    print('%s already exists at %s. Skipping...' % (
+                        _file,
+                        checksum_file
+                    ))
+                return
+            else:
+                if(constants.debug is True):
+                    print('%s matched checksum but file not found at %s. Importing again...' % (  # noqa
+                        _file,
+                        checksum_file
+                    ))
 
         self.create_directory(dest_directory)
 
