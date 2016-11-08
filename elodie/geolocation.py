@@ -4,10 +4,10 @@ from __future__ import division
 from future import standard_library
 from past.utils import old_div
 
+standard_library.install_aliases()  # noqa
+
 from os import path
 from configparser import ConfigParser
-
-standard_library.install_aliases()  # noqa
 
 import requests
 import urllib.request
