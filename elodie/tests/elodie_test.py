@@ -122,6 +122,22 @@ def test_import_file_allow_duplicate_true():
     assert dest_path2 is not None
     assert dest_path1 == dest_path2
 
+def test_import_destination_in_source():
+    temporary_folder, folder = helper.create_working_folder()
+    folder_destination = '{}/destination'.format(folder)
+    os.mkdir(folder_destination)
+
+    origin = '%s/video.mov' % folder
+    shutil.copyfile(helper.get_file('video.mov'), origin)
+
+    reset_hash_db()
+    dest_path = elodie.import_file(origin, folder_destination, False, False, False)
+    restore_hash_db()
+
+    shutil.rmtree(folder)
+
+    assert dest_path is None, dest_path
+
 def test_update_location_on_audio():
     temporary_folder, folder = helper.create_working_folder()
     temporary_folder_destination, folder_destination = helper.create_working_folder()
