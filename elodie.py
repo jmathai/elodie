@@ -40,6 +40,11 @@ def import_file(_file, destination, album_from_folder, trash, allow_duplicates):
         print('{"source":"%s", "error_msg":"Could not find %s"}' % \
             (_file, _file))
         return
+    # Check if the source, _file, is a child folder within destination
+    elif destination.startswith(os.path.dirname(_file)):
+        print('{"source": "%s", "destination": "%s", "error_msg": "Cannot be in destination"}' % (_file, destination))
+        return
+
 
     media = Media.get_class_by_file(_file, [Text, Audio, Photo, Video])
     if not media:
@@ -78,7 +83,7 @@ def import_file(_file, destination, album_from_folder, trash, allow_duplicates):
 def _import(destination, source, file, album_from_folder, trash, paths, allow_duplicates):
     """Import files or directories by reading their EXIF and organizing them accordingly.
     """
-    destination = os.path.expanduser(destination)
+    destination = os.path.abspath(os.path.expanduser(destination))
 
     files = set()
     paths = set(paths)
