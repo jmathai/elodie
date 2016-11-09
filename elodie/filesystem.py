@@ -12,7 +12,7 @@ import shutil
 import time
 
 from elodie import geolocation
-from elodie import constants
+from elodie import log
 from elodie.localstorage import Db
 
 
@@ -192,8 +192,7 @@ class FileSystem(object):
         db = Db()
         checksum = db.checksum(_file)
         if(checksum is None):
-            if(constants.debug is True):
-                print('Could not get checksum for %s. Skipping...' % _file)
+            log.info('Could not get checksum for %s. Skipping...' % _file)
             return
 
         # If duplicates are not allowed then we check if we've seen this file
@@ -204,18 +203,16 @@ class FileSystem(object):
         checksum_file = db.get_hash(checksum)
         if(allow_duplicate is False and checksum_file is not None):
             if(os.path.isfile(checksum_file)):
-                if(constants.debug is True):
-                    print('%s already exists at %s. Skipping...' % (
-                        _file,
-                        checksum_file
-                    ))
+                log.info('%s already exists at %s. Skipping...' % (
+                    _file,
+                    checksum_file
+                ))
                 return
             else:
-                if(constants.debug is True):
-                    print('%s matched checksum but file not found at %s. Importing again...' % (  # noqa
-                        _file,
-                        checksum_file
-                    ))
+                log.info('%s matched checksum but file not found at %s. Importing again...' % (  # noqa
+                    _file,
+                    checksum_file
+                ))
 
         self.create_directory(dest_directory)
 
