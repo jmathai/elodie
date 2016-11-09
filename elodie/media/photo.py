@@ -15,7 +15,7 @@ from datetime import datetime
 from re import compile
 
 
-from elodie import constants
+from elodie import log
 from .media import Media
 
 
@@ -73,8 +73,7 @@ class Photo(Media):
                         seconds_since_epoch = time.mktime(time_tuple)
                         break
             except BaseException as e:
-                if(constants.debug is True):
-                    print(e)
+                log.error(e)
                 pass
 
         if(seconds_since_epoch == 0):
