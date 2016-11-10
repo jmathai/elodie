@@ -5,14 +5,14 @@ are tracked by Elodie.
 .. moduleauthor:: Jaisen Mathai <jaisen@jmathai.com>
 """
 
-# load modules
-from elodie import constants
-from elodie.media.base import Base
-
 from json import dumps, loads
 import os
 from shutil import copyfileobj
 import time
+
+# load modules
+from elodie import log
+from elodie.media.base import Base
 
 
 class Text(Base):
@@ -122,8 +122,7 @@ class Text(Base):
             if isinstance(parsed_json, dict):
                 self.metadata_line = parsed_json
         except ValueError:
-            if(constants.debug is True):
-                print('Could not parse JSON from first line: %s' % first_line)
+            log.error('Could not parse JSON from first line: %s' % first_line)
             pass
 
     def write_metadata(self, **kwargs):

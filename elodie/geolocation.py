@@ -15,6 +15,7 @@ import urllib.parse
 import urllib.error
 
 from elodie import constants
+from elodie import log
 from elodie.localstorage import Db
 
 __KEY__ = None
@@ -170,18 +171,14 @@ def lookup(**kwargs):
                     path,
                     urllib.parse.urlencode(params)
               )
-        if(constants.debug is True):
-            print(url)
         r = requests.get(url)
         return parse_result(r.json())
     except requests.exceptions.RequestException as e:
-        if(constants.debug is True):
-            print(e)
+        log.error(e)
         return None
     except ValueError as e:
-        if(constants.debug is True):
-            print(r.text)
-            print(e)
+        log.error(r.text)
+        log.error(e)
         return None
 
 
