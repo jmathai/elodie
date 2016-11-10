@@ -17,6 +17,7 @@ if not verify_dependencies():
 
 from elodie import constants
 from elodie import geolocation
+from elodie import log
 from elodie.media.base import Base
 from elodie.media.media import Media
 from elodie.media.text import Text
@@ -35,8 +36,7 @@ def import_file(_file, destination, album_from_folder, trash, allow_duplicates):
     """Set file metadata and move it to destination.
     """
     if not os.path.exists(_file):
-        if constants.debug:
-            print('Could not find %s' % _file)
+        log.warn('Could not find %s' % _file)
         print('{"source":"%s", "error_msg":"Could not find %s"}' % \
             (_file, _file))
         return
@@ -48,8 +48,7 @@ def import_file(_file, destination, album_from_folder, trash, allow_duplicates):
 
     media = Media.get_class_by_file(_file, [Text, Audio, Photo, Video])
     if not media:
-        if constants.debug:
-            print('Not a supported file (%s)' % _file)
+        log.warn('Not a supported file (%s)' % _file)
         print('{"source":"%s", "error_msg":"Not a supported file"}' % _file)
         return
 
@@ -113,8 +112,7 @@ def update_location(media, file_path, location_name):
         location_status = media.set_location(location_coords[
             'latitude'], location_coords['longitude'])
         if not location_status:
-            if constants.debug:
-                print('Failed to update location')
+            log.error('Failed to update location')
             print(('{"source":"%s",' % file_path,
                 '"error_msg":"Failed to update location"}'))
             sys.exit(1)
@@ -129,8 +127,7 @@ def update_time(media, file_path, time_string):
         time_string = '%s 00:00:00' % time_string
     elif re.match(r'^\d{4}-\d{2}-\d{2} \d{2}:\d{2}\d{2}$', time_string):
         msg = ('Invalid time format. Use YYYY-mm-dd hh:ii:ss or YYYY-mm-dd')
-        if constants.debug:
-            print(msg)
+        log.error(msg)
         print('{"source":"%s", "error_msg":"%s"}' % (file_path, msg))
         sys.exit(1)
 
@@ -154,8 +151,7 @@ def _update(album, location, time, title, files):
     """
     for file_path in files:
         if not os.path.exists(file_path):
-            if constants.debug:
-                print('Could not find %s' % file_path)
+            log.warn('Could not find %s' % file_path)
             print('{"source":"%s", "error_msg":"Could not find %s"}' % \
                 (file_path, file_path))
             continue
@@ -213,8 +209,7 @@ def _update(album, location, time, title, files):
 
             dest_path = FILESYSTEM.process_file(file_path, destination,
                 updated_media, move=True, allowDuplicate=True)
-            if constants.debug:
-                print(u'%s -> %s' % (file_path, dest_path))
+            log.info(u'%s -> %s' % (file_path, dest_path))
             print('{"source":"%s", "destination":"%s"}' % (file_path,
                 dest_path))
             # If the folder we moved the file out of or its parent are empty
