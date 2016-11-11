@@ -18,18 +18,20 @@ if not verify_dependencies():
 from elodie import constants
 from elodie import geolocation
 from elodie import log
+from elodie.filesystem import FileSystem
+from elodie.localstorage import Db
 from elodie.media.base import Base
 from elodie.media.media import Media
 from elodie.media.text import Text
 from elodie.media.audio import Audio
 from elodie.media.photo import Photo
 from elodie.media.video import Video
-from elodie.filesystem import FileSystem
-from elodie.localstorage import Db
+from elodie.result import Result
 
 
 DB = Db()
 FILESYSTEM = FileSystem()
+RESULT = Result()
 
 
 def import_file(_file, destination, album_from_folder, trash, allow_duplicates):
@@ -42,7 +44,7 @@ def import_file(_file, destination, album_from_folder, trash, allow_duplicates):
         return
     # Check if the source, _file, is a child folder within destination
     elif destination.startswith(os.path.dirname(_file)):
-        print('{"source": "%s", "destination": "%s", "error_msg": "Cannot be in destination"}' % (_file, destination))
+        print('{"source": "%s", "destination": "%s", "error_msg": "Source cannot be in destination"}' % (_file, destination))
         return
 
 
@@ -98,8 +100,11 @@ def _import(destination, source, file, album_from_folder, trash, paths, allow_du
             files.add(path)
 
     for current_file in files:
-        import_file(current_file, destination, album_from_folder,
+        dest_path = import_file(current_file, destination, album_from_folder,
                     trash, allow_duplicates)
+        RESULT.append((current_file, dest_path))
+
+    RESULT.write()
 
 
 def update_location(media, file_path, location_name):
@@ -149,27 +154,28 @@ def update_time(media, file_path, time_string):
 def _update(album, location, time, title, files):
     """Update a file's EXIF. Automatically modifies the file's location and file name accordingly.
     """
-    for file_path in files:
-        if not os.path.exists(file_path):
-            log.warn('Could not find %s' % file_path)
+    for current_file in files:
+        if not os.path.exists(current_file):
+            if constants.debug:
+                print('Could not find %s' % current_file)
             print('{"source":"%s", "error_msg":"Could not find %s"}' % \
-                (file_path, file_path))
+                (current_file, current_file))
             continue
 
-        file_path = os.path.expanduser(file_path)
+        current_file = os.path.expanduser(current_file)
         destination = os.path.expanduser(os.path.dirname(os.path.dirname(
-                                         os.path.dirname(file_path))))
+                                         os.path.dirname(current_file))))
 
-        media = Media.get_class_by_file(file_path, [Text, Audio, Photo, Video])
+        media = Media.get_class_by_file(current_file, [Text, Audio, Photo, Video])
         if not media:
             continue
 
         updated = False
         if location:
-            update_location(media, file_path, location)
+            update_location(media, current_file, location)
             updated = True
         if time:
-            update_time(media, file_path, time)
+            update_time(media, current_file, time)
             updated = True
         if album:
             media.set_album(album)
@@ -198,7 +204,7 @@ def _update(album, location, time, title, files):
             updated = True
 
         if updated:
-            updated_media = Media.get_class_by_file(file_path,
+            updated_media = Media.get_class_by_file(current_file,
                                                     [Text, Audio, Photo, Video])
             # See comments above on why we have to do this when titles
             # get updated.
@@ -207,16 +213,21 @@ def _update(album, location, time, title, files):
                 updated_media.set_metadata_basename(
                     original_base_name.replace('-%s' % original_title, ''))
 
-            dest_path = FILESYSTEM.process_file(file_path, destination,
+            dest_path = FILESYSTEM.process_file(current_file, destination,
                 updated_media, move=True, allowDuplicate=True)
-            log.info(u'%s -> %s' % (file_path, dest_path))
+            log.info(u'%s -> %s' % (current_file, dest_path))
             print('{"source":"%s", "destination":"%s"}' % (file_path,
                 dest_path))
             # If the folder we moved the file out of or its parent are empty
             # we delete it.
-            FILESYSTEM.delete_directory_if_empty(os.path.dirname(file_path))
+            FILESYSTEM.delete_directory_if_empty(os.path.dirname(current_file))
             FILESYSTEM.delete_directory_if_empty(
-                os.path.dirname(os.path.dirname(file_path)))
+                os.path.dirname(os.path.dirname(current_file)))
+            RESULT.append((current_file, dest_path))
+        else:
+            RESULT.append((current_file, None))
+
+    RESULT.write()
 
 
 @click.group()
