@@ -7,7 +7,6 @@ import unittest
 
 from json import dumps
 from mock import patch
-from nose.tools import with_setup
 try:
     from StringIO import StringIO
 except ImportError:
@@ -18,8 +17,6 @@ sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirna
 from elodie import constants
 from elodie import log
 
-
-os.environ['TZ'] = 'GMT'
 
 def call_log_and_assert(func, message, expected):
     saved_stdout = sys.stdout
