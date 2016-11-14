@@ -216,7 +216,7 @@ def _update(album, location, time, title, files):
             dest_path = FILESYSTEM.process_file(current_file, destination,
                 updated_media, move=True, allowDuplicate=True)
             log.info(u'%s -> %s' % (current_file, dest_path))
-            print('{"source":"%s", "destination":"%s"}' % (file_path,
+            print('{"source":"%s", "destination":"%s"}' % (current_file,
                 dest_path))
             # If the folder we moved the file out of or its parent are empty
             # we delete it.
