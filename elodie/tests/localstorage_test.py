@@ -62,6 +62,14 @@ def test_add_hash_explicit_write():
     # Instnatiate new db class to confirm random_key exists
     db2 = Db()
     assert db2.check_hash(random_key) == True
+
+def test_backup_hash_db():
+    db = Db()
+    backup_file_name = db.backup_hash_db()
+    file_exists = os.path.isfile(backup_file_name)
+    os.remove(backup_file_name)
+    
+    assert file_exists, backup_file_name
     
 def test_check_hash_exists():
     db = Db()

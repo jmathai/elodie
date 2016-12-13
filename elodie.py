@@ -20,7 +20,7 @@ from elodie import geolocation
 from elodie import log
 from elodie.filesystem import FileSystem
 from elodie.localstorage import Db
-from elodie.media.base import Base
+from elodie.media.base import Base, get_all_subclasses
 from elodie.media.media import Media
 from elodie.media.text import Text
 from elodie.media.audio import Audio
@@ -29,7 +29,6 @@ from elodie.media.video import Video
 from elodie.result import Result
 
 
-DB = Db()
 FILESYSTEM = FileSystem()
 RESULT = Result()
 
@@ -105,6 +104,42 @@ def _import(destination, source, file, album_from_folder, trash, paths, allow_du
         RESULT.append((current_file, dest_path))
 
     RESULT.write()
+
+
+@click.command('generate-db')
+@click.option('--source', type=click.Path(file_okay=False),
+              required=True, help='Source of your photo library.')
+def _generate_db(source):
+    """Regenerate the hash.json database which contains all of the sha1 signatures of media files.
+    """
+    source = os.path.abspath(os.path.expanduser(source))
+
+    extensions = set()
+    all_files = set()
+    valid_files = set()
+
+    if not os.path.isdir(source):
+        log.error('Source is not a valid directory %s' % source)
+        sys.exit(1)
+        
+    subclasses = get_all_subclasses(Base)
+    for cls in subclasses:
+        extensions.update(cls.extensions)
+
+    all_files.update(FILESYSTEM.get_all_files(source, None))
+
+    db = Db()
+    db.backup_hash_db()
+    db.reset_hash_db()
+
+    for current_file in all_files:
+        if os.path.splitext(current_file)[1][1:].lower() not in extensions:
+            log.info('Skipping invalid file %s' % current_file)
+            continue
+
+        db.add_hash(db.checksum(current_file), current_file)
+    
+    db.update_hash_db()
 
 
 def update_location(media, file_path, location_name):
@@ -237,6 +272,7 @@ def main():
 
 main.add_command(_import)
 main.add_command(_update)
+main.add_command(_generate_db)
 
 
 if __name__ == '__main__':
