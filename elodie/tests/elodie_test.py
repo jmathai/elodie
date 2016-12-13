@@ -4,7 +4,9 @@ import os
 import sys
 import shutil
 
+from click.testing import CliRunner
 from nose.plugins.skip import SkipTest
+from nose.tools import assert_raises
 
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))))
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))))
@@ -13,6 +15,7 @@ import helper
 elodie = load_source('elodie', os.path.abspath('{}/../../elodie.py'.format(os.path.dirname(os.path.realpath(__file__)))))
 
 from elodie import constants
+from elodie.localstorage import Db
 from elodie.media.audio import Audio
 from elodie.media.photo import Photo
 from elodie.media.text import Text
@@ -333,6 +336,48 @@ def test_update_time_on_video():
     assert status == True, status
     assert metadata['date_taken'] != metadata_processed['date_taken']
     assert metadata_processed['date_taken'] == helper.time_convert((2000, 1, 1, 12, 0, 0, 5, 1, 0)), metadata_processed['date_taken']
+
+def test_regenerate_db_invalid_source():
+    runner = CliRunner()
+    result = runner.invoke(elodie._generate_db, ['--source', '/invalid/path'])
+    assert result.exit_code == 1, result.exit_code
+
+def test_regenerate_valid_source():
+    temporary_folder, folder = helper.create_working_folder()
+
+    origin = '%s/valid.txt' % folder
+    shutil.copyfile(helper.get_file('valid.txt'), origin)
+
+    reset_hash_db()
+    runner = CliRunner()
+    result = runner.invoke(elodie._generate_db, ['--source', folder])
+    db = Db()
+    restore_hash_db()
+
+    shutil.rmtree(folder)
+
+    assert result.exit_code == 0, result.exit_code
+    assert 'bde2dc0b839a5d20b0b4c1f57605f84e0e2a4562aaebc1c362de6cb7cc02eeb3' in db.hash_db, db.hash_db
+
+def test_regenerate_valid_source_with_invalid_files():
+    temporary_folder, folder = helper.create_working_folder()
+
+    origin_valid = '%s/valid.txt' % folder
+    shutil.copyfile(helper.get_file('valid.txt'), origin_valid)
+    origin_invalid = '%s/invalid.invalid' % folder
+    shutil.copyfile(helper.get_file('invalid.invalid'), origin_invalid)
+
+    reset_hash_db()
+    runner = CliRunner()
+    result = runner.invoke(elodie._generate_db, ['--source', folder])
+    db = Db()
+    restore_hash_db()
+
+    shutil.rmtree(folder)
+
+    assert result.exit_code == 0, result.exit_code
+    assert 'bde2dc0b839a5d20b0b4c1f57605f84e0e2a4562aaebc1c362de6cb7cc02eeb3' in db.hash_db, db.hash_db
+    assert 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855' not in db.hash_db, db.hash_db
 
 def reset_hash_db():
     hash_db = constants.hash_db

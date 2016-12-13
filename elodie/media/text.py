@@ -25,7 +25,7 @@ class Text(Base):
     __name__ = 'Text'
 
     #: Valid extensions for text files.
-    extensions = ('txt')
+    extensions = ('txt',)
 
     def __init__(self, source=None):
         super(Text, self).__init__(source)
