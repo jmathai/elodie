@@ -52,7 +52,7 @@ You'll notice that the photo was organized into an *Unknown Location* folder. Th
 
 ### Usage Instructions
 
-You can view these instructions on the command line by typing `./elodie.py import --help` or `./elodie.py update --help`.
+You can view these instructions on the command line by typing `./elodie.py import --help`, `./elodie.py update --help` or `./elodie.py generate-db --help`.
 
 ```
 Usage: elodie.py import [OPTIONS] [PATHS]...
@@ -86,6 +86,17 @@ Options:
                    hh:ii:ss or YYYY-mm-dd format.
   --title TEXT     Update the image title.
   --help           Show this message and exit.
+```
+
+```
+Usage: elodie.py generate-db [OPTIONS]
+
+  Regenerate the hash.json database which contains all of the sha1
+  signatures of media files.
+
+Options:
+  --source DIRECTORY  Source of your photo library.  [required]
+  --help              Show this message and exit.
 ```
 
 Now you're ready to learn more about Elodie.
