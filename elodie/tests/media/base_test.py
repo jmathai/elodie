@@ -14,7 +14,7 @@ sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirna
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
 
 import helper
-from elodie.media.base import Base
+from elodie.media.base import Base, get_all_subclasses
 from elodie.media.media import Media
 from elodie.media.audio import Audio
 from elodie.media.text import Text
@@ -106,3 +106,8 @@ def test_set_metadata_basename():
     new_metadata = photo.get_metadata()
 
     assert new_metadata['base_name'] == new_basename, new_metadata['base_name']
+
+def test_get_all_subclasses():
+    subclasses = get_all_subclasses(Base)
+    expected = {Media, Base, Text, Photo, Video, Audio}
+    assert subclasses == expected, subclasses
