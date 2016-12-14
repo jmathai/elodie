@@ -135,8 +135,10 @@ def _generate_db(source):
     for current_file in all_files:
         if os.path.splitext(current_file)[1][1:].lower() not in extensions:
             log.info('Skipping invalid file %s' % current_file)
+            RESULT.append((current_file, None))
             continue
 
+        RESULT.append((current_file, True))
         db.add_hash(db.checksum(current_file), current_file)
     
     db.update_hash_db()
