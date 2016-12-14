@@ -142,6 +142,24 @@ def _generate_db(source):
         db.add_hash(db.checksum(current_file), current_file)
     
     db.update_hash_db()
+    RESULT.write()
+
+@click.command('verify')
+def _verify():
+    db = Db()
+    for checksum, file_path in db.all():
+        if not os.path.isfile(file_path):
+            RESULT.append((file_path, True))
+            continue
+
+        actual_checksum = db.checksum(file_path)
+        if checksum == actual_checksum:
+            RESULT.append((file_path, True))
+        else:
+            RESULT.append((file_path, None))
+
+    RESULT.write()
+
 
 
 def update_location(media, file_path, location_name):
@@ -275,6 +293,7 @@ def main():
 main.add_command(_import)
 main.add_command(_update)
 main.add_command(_generate_db)
+main.add_command(_verify)
 
 
 if __name__ == '__main__':
