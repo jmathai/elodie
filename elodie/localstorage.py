@@ -183,6 +183,14 @@ class Db(object):
 
         return None
 
+    def all(self):
+        """Generator to get all entries from self.hash_db
+
+        :returns tuple(string)
+        """
+        for checksum, path in self.hash_db.items():
+            yield (checksum, path)
+
     def reset_hash_db(self):
         self.hash_db = {}
 
