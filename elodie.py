@@ -30,7 +30,6 @@ from elodie.result import Result
 
 
 FILESYSTEM = FileSystem()
-RESULT = Result()
 
 
 def import_file(_file, destination, album_from_folder, trash, allow_duplicates):
@@ -83,6 +82,7 @@ def import_file(_file, destination, album_from_folder, trash, allow_duplicates):
 def _import(destination, source, file, album_from_folder, trash, paths, allow_duplicates):
     """Import files or directories by reading their EXIF and organizing them accordingly.
     """
+    result = Result()
     destination = os.path.abspath(os.path.expanduser(destination))
 
     files = set()
@@ -101,9 +101,9 @@ def _import(destination, source, file, album_from_folder, trash, paths, allow_du
     for current_file in files:
         dest_path = import_file(current_file, destination, album_from_folder,
                     trash, allow_duplicates)
-        RESULT.append((current_file, dest_path))
+        result.append((current_file, dest_path))
 
-    RESULT.write()
+    result.write()
 
 
 @click.command('generate-db')
@@ -112,6 +112,7 @@ def _import(destination, source, file, album_from_folder, trash, paths, allow_du
 def _generate_db(source):
     """Regenerate the hash.json database which contains all of the sha1 signatures of media files.
     """
+    result = Result()
     source = os.path.abspath(os.path.expanduser(source))
 
     extensions = set()
@@ -135,11 +136,31 @@ def _generate_db(source):
     for current_file in all_files:
         if os.path.splitext(current_file)[1][1:].lower() not in extensions:
             log.info('Skipping invalid file %s' % current_file)
+            result.append((current_file, False))
             continue
 
+        result.append((current_file, True))
         db.add_hash(db.checksum(current_file), current_file)
     
     db.update_hash_db()
+    result.write()
+
+@click.command('verify')
+def _verify():
+    result = Result()
+    db = Db()
+    for checksum, file_path in db.all():
+        if not os.path.isfile(file_path):
+            result.append((file_path, False))
+            continue
+
+        actual_checksum = db.checksum(file_path)
+        if checksum == actual_checksum:
+            result.append((file_path, True))
+        else:
+            result.append((file_path, False))
+
+    result.write()
 
 
 def update_location(media, file_path, location_name):
@@ -189,6 +210,7 @@ def update_time(media, file_path, time_string):
 def _update(album, location, time, title, files):
     """Update a file's EXIF. Automatically modifies the file's location and file name accordingly.
     """
+    result = Result()
     for current_file in files:
         if not os.path.exists(current_file):
             if constants.debug:
@@ -258,11 +280,11 @@ def _update(album, location, time, title, files):
             FILESYSTEM.delete_directory_if_empty(os.path.dirname(current_file))
             FILESYSTEM.delete_directory_if_empty(
                 os.path.dirname(os.path.dirname(current_file)))
-            RESULT.append((current_file, dest_path))
+            result.append((current_file, dest_path))
         else:
-            RESULT.append((current_file, None))
+            result.append((current_file, False))
 
-    RESULT.write()
+    result.write()
 
 
 @click.group()
@@ -273,6 +295,7 @@ def main():
 main.add_command(_import)
 main.add_command(_update)
 main.add_command(_generate_db)
+main.add_command(_verify)
 
 
 if __name__ == '__main__':
