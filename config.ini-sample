@@ -1,2 +1,4 @@
 [MapQuest]
 key=your-api-key-goes-here
+[Directory]
+dir=%Y-%m-%b

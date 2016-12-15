@@ -10,11 +10,33 @@ import os
 import re
 import shutil
 import time
+from os import path
+from configparser import RawConfigParser
 
 from elodie import geolocation
+from elodie import constants
 from elodie import log
 from elodie.localstorage import Db
 
+__DIR__ = None
+
+def get_dir():
+    global __DIR__
+    default_dir = "%Y-%m-%b"
+    if __DIR__ is not None:
+        return __DIR__
+
+    config_file = '%s/config.ini' % constants.application_directory
+    if not path.exists(config_file):
+        return default_dir
+
+    config = RawConfigParser()
+    config.read(config_file)
+    if('Directory' not in config.sections()):
+        return default_dir
+
+    __DIR__ = config.get('Directory', 'dir')
+    return __DIR__
 
 class FileSystem(object):
 
@@ -136,7 +158,8 @@ class FileSystem(object):
         :param time time_obj: Time object to be used to determine folder name.
         :returns: str
         """
-        return time.strftime('%Y-%m-%b', time_obj)
+        dir = get_dir()
+        return time.strftime(dir, time_obj)
 
     def get_folder_path(self, metadata):
         """Get folder path by various parameters.
@@ -144,9 +167,10 @@ class FileSystem(object):
         :param time time_obj: Time object to be used to determine folder name.
         :returns: str
         """
+        dir = get_dir()
         path = []
         if(metadata['date_taken'] is not None):
-            path.append(time.strftime('%Y-%m-%b', metadata['date_taken']))
+            path.append(time.strftime(dir, metadata['date_taken']))
 
         if(metadata['album'] is not None):
             path.append(metadata['album'])
