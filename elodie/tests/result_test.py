@@ -24,11 +24,40 @@ def call_result_and_assert(result, expected):
         sys.stdout = out
         result.write()
         output = out.getvalue().strip()
-        assert output == expected, expected
+        assert output == expected, output
     finally:
         sys.stdout = saved_stdout
 
-def test_add_multiple_rows():
+def test_add_multiple_rows_with_success():
+    expected = """****** SUMMARY ******
+Metric      Count
+--------  -------
+Success         2
+Error           0"""
+    result = Result()
+    result.append(('id1', '/some/path/1'))
+    result.append(('id2', '/some/path/2'))
+    call_result_and_assert(result, expected)
+
+def test_add_multiple_rows_with_failure():
+    expected = """****** ERROR DETAILS ******
+File
+------
+id1
+id2
+
+
+****** SUMMARY ******
+Metric      Count
+--------  -------
+Success         0
+Error           2"""
+    result = Result()
+    result.append(('id1', False))
+    result.append(('id2', False))
+    call_result_and_assert(result, expected)
+
+def test_add_multiple_rows_with_failure_and_success():
     expected = """****** ERROR DETAILS ******
 File
 ------
@@ -41,6 +70,6 @@ Metric      Count
 Success         1
 Error           1"""
     result = Result()
-    result.append(('id1', None))
+    result.append(('id1', False))
     result.append(('id2', '/some/path'))
     call_result_and_assert(result, expected)

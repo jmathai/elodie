@@ -379,6 +379,42 @@ def test_regenerate_valid_source_with_invalid_files():
     assert 'bde2dc0b839a5d20b0b4c1f57605f84e0e2a4562aaebc1c362de6cb7cc02eeb3' in db.hash_db, db.hash_db
     assert 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855' not in db.hash_db, db.hash_db
 
+def test_verify_ok():
+    temporary_folder, folder = helper.create_working_folder()
+
+    origin = '%s/valid.txt' % folder
+    shutil.copyfile(helper.get_file('valid.txt'), origin)
+
+    reset_hash_db()
+    runner = CliRunner()
+    runner.invoke(elodie._generate_db, ['--source', folder])
+    result = runner.invoke(elodie._verify)
+    restore_hash_db()
+
+    shutil.rmtree(folder)
+
+    assert 'Success         1' in result.output, result.output
+    assert 'Error           0' in result.output, result.output
+
+def test_verify_error():
+    temporary_folder, folder = helper.create_working_folder()
+
+    origin = '%s/valid.txt' % folder
+    shutil.copyfile(helper.get_file('valid.txt'), origin)
+
+    reset_hash_db()
+    runner = CliRunner()
+    runner.invoke(elodie._generate_db, ['--source', folder])
+    with open(origin, 'w') as f:
+        f.write('changed text')
+    result = runner.invoke(elodie._verify)
+    restore_hash_db()
+
+    shutil.rmtree(folder)
+
+    assert origin in result.output, result.output
+    assert 'Error           1' in result.output, result.output
+
 def reset_hash_db():
     hash_db = constants.hash_db
     if os.path.isfile(hash_db):
