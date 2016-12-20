@@ -57,13 +57,18 @@ def get_file_path(name):
 def get_test_location():
     return (61.013710, 99.196656, 'Siberia')
 
-def populate_folder(number_of_files):
+def populate_folder(number_of_files, include_invalid=False):
     folder = '%s/%s' % (tempfile.gettempdir(), random_string(10))
     os.makedirs(folder)
 
     for x in range(0, number_of_files):
         ext = 'jpg' if x % 2 == 0 else 'txt'
         fname = '%s/%s.%s' % (folder, x, ext)
+        with open(fname, 'a'):
+            os.utime(fname, None)
+
+    if include_invalid:
+        fname = '%s/%s' % (folder, 'invalid.invalid')
         with open(fname, 'a'):
             os.utime(fname, None)
 
