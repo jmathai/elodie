@@ -115,34 +115,21 @@ def _generate_db(source):
     result = Result()
     source = os.path.abspath(os.path.expanduser(source))
 
-    extensions = set()
-    all_files = set()
-    valid_files = set()
-
     if not os.path.isdir(source):
         log.error('Source is not a valid directory %s' % source)
         sys.exit(1)
         
-    subclasses = get_all_subclasses(Base)
-    for cls in subclasses:
-        extensions.update(cls.extensions)
-
-    all_files.update(FILESYSTEM.get_all_files(source, None))
-
     db = Db()
     db.backup_hash_db()
     db.reset_hash_db()
 
-    for current_file in all_files:
-        if os.path.splitext(current_file)[1][1:].lower() not in extensions:
-            log.info('Skipping invalid file %s' % current_file)
-            result.append((current_file, False))
-            continue
-
+    for current_file in FILESYSTEM.get_all_files(source):
         result.append((current_file, True))
         db.add_hash(db.checksum(current_file), current_file)
+        log.progress()
     
     db.update_hash_db()
+    log.progress('', True)
     result.write()
 
 @click.command('verify')
@@ -152,14 +139,18 @@ def _verify():
     for checksum, file_path in db.all():
         if not os.path.isfile(file_path):
             result.append((file_path, False))
+            log.progress('x')
             continue
 
         actual_checksum = db.checksum(file_path)
         if checksum == actual_checksum:
             result.append((file_path, True))
+            log.progress()
         else:
             result.append((file_path, False))
+            log.progress('x')
 
+    log.progress('', True)
     result.write()
 
 

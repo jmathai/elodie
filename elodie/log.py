@@ -5,6 +5,8 @@ General file system methods.
 """
 from __future__ import print_function
 
+import sys
+
 from json import dumps
 
 from elodie import constants
@@ -16,6 +18,13 @@ def info(message):
 
 def info_json(payload):
     _print(dumps(payload))
+
+
+def progress(message='.', new_line=False):
+    if not new_line:
+        print(message, end="")
+    else:
+        print(message)
 
 
 def warn(message):
