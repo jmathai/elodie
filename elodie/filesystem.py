@@ -14,6 +14,7 @@ import time
 from elodie import geolocation
 from elodie import log
 from elodie.localstorage import Db
+from elodie.media.base import Base, get_all_subclasses
 
 
 class FileSystem(object):
@@ -61,17 +62,20 @@ class FileSystem(object):
 
         :param str path string: Path to start recursive file listing
         :param tuple(str) extensions: File extensions to include (whitelist)
+        :returns: generator
         """
-        files = []
+        # If extensions is None then we get all supported extensions
+        if not extensions:
+            extensions = set()
+            subclasses = get_all_subclasses(Base)
+            for cls in subclasses:
+                extensions.update(cls.extensions)
+
         for dirname, dirnames, filenames in os.walk(path):
-            # print path to all filenames.
             for filename in filenames:
-                if(
-                    extensions is None or
-                    filename.lower().endswith(extensions)
-                ):
-                    files.append(os.path.join(dirname, filename))
-        return files
+                # If file extension is in `extensions` then append to the list
+                if os.path.splitext(filename)[1][1:].lower() in extensions:
+                    yield os.path.join(dirname, filename)
 
     def get_current_directory(self):
         """Get the current working directory.
