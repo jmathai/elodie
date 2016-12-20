@@ -14,6 +14,7 @@ sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirna
 
 from . import helper
 from elodie.filesystem import FileSystem
+from elodie.media.text import Text
 from elodie.media.media import Media
 from elodie.media.photo import Photo
 from elodie.media.video import Video
@@ -102,34 +103,74 @@ def test_delete_directory_if_empty_when_not_empty():
 def test_get_all_files_success():
     filesystem = FileSystem()
     folder = helper.populate_folder(5)
-    files = filesystem.get_all_files(folder)
+
+    files = set()
+    files.update(filesystem.get_all_files(folder))
     shutil.rmtree(folder)
 
     length = len(files)
-    assert length == 5, length
-
+    assert length == 5, files
 
 def test_get_all_files_by_extension():
     filesystem = FileSystem()
     folder = helper.populate_folder(5)
 
-    files = filesystem.get_all_files(folder)
+    files = set()
+    files.update(filesystem.get_all_files(folder))
     length = len(files)
     assert length == 5, length
 
-    files = filesystem.get_all_files(folder, 'jpg')
+    files = set()
+    files.update(filesystem.get_all_files(folder, 'jpg'))
     length = len(files)
     assert length == 3, length
 
-    files = filesystem.get_all_files(folder, 'txt')
+    files = set()
+    files.update(filesystem.get_all_files(folder, 'txt'))
     length = len(files)
     assert length == 2, length
 
-    files = filesystem.get_all_files(folder, 'gif')
+    files = set()
+    files.update(filesystem.get_all_files(folder, 'gif'))
     length = len(files)
     assert length == 0, length
 
     shutil.rmtree(folder)
+
+def test_get_all_files_with_only_invalid_file():
+    filesystem = FileSystem()
+    folder = helper.populate_folder(0, include_invalid=True)
+
+    files = set()
+    files.update(filesystem.get_all_files(folder))
+    shutil.rmtree(folder)
+
+    length = len(files)
+    assert length == 0, length
+
+def test_get_all_files_with_invalid_file():
+    filesystem = FileSystem()
+    folder = helper.populate_folder(5, include_invalid=True)
+
+    files = set()
+    files.update(filesystem.get_all_files(folder))
+    shutil.rmtree(folder)
+
+    length = len(files)
+    assert length == 5, length
+
+def test_get_all_files_for_loop():
+    filesystem = FileSystem()
+    folder = helper.populate_folder(5)
+
+    files = set()
+    files.update()
+    counter = 0
+    for file in filesystem.get_all_files(folder):
+        counter += 1
+    shutil.rmtree(folder)
+
+    assert counter == 5, counter
 
 def test_get_current_directory():
     filesystem = FileSystem()
