@@ -7,13 +7,13 @@ from past.utils import old_div
 standard_library.install_aliases()  # noqa
 
 from os import path
-from configparser import ConfigParser
 
 import requests
 import urllib.request
 import urllib.parse
 import urllib.error
 
+from elodie.config import load_config
 from elodie import constants
 from elodie import log
 from elodie.localstorage import Db
@@ -106,12 +106,11 @@ def get_key():
     if not path.exists(config_file):
         return None
 
-    config = ConfigParser()
-    config.read(config_file)
-    if('MapQuest' not in config.sections()):
+    config = load_config()
+    if('MapQuest' not in config):
         return None
 
-    __KEY__ = config.get('MapQuest', 'key')
+    __KEY__ = config['MapQuest']['key']
     return __KEY__
 
 
