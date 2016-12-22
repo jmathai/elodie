@@ -23,7 +23,6 @@ from elodie.media.video import Video
 
 os.environ['TZ'] = 'GMT'
 
-
 def test_import_file_text():
     temporary_folder, folder = helper.create_working_folder()
     temporary_folder_destination, folder_destination = helper.create_working_folder()
@@ -88,6 +87,23 @@ def test_import_file_video():
 
     assert helper.path_tz_fix(os.path.join('2015-01-Jan','California','2015-01-19_12-45-11-video.mov')) in dest_path, dest_path
 
+def test_import_file_path_unicode():
+    raise SkipTest("Skipping test because failure case not established. gh-162")
+    temporary_folder, folder = helper.create_working_folder()
+    temporary_folder_destination, folder_destination = helper.create_working_folder()
+
+    origin = u'%s/unicode\xa0filename.txt' % folder
+    shutil.copyfile(helper.get_file('valid.txt'), origin)
+
+    reset_hash_db()
+    dest_path = elodie.import_file(origin, folder_destination, False, False, False)
+    restore_hash_db()
+
+    shutil.rmtree(folder)
+    shutil.rmtree(folder_destination)
+
+    assert helper.path_tz_fix(os.path.join('2016-04-Apr','Unknown Location',u'2016-04-07_11-15-26-unicode\xa0filename-sample-title.txt')) in dest_path, dest_path
+    
 def test_import_file_allow_duplicate_false():
     temporary_folder, folder = helper.create_working_folder()
     temporary_folder_destination, folder_destination = helper.create_working_folder()
