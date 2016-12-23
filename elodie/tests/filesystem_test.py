@@ -1,18 +1,19 @@
 from __future__ import absolute_import
 # Project imports
+import mock
 import os
 import re
 import shutil
-import time
 import sys
+import time
 from datetime import datetime
 from datetime import timedelta
-
-import mock
+from tempfile import gettempdir
 
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))))
 
 from . import helper
+from elodie.config import load_config
 from elodie.filesystem import FileSystem
 from elodie.media.media import Media
 from elodie.media.photo import Photo
@@ -422,3 +423,58 @@ def test_set_utime_without_exif_date():
     assert initial_time == final_stat.st_mtime
     assert final_stat.st_mtime == time.mktime(metadata_final['date_taken']), (final_stat.st_mtime, time.mktime(metadata_final['date_taken']))
     assert initial_checksum == final_checksum
+
+@mock.patch('elodie.config.config_file', '%s/config.ini-does-not-exist' % gettempdir())
+def test_get_folder_path_definition_default():
+    if hasattr(load_config, 'config'):
+        del load_config.config
+    filesystem = FileSystem()
+    path_definition = filesystem.get_folder_path_definition()
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    assert path_definition == filesystem.default_folder_path_definition, path_definition
+
+@mock.patch('elodie.config.config_file', '%s/config.ini-date-location' % gettempdir())
+def test_get_folder_path_definition_date_location():
+    with open('%s/config.ini-date-location' % gettempdir(), 'w') as f:
+        f.write("""
+[Directory]
+date=%Y-%m-%d
+location=%country
+full_path=%date/%location
+        """)
+
+    if hasattr(load_config, 'config'):
+        del load_config.config
+    filesystem = FileSystem()
+    path_definition = filesystem.get_folder_path_definition()
+    expected = [
+        ('date', '%Y-%m-%d'), ('location', '%country')
+    ]
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    assert path_definition == expected, path_definition
+
+@mock.patch('elodie.config.config_file', '%s/config.ini-location-date' % gettempdir())
+def test_get_folder_path_definition_location_date():
+    with open('%s/config.ini-location-date' % gettempdir(), 'w') as f:
+        f.write("""
+[Directory]
+date=%Y-%m-%d
+location=%country
+full_path=%location/%date
+        """)
+
+    if hasattr(load_config, 'config'):
+        del load_config.config
+    filesystem = FileSystem()
+    path_definition = filesystem.get_folder_path_definition()
+    expected = [
+        ('location', '%country'), ('date', '%Y-%m-%d')
+    ]
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    assert path_definition == expected, path_definition

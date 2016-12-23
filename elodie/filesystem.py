@@ -11,36 +11,35 @@ import re
 import shutil
 import time
 from os import path
-from configparser import RawConfigParser
 
-from elodie import geolocation
 from elodie import constants
+from elodie import geolocation
 from elodie import log
+from elodie.config import load_config
 from elodie.localstorage import Db
 
-__DIR__ = None
 
 def get_dir():
-    global __DIR__
     default_dir = "%Y-%m-%b"
-    if __DIR__ is not None:
-        return __DIR__
-
     config_file = '%s/config.ini' % constants.application_directory
     if not path.exists(config_file):
         return default_dir
 
-    config = RawConfigParser()
-    config.read(config_file)
-    if('Directory' not in config.sections()):
+    config = load_config()
+    if('Directory' not in config or 'date' not in config['Directory']):
         return default_dir
 
-    __DIR__ = config.get('Directory', 'dir')
-    return __DIR__
+    return config.get['Directory']['dir']
+
 
 class FileSystem(object):
-
     """A class for interacting with the file system."""
+
+    def __init__(self):
+        # The default folder path is along the lines of 2015-01-Jan/Chicago
+        self.default_folder_path_definition = [
+            ('date', '%Y-%m-%b'), ('location', '%city')
+        ]
 
     def create_directory(self, directory_path):
         """Create a directory if it does not already exist.
@@ -152,6 +151,7 @@ class FileSystem(object):
             metadata['extension'])
         return file_name.lower()
 
+    # gh-160 remove?
     def get_folder_name_by_date(self, time_obj):
         """Get date based folder name.
 
@@ -160,6 +160,30 @@ class FileSystem(object):
         """
         dir = get_dir()
         return time.strftime(dir, time_obj)
+
+    def get_folder_path_definition(self):
+        config = load_config()
+
+        # If Directory is in the config we assume full_path and its
+        #  corresponding values (date, location) are als present
+        if('Directory' not in config):
+            return self.default_folder_path_definition
+
+        config_directory = config['Directory']
+
+        path_parts = re.search(
+                         '\%([^/]+)\/\%([^/]+)',
+                         config_directory['full_path']
+                     )
+
+        if not path_parts or len(path_parts.groups()) != 2:
+            return self.default_folder_path_definition
+
+        path_part_groups = path_parts.groups()
+        return [
+            (path_part_groups[0], config_directory[path_part_groups[0]]),
+            (path_part_groups[1], config_directory[path_part_groups[1]]),
+        ]
 
     def get_folder_path(self, metadata):
         """Get folder path by various parameters.

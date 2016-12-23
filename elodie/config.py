@@ -12,7 +12,7 @@ def load_config():
         return load_config.config
 
     if not path.exists(config_file):
-        return None
+        return {}
 
     load_config.config = RawConfigParser()
     load_config.config.read(config_file)
