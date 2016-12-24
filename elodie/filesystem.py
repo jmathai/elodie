@@ -40,6 +40,7 @@ class FileSystem(object):
         self.default_folder_path_definition = [
             ('date', '%Y-%m-%b'), ('location', '%city')
         ]
+        self.cached_folder_path_definition = None
 
     def create_directory(self, directory_path):
         """Create a directory if it does not already exist.
@@ -162,10 +163,15 @@ class FileSystem(object):
         return time.strftime(dir, time_obj)
 
     def get_folder_path_definition(self):
+        # If we've done this already then return it immediately without
+        # incurring any extra work
+        if self.cached_folder_path_definition is not None:
+            return self.cached_folder_path_definition
+
         config = load_config()
 
         # If Directory is in the config we assume full_path and its
-        #  corresponding values (date, location) are als present
+        #  corresponding values (date, location) are also present
         if('Directory' not in config):
             return self.default_folder_path_definition
 
@@ -180,10 +186,11 @@ class FileSystem(object):
             return self.default_folder_path_definition
 
         path_part_groups = path_parts.groups()
-        return [
+        self.cached_folder_path_definition = [
             (path_part_groups[0], config_directory[path_part_groups[0]]),
             (path_part_groups[1], config_directory[path_part_groups[1]]),
         ]
+        return self.cached_folder_path_definition
 
     def get_folder_path(self, metadata):
         """Get folder path by various parameters.

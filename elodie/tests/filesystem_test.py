@@ -478,3 +478,40 @@ full_path=%location/%date
         del load_config.config
 
     assert path_definition == expected, path_definition
+
+@mock.patch('elodie.config.config_file', '%s/config.ini-cached' % gettempdir())
+def test_get_folder_path_definition_cached():
+    with open('%s/config.ini-cached' % gettempdir(), 'w') as f:
+        f.write("""
+[Directory]
+date=%Y-%m-%d
+location=%country
+full_path=%date/%location
+        """)
+
+    if hasattr(load_config, 'config'):
+        del load_config.config
+    filesystem = FileSystem()
+    path_definition = filesystem.get_folder_path_definition()
+    expected = [
+        ('date', '%Y-%m-%d'), ('location', '%country')
+    ]
+
+    assert path_definition == expected, path_definition
+
+    with open('%s/config.ini-cached' % gettempdir(), 'w') as f:
+        f.write("""
+[Directory]
+date=%uncached
+location=%uncached
+full_path=%date/%location
+        """)
+    if hasattr(load_config, 'config'):
+        del load_config.config
+    filesystem = FileSystem()
+    path_definition = filesystem.get_folder_path_definition()
+    expected = [
+        ('date', '%Y-%m-%d'), ('location', '%country')
+    ]
+    if hasattr(load_config, 'config'):
+        del load_config.config
