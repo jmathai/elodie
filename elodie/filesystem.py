@@ -198,23 +198,56 @@ class FileSystem(object):
         :param time time_obj: Time object to be used to determine folder name.
         :returns: str
         """
-        dir = get_dir()
+        path_parts = self.get_folder_path_definition()
         path = []
-        if(metadata['date_taken'] is not None):
-            path.append(time.strftime(dir, metadata['date_taken']))
+        for path_part in path_parts:
+            part, mask = path_part
+            if part == 'date':
+                path.append(time.strftime(mask, metadata['date_taken']))
+            elif part == 'location':
+                if(
+                    metadata['latitude'] is not None and
+                    metadata['longitude'] is not None
+                ):
+                    place_name = geolocation.place_name(
+                        metadata['latitude'],
+                        metadata['longitude']
+                    )
+                    if(place_name is not None):
+                        folder_name = mask
+                        location_parts = re.findall('(%[^%]+)', mask)
+                        for loc_part in location_parts:
+                            # We assume the search returns a tuple of length 2.
+                            # If not then it's a bad mask in config.ini.
+                            # loc_part = '%country-'
+                            # component = '%country'
+                            # key = 'country
+                            # component_full = '%country-'
+                            component, key, component_full = re.search(
+                                '(%([a-z]+))([^%]*)',
+                                loc_part,
+                            ).groups()
+                            if(key in place_name):
+                                replace_target = component
+                                replace_with = place_name[key]
+                            else:
+                                replace_target = component_full
+                                replace_with = ''
 
+                            folder_name = folder_name.replace(
+                                replace_target,
+                                replace_with,
+                            )
+                        path.append(folder_name)
+
+        # For now we always make the leaf folder an album if it's in the EXIF.
+        # This is to preserve backwards compatability until we figure out how
+        # to include %album in the config.ini syntax.
         if(metadata['album'] is not None):
-            path.append(metadata['album'])
-        elif(
-            metadata['latitude'] is not None and
-            metadata['longitude'] is not None
-        ):
-            place_name = geolocation.place_name(
-                metadata['latitude'],
-                metadata['longitude']
-            )
-            if(place_name is not None):
-                path.append(place_name)
+            if(len(path) == 1):
+                path.append(metadata['album'])
+            elif(len(path) == 2):
+                path[1] = metadata['album']
 
         # if we don't have a 2nd level directory we use 'Unknown Location'
         if(len(path) < 2):

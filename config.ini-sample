@@ -1,4 +1,5 @@
 [MapQuest]
 key=your-api-key-goes-here
 [Directory]
-dir=%Y-%m-%b
+date=%Y-%m-%b
+location=%country-%state-%city

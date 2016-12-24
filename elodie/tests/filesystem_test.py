@@ -183,6 +183,28 @@ def test_get_folder_path_with_location():
 
     assert path == os.path.join('2015-12-Dec','Sunnyvale'), path
 
+@mock.patch('elodie.config.config_file', '%s/config.ini-custom-path' % gettempdir())
+def test_get_folder_path_with_custom_path():
+    with open('%s/config.ini-custom-path' % gettempdir(), 'w') as f:
+        f.write("""
+[MapQuest]
+key=czjNKTtFjLydLteUBwdgKAIC8OAbGLUx
+
+[Directory]
+date=%Y-%m-%d
+location=%country-%state-%city
+full_path=%date/%location
+        """)
+    if hasattr(load_config, 'config'):
+        del load_config.config
+    filesystem = FileSystem()
+    media = Photo(helper.get_file('with-location.jpg'))
+    path = filesystem.get_folder_path(media.get_metadata())
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    assert path == os.path.join('2015-12-05','United States of America-California-Sunnyvale'), path
+
 def test_get_folder_path_with_location_and_title():
     filesystem = FileSystem()
     media = Photo(helper.get_file('with-location-and-title.jpg'))
