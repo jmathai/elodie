@@ -195,7 +195,7 @@ class FileSystem(object):
     def get_folder_path(self, metadata):
         """Get folder path by various parameters.
 
-        :param time time_obj: Time object to be used to determine folder name.
+        :param metadata dict: Metadata dictionary.
         :returns: str
         """
         path_parts = self.get_folder_path_definition()
