@@ -5,8 +5,6 @@ General file system methods.
 """
 from __future__ import print_function
 
-import sys
-
 from json import dumps
 
 from elodie import constants

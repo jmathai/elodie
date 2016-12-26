@@ -93,6 +93,7 @@ def test_import_file_path_unicode():
 
     origin = unicode(folder)+u'/unicode'+unichr(160)+u'filename.txt'
     origin = origin.encode('utf-8')
+
     shutil.copyfile(helper.get_file('valid.txt'), origin)
 
     reset_hash_db()
@@ -140,6 +141,40 @@ def test_import_file_allow_duplicate_true():
     assert dest_path1 is not None
     assert dest_path2 is not None
     assert dest_path1 == dest_path2
+
+def test_import_file_send_to_trash_false():
+    temporary_folder, folder = helper.create_working_folder()
+    temporary_folder_destination, folder_destination = helper.create_working_folder()
+
+    origin = '%s/valid.txt' % folder
+    shutil.copyfile(helper.get_file('valid.txt'), origin)
+
+    reset_hash_db()
+    dest_path1 = elodie.import_file(origin, folder_destination, False, False, False)
+    assert os.path.isfile(origin), origin
+    restore_hash_db()
+
+    shutil.rmtree(folder)
+    shutil.rmtree(folder_destination)
+
+    assert dest_path1 is not None
+
+def test_import_file_send_to_trash_true():
+    temporary_folder, folder = helper.create_working_folder()
+    temporary_folder_destination, folder_destination = helper.create_working_folder()
+
+    origin = '%s/valid.txt' % folder
+    shutil.copyfile(helper.get_file('valid.txt'), origin)
+
+    reset_hash_db()
+    dest_path1 = elodie.import_file(origin, folder_destination, False, True, False)
+    assert not os.path.isfile(origin), origin
+    restore_hash_db()
+
+    shutil.rmtree(folder)
+    shutil.rmtree(folder_destination)
+
+    assert dest_path1 is not None
 
 def test_import_destination_in_source():
     temporary_folder, folder = helper.create_working_folder()

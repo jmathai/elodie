@@ -87,7 +87,7 @@ def _import(destination, source, file, album_from_folder, trash, paths, allow_du
     """Import files or directories by reading their EXIF and organizing them accordingly.
     """
     result = Result()
-    
+
     destination = destination.decode(sys.getfilesystemencoding())
     destination = os.path.abspath(os.path.expanduser(destination))
 
