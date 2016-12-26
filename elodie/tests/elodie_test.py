@@ -88,11 +88,11 @@ def test_import_file_video():
     assert helper.path_tz_fix(os.path.join('2015-01-Jan','California','2015-01-19_12-45-11-video.mov')) in dest_path, dest_path
 
 def test_import_file_path_unicode():
-    raise SkipTest("Skipping test because failure case not established. gh-162")
     temporary_folder, folder = helper.create_working_folder()
     temporary_folder_destination, folder_destination = helper.create_working_folder()
 
-    origin = u'%s/unicode\xa0filename.txt' % folder
+    origin = unicode(folder)+u'/unicode'+unichr(160)+u'filename.txt'
+    origin = origin.encode('utf-8')
     shutil.copyfile(helper.get_file('valid.txt'), origin)
 
     reset_hash_db()

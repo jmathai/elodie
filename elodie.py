@@ -33,6 +33,10 @@ FILESYSTEM = FileSystem()
 
 
 def import_file(_file, destination, album_from_folder, trash, allow_duplicates):
+
+    _file = _file.decode(sys.getfilesystemencoding())
+    destination = destination.decode(sys.getfilesystemencoding())
+
     """Set file metadata and move it to destination.
     """
     if not os.path.exists(_file):
@@ -83,13 +87,11 @@ def _import(destination, source, file, album_from_folder, trash, paths, allow_du
     """Import files or directories by reading their EXIF and organizing them accordingly.
     """
     result = Result()
-    destination = destination.decode(sys.getfilesystemencoding())
     destination = os.path.abspath(os.path.expanduser(destination))
 
     files = set()
     paths = set(paths)
     if source:
-        source = source.decode(sys.getfilesystemencoding())
         paths.add(source)
     if file:
         paths.add(file)
