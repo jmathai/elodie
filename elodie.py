@@ -18,6 +18,7 @@ if not verify_dependencies():
 from elodie import constants
 from elodie import geolocation
 from elodie import log
+from elodie.compatability import _decode
 from elodie.filesystem import FileSystem
 from elodie.localstorage import Db
 from elodie.media.base import Base, get_all_subclasses
@@ -33,6 +34,10 @@ FILESYSTEM = FileSystem()
 
 
 def import_file(_file, destination, album_from_folder, trash, allow_duplicates):
+
+    _file = _decode(_file)
+    destination = _decode(destination)
+
     """Set file metadata and move it to destination.
     """
     if not os.path.exists(_file):
@@ -46,7 +51,7 @@ def import_file(_file, destination, album_from_folder, trash, allow_duplicates):
         return
 
 
-    media = Media.get_class_by_file(_file, [Text, Audio, Photo, Video])
+    media = Media.get_class_by_file(_file, get_all_subclasses())
     if not media:
         log.warn('Not a supported file (%s)' % _file)
         print('{"source":"%s", "error_msg":"Not a supported file"}' % _file)
@@ -83,13 +88,14 @@ def _import(destination, source, file, album_from_folder, trash, paths, allow_du
     """Import files or directories by reading their EXIF and organizing them accordingly.
     """
     result = Result()
-    destination = destination.decode(sys.getfilesystemencoding())
+
+    destination = _decode(destination)
     destination = os.path.abspath(os.path.expanduser(destination))
 
     files = set()
     paths = set(paths)
     if source:
-        source = source.decode(sys.getfilesystemencoding())
+        source = _decode(source)
         paths.add(source)
     if file:
         paths.add(file)
@@ -216,7 +222,7 @@ def _update(album, location, time, title, files):
         destination = os.path.expanduser(os.path.dirname(os.path.dirname(
                                          os.path.dirname(current_file))))
 
-        media = Media.get_class_by_file(current_file, [Text, Audio, Photo, Video])
+        media = Media.get_class_by_file(current_file, get_all_subclasses())
         if not media:
             continue
 
@@ -255,7 +261,7 @@ def _update(album, location, time, title, files):
 
         if updated:
             updated_media = Media.get_class_by_file(current_file,
-                                                    [Text, Audio, Photo, Video])
+                                                    get_all_subclasses())
             # See comments above on why we have to do this when titles
             # get updated.
             if remove_old_title_from_name and len(original_title) > 0:
