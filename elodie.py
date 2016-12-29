@@ -18,7 +18,6 @@ if not verify_dependencies():
 from elodie import constants
 from elodie import geolocation
 from elodie import log
-from elodie.compatability import _decode
 from elodie.filesystem import FileSystem
 from elodie.localstorage import Db
 from elodie.media.base import Base, get_all_subclasses
@@ -34,10 +33,6 @@ FILESYSTEM = FileSystem()
 
 
 def import_file(_file, destination, album_from_folder, trash, allow_duplicates):
-
-    _file = _decode(_file)
-    destination = _decode(destination)
-
     """Set file metadata and move it to destination.
     """
     if not os.path.exists(_file):
@@ -89,13 +84,11 @@ def _import(destination, source, file, album_from_folder, trash, paths, allow_du
     """
     result = Result()
 
-    destination = _decode(destination)
     destination = os.path.abspath(os.path.expanduser(destination))
 
     files = set()
     paths = set(paths)
     if source:
-        source = _decode(source)
         paths.add(source)
     if file:
         paths.add(file)
