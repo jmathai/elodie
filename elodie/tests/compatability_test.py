@@ -1,4 +1,6 @@
 import mock
+
+from nose.plugins.skip import SkipTest
 from six import text_type
 
 from elodie.compatability import _decode
