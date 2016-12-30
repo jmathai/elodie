@@ -214,6 +214,33 @@ class FileSystem(object):
         return os.path.join(*path)
 
     def parse_mask_for_location(self, mask, location_parts, place_name):
+        """Takes a mask for a location and interpolates the actual place names.
+
+        Given these parameters here are the outputs.
+
+        mask=%city
+        location_parts=[('%city','%city','city')]
+        place_name={'city': u'Sunnyvale'}
+        output=Sunnyvale
+
+        mask=%city-%state
+        location_parts=[('%city-','%city','city'), ('%state','%state','state')]
+        place_name={'city': u'Sunnyvale', 'state': u'California'}
+        output=Sunnyvale-California
+
+        mask=%country
+        location_parts=[('%country','%country','country')]
+        place_name={'default': u'Sunnyvale', 'city': u'Sunnyvale'}
+        output=Sunnyvale
+
+
+        :param str mask: The location mask in the form of %city-%state, etc
+        :param list location_parts: A list of tuples in the form of
+            [('%city-', '%city', 'city'), ('%state', '%state', 'state')]
+        :param dict place_name: A dictionary of place keywords and names like
+            {'default': u'California', 'state': u'California'}
+        :returns: str
+        """
         found = False
         folder_name = mask
         for loc_part in location_parts:
