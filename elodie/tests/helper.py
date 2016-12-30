@@ -14,6 +14,8 @@ import urllib
 from datetime import datetime
 from datetime import timedelta
 
+from elodie import constants
+
 def checksum(file_path, blocksize=65536):
     hasher = hashlib.sha256()
     with open(file_path, 'rb') as f:
@@ -128,3 +130,21 @@ def isclose(a, b, rel_tol = 1e-8):
     diff = abs(a - b)
     return (diff <= abs(rel_tol * a) and
             diff <= abs(rel_tol * b))
+
+def reset_dbs():
+    hash_db = constants.hash_db
+    if os.path.isfile(hash_db):
+        os.rename(hash_db, '{}-test'.format(hash_db))
+
+    location_db = constants.location_db
+    if os.path.isfile(location_db):
+        os.rename(location_db, '{}-test'.format(location_db))
+
+def restore_dbs():
+    hash_db = '{}-test'.format(constants.hash_db)
+    if os.path.isfile(hash_db):
+        os.rename(hash_db, hash_db.replace('-test', ''))
+
+    location_db = '{}-test'.format(constants.location_db)
+    if os.path.isfile(location_db):
+        os.rename(location_db, location_db.replace('-test', ''))
