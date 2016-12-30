@@ -254,10 +254,7 @@ class FileSystem(object):
                 '((%([a-z]+))[^%]*)',
                 loc_part
             ).groups()
-            """component, key, component_full = re.search(
-                '(%([a-z]+))([^%]*)',
-                loc_part,
-            ).groups()"""
+
             if(key in place_name):
                 found = True
                 replace_target = component
