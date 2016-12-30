@@ -150,18 +150,6 @@ def test_get_file_name_with_title():
 
     assert file_name == helper.path_tz_fix('2015-12-05_00-59-26-with-title-some-title.jpg'), file_name
 
-def test_get_folder_name_by_date():
-    filesystem = FileSystem()
-    time_tuple = (2010, 4, 15, 1, 2, 3, 0, 0, 0)
-    folder_name = filesystem.get_folder_name_by_date(time_tuple)
-
-    assert folder_name == '2010-04-Apr', folder_name
-
-    time_tuple = (2010, 9, 15, 1, 2, 3, 0, 0, 0)
-    folder_name = filesystem.get_folder_name_by_date(time_tuple)
-
-    assert folder_name == '2010-09-Sep', folder_name
-
 def test_get_folder_path_plain():
     filesystem = FileSystem()
     media = Photo(helper.get_file('plain.jpg'))

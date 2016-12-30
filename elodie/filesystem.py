@@ -10,26 +10,11 @@ import os
 import re
 import shutil
 import time
-from os import path
 
-from elodie import constants
 from elodie import geolocation
 from elodie import log
 from elodie.config import load_config
 from elodie.localstorage import Db
-
-
-def get_dir():
-    default_dir = "%Y-%m-%b"
-    config_file = '%s/config.ini' % constants.application_directory
-    if not path.exists(config_file):
-        return default_dir
-
-    config = load_config()
-    if('Directory' not in config or 'date' not in config['Directory']):
-        return default_dir
-
-    return config.get['Directory']['dir']
 
 
 class FileSystem(object):
@@ -152,16 +137,6 @@ class FileSystem(object):
             metadata['extension'])
         return file_name.lower()
 
-    # gh-160 remove?
-    def get_folder_name_by_date(self, time_obj):
-        """Get date based folder name.
-
-        :param time time_obj: Time object to be used to determine folder name.
-        :returns: str
-        """
-        dir = get_dir()
-        return time.strftime(dir, time_obj)
-
     def get_folder_path_definition(self):
         # If we've done this already then return it immediately without
         # incurring any extra work
@@ -237,7 +212,7 @@ class FileSystem(object):
 
         # return '/'.join(path[::-1])
         return os.path.join(*path)
-    
+
     def parse_mask_for_location(self, mask, location_parts, place_name):
         found = False
         folder_name = mask
