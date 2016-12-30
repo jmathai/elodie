@@ -37,17 +37,17 @@ def test_get_title():
 def test_get_default_coordinate():
     text = Text(helper.get_file('valid.txt'))
     text.get_metadata()
-    assert text.get_coordinate() == '123.456', text.get_coordinate()
+    assert text.get_coordinate() == '51.521435', text.get_coordinate()
 
 def test_get_coordinate_latitude():
     text = Text(helper.get_file('valid.txt'))
     text.get_metadata()
-    assert text.get_coordinate('latitude') == '123.456', text.get_coordinate('latitude')
+    assert text.get_coordinate('latitude') == '51.521435', text.get_coordinate('latitude')
 
 def test_get_coordinate_longitude():
     text = Text(helper.get_file('valid.txt'))
     text.get_metadata()
-    assert text.get_coordinate('longitude') == '234.567', text.get_coordinate('longitude')
+    assert text.get_coordinate('longitude') == '0.162714', text.get_coordinate('longitude')
 
 def test_get_date_taken():
     text = Text(helper.get_file('valid.txt'))

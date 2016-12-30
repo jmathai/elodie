@@ -214,31 +214,13 @@ class FileSystem(object):
                         metadata['longitude']
                     )
                     if(place_name is not None):
-                        folder_name = mask
                         location_parts = re.findall('(%[^%]+)', mask)
-                        for loc_part in location_parts:
-                            # We assume the search returns a tuple of length 2.
-                            # If not then it's a bad mask in config.ini.
-                            # loc_part = '%country-'
-                            # component = '%country'
-                            # key = 'country
-                            # component_full = '%country-'
-                            component, key, component_full = re.search(
-                                '(%([a-z]+))([^%]*)',
-                                loc_part,
-                            ).groups()
-                            if(key in place_name):
-                                replace_target = component
-                                replace_with = place_name[key]
-                            else:
-                                replace_target = component_full
-                                replace_with = ''
-
-                            folder_name = folder_name.replace(
-                                replace_target,
-                                replace_with,
-                            )
-                        path.append(folder_name)
+                        parsed_folder_name = self.parse_mask_for_location(
+                            mask,
+                            location_parts,
+                            place_name,
+                        )
+                        path.append(parsed_folder_name)
 
         # For now we always make the leaf folder an album if it's in the EXIF.
         # This is to preserve backwards compatability until we figure out how
@@ -255,6 +237,42 @@ class FileSystem(object):
 
         # return '/'.join(path[::-1])
         return os.path.join(*path)
+    
+    def parse_mask_for_location(self, mask, location_parts, place_name):
+        found = False
+        folder_name = mask
+        for loc_part in location_parts:
+            # We assume the search returns a tuple of length 2.
+            # If not then it's a bad mask in config.ini.
+            # loc_part = '%country-random'
+            # component_full = '%country-random'
+            # component = '%country'
+            # key = 'country
+            component_full, component, key = re.search(
+                '((%([a-z]+))[^%]*)',
+                loc_part
+            ).groups()
+            """component, key, component_full = re.search(
+                '(%([a-z]+))([^%]*)',
+                loc_part,
+            ).groups()"""
+            if(key in place_name):
+                found = True
+                replace_target = component
+                replace_with = place_name[key]
+            else:
+                replace_target = component_full
+                replace_with = ''
+
+            folder_name = folder_name.replace(
+                replace_target,
+                replace_with,
+            )
+
+        if(not found and folder_name == ''):
+            folder_name = place_name['default']
+
+        return folder_name
 
     def process_file(self, _file, destination, media, **kwargs):
         move = False

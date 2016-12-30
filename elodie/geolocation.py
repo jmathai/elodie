@@ -138,6 +138,13 @@ def place_name(lat, lon):
             for loc in ['city', 'state', 'country']:
                 if(loc in address):
                     lookup_place_name[loc] = address[loc]
+                    # In many cases the desired key is not available so we
+                    #  set the most specific as the default.
+                    if('default' not in lookup_place_name):
+                        lookup_place_name['default'] = address[loc]
+
+    if('default' not in lookup_place_name):
+        lookup_place_name = 'Unknown Location'
 
     if(lookup_place_name is not {}):
         db.add_location(lat, lon, lookup_place_name)

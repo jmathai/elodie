@@ -212,6 +212,84 @@ def test_get_folder_path_with_location_and_title():
 
     assert path == os.path.join('2015-12-Dec','Sunnyvale'), path
 
+def test_parse_folder_name_default():
+    if hasattr(load_config, 'config'):
+        del load_config.config
+    filesystem = FileSystem()
+    place_name = {'default': u'California', 'country': u'United States of America', 'state': u'California', 'city': u'Sunnyvale'}
+    mask = '%city'
+    location_parts = re.findall('(%[^%]+)', mask)
+    path = filesystem.parse_mask_for_location(mask, location_parts, place_name)
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    assert path == 'Sunnyvale', path
+
+def test_parse_folder_name_multiple():
+    if hasattr(load_config, 'config'):
+        del load_config.config
+    filesystem = FileSystem()
+    place_name = {'default': u'California', 'country': u'United States of America', 'state': u'California', 'city': u'Sunnyvale'}
+    mask = '%city-%state-%country'
+    location_parts = re.findall('(%[^%]+)', mask)
+    path = filesystem.parse_mask_for_location(mask, location_parts, place_name)
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    assert path == 'Sunnyvale-California-United States of America', path
+
+def test_parse_folder_name_static_chars():
+    if hasattr(load_config, 'config'):
+        del load_config.config
+    filesystem = FileSystem()
+    place_name = {'default': u'California', 'country': u'United States of America', 'state': u'California', 'city': u'Sunnyvale'}
+    mask = '%city-is-the-city'
+    location_parts = re.findall('(%[^%]+)', mask)
+    path = filesystem.parse_mask_for_location(mask, location_parts, place_name)
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    assert path == 'Sunnyvale-is-the-city', path
+
+def test_parse_folder_name_key_not_found():
+    if hasattr(load_config, 'config'):
+        del load_config.config
+    filesystem = FileSystem()
+    place_name = {'default': u'California', 'country': u'United States of America', 'state': u'California'}
+    mask = '%city'
+    location_parts = re.findall('(%[^%]+)', mask)
+    path = filesystem.parse_mask_for_location(mask, location_parts, place_name)
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    assert path == 'California', path
+
+def test_parse_folder_name_key_not_found_with_static_chars():
+    if hasattr(load_config, 'config'):
+        del load_config.config
+    filesystem = FileSystem()
+    place_name = {'default': u'California', 'country': u'United States of America', 'state': u'California'}
+    mask = '%city-is-not-found'
+    location_parts = re.findall('(%[^%]+)', mask)
+    path = filesystem.parse_mask_for_location(mask, location_parts, place_name)
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    assert path == 'California', path
+
+def test_parse_folder_name_multiple_keys_not_found():
+    if hasattr(load_config, 'config'):
+        del load_config.config
+    filesystem = FileSystem()
+    place_name = {'default': u'United States of America', 'country': u'United States of America'}
+    mask = '%city-%state'
+    location_parts = re.findall('(%[^%]+)', mask)
+    path = filesystem.parse_mask_for_location(mask, location_parts, place_name)
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    assert path == 'United States of America', path
+
 def test_process_file_invalid():
     filesystem = FileSystem()
     temporary_folder, folder = helper.create_working_folder()
