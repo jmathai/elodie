@@ -216,7 +216,13 @@ class FileSystem(object):
         else:
             # Do not use copy2(), will have an issue when copying to a network/mounted drive
             # using copy and manual set_date_from_filename gets the job done
-            shutil.copy(_file, dest_path)
+            # shutil.copy(_file, dest_path)
+            
+            # try copying with bigger buffer size
+            with open(_file, 'rb') as fin:
+                with open(dest_path, 'wb') as fout:
+                    shutil.copyfileobj(fin, fout, -1)
+                    
             self.set_date_from_filename(dest_path)
 
         db.add_hash(checksum, dest_path)
