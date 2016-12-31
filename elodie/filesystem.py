@@ -10,6 +10,7 @@ import os
 import re
 import shutil
 import time
+import sys
 
 from elodie import geolocation
 from elodie import constants
@@ -39,7 +40,7 @@ class FileSystem(object):
             pass
 
         return False
-
+    
     def delete_directory_if_empty(self, directory_path):
         """Delete a directory only if it's empty.
 
@@ -218,17 +219,36 @@ class FileSystem(object):
             # using copy and manual set_date_from_filename gets the job done
             # shutil.copy(_file, dest_path)
             
-            # try copying with bigger buffer size
-            with open(_file, 'rb') as fin:
-                with open(dest_path, 'wb') as fout:
-                    shutil.copyfileobj(fin, fout, -1)
-                    
+            self.copyfile(_file, dest_path)
             self.set_date_from_filename(dest_path)
 
         db.add_hash(checksum, dest_path)
         db.update_hash_db()
 
         return dest_path
+
+    def copyfile(self, src, dst):
+        try:
+            O_BINARY = os.O_BINARY
+        except:
+            O_BINARY = 0
+
+        READ_FLAGS = os.O_RDONLY | O_BINARY
+        WRITE_FLAGS = os.O_WRONLY | os.O_CREAT | os.O_TRUNC | O_BINARY
+        BUFFER_SIZE = 128*1024
+        
+        try:
+            fin = os.open(src, READ_FLAGS)
+            stat = os.fstat(fin)
+            fout = os.open(dst, WRITE_FLAGS, stat.st_mode)
+            for x in iter(lambda: os.read(fin, BUFFER_SIZE), ""):
+                os.write(fout, x)
+        finally:
+            try: os.close(fin)
+            except: pass
+            try: os.close(fout)
+            except: pass
+        
 
     def set_date_from_filename(self, file):
         """ Set the modification time on the file base on the file name.
@@ -238,7 +258,7 @@ class FileSystem(object):
         file_name = os.path.basename(file)
         # Initialize date taken to what's returned from the metadata function.
         # If the folder and file name follow a time format of
-        #   YYYY-MM-DD_HH-MM-SS-IMG_0001.JPG then we override the date_taken
+        #   YYYY-MM/DD-IMG_0001.JPG then we override the date_taken
         (year, month, day, hour, minute, second) = [None] * 6
         year_month_day_match = re.search('(\d{4})-(\d{2})-(\d{2})_(\d{2})-(\d{2})-(\d{2})', file_name)
         if(year_month_day_match is not None):
@@ -297,3 +317,5 @@ class FileSystem(object):
                 )
 
             os.utime(video_file_path, (time.time(), time.mktime(date_taken)))
+            
+
