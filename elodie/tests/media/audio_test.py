@@ -9,8 +9,6 @@ import tempfile
 import time
 import datetime
 
-from nose.plugins.skip import SkipTest
-
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))))
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
 
@@ -32,32 +30,28 @@ def test_audio_extensions():
     assert extensions == valid_extensions, valid_extensions
 
 def test_get_coordinate():
-    raise SkipTest('gh-61 this test fails on travisci')
     audio = Audio(helper.get_file('audio.m4a'))
     coordinate = audio.get_coordinate()
 
-    assert coordinate == 29.75893888888889, coordinate
+    assert helper.isclose(coordinate, 29.758938), coordinate
 
 def test_get_coordinate_latitude():
-    raise SkipTest('gh-61 this test fails on travisci')
     audio = Audio(helper.get_file('audio.m4a'))
     coordinate = audio.get_coordinate('latitude')
 
-    assert coordinate == 29.75893888888889, coordinate
+    assert helper.isclose(coordinate, 29.758938), coordinate
 
 def test_get_coordinate_longitude():
-    raise SkipTest('gh-61 this test fails on travisci')
     audio = Audio(helper.get_file('audio.m4a'))
     coordinate = audio.get_coordinate('longitude')
 
-    assert coordinate == -95.3677, coordinate
+    assert helper.isclose(coordinate, -95.3677), coordinate
 
 def test_get_date_taken():
-    raise SkipTest('gh-32 this test fails on travisci')
     audio = Audio(helper.get_file('audio.m4a'))
     date_taken = audio.get_date_taken()
 
-    assert date_taken == (2016, 1, 4, 5, 24, 15, 0, 19, 0), date_taken
+    assert date_taken == (2016, 1, 4, 5, 28, 15, 0, 4, 0), date_taken
 
 def test_get_exiftool_attributes():
     audio = Video(helper.get_file('audio.m4a'))
@@ -169,7 +163,6 @@ def test_set_title():
     assert metadata['title'] == 'my audio title', metadata['title']
 
 def test_set_title_non_ascii():
-    raise SkipTest('gh-27, non-ascii characters')
     temporary_folder, folder = helper.create_working_folder()
 
     origin = '%s/audio.m4a' % folder
@@ -178,7 +171,8 @@ def test_set_title_non_ascii():
     audio = Audio(origin)
     origin_metadata = audio.get_metadata()
 
-    status = audio.set_title('形声字 / 形聲字')
+    unicode_title = u'形声字 / 形聲字'
+    status = audio.set_title(unicode_title)
 
     assert status == True, status
 
@@ -187,4 +181,4 @@ def test_set_title_non_ascii():
 
     shutil.rmtree(folder)
 
-    assert metadata['title'] == '形声字 / 形聲字', metadata['title']
+    assert metadata['title'] == unicode_title, metadata['title']

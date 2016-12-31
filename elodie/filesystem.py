@@ -13,9 +13,9 @@ import time
 import sys
 
 from elodie import geolocation
-from elodie import constants
+from elodie import log
 from elodie.localstorage import Db
-from elodie.media.media import Media
+from elodie.media.base import Base, get_all_subclasses
 
 
 class FileSystem(object):
@@ -63,17 +63,20 @@ class FileSystem(object):
 
         :param str path string: Path to start recursive file listing
         :param tuple(str) extensions: File extensions to include (whitelist)
+        :returns: generator
         """
-        files = []
+        # If extensions is None then we get all supported extensions
+        if not extensions:
+            extensions = set()
+            subclasses = get_all_subclasses(Base)
+            for cls in subclasses:
+                extensions.update(cls.extensions)
+
         for dirname, dirnames, filenames in os.walk(path):
-            # print path to all filenames.
             for filename in filenames:
-                if(
-                    extensions is None or
-                    filename.lower().endswith(extensions)
-                ):
-                    files.append(os.path.join(dirname, filename))
-        return files
+                # If file extension is in `extensions` then append to the list
+                if os.path.splitext(filename)[1][1:].lower() in extensions:
+                    yield os.path.join(dirname, filename)
 
     def get_current_directory(self):
         """Get the current working directory.
@@ -194,19 +197,27 @@ class FileSystem(object):
         db = Db()
         checksum = db.checksum(_file)
         if(checksum is None):
-            if(constants.debug is True):
-                print('Could not get checksum for %s. Skipping...' % _file)
+            log.info('Could not get checksum for %s. Skipping...' % _file)
             return
 
-        # If duplicates are not allowed and this hash exists in the db then we
-        #   return
-        if(allow_duplicate is False and db.check_hash(checksum) is True):
-            if(constants.debug is True):
-                print('%s already exists at %s. Skipping...' % (
+        # If duplicates are not allowed then we check if we've seen this file
+        #  before via checksum. We also check that the file exists at the
+        #   location we believe it to be.
+        # If we find a checksum match but the file doesn't exist where we
+        #  believe it to be then we write a debug log and proceed to import.
+        checksum_file = db.get_hash(checksum)
+        if(allow_duplicate is False and checksum_file is not None):
+            if(os.path.isfile(checksum_file)):
+                log.info('%s already exists at %s. Skipping...' % (
                     _file,
-                    db.get_hash(checksum)
+                    checksum_file
                 ))
-            return
+                return
+            else:
+                log.info('%s matched checksum but file not found at %s. Importing again...' % (  # noqa
+                    _file,
+                    checksum_file
+                ))
 
         self.create_directory(dest_directory)
 
@@ -220,7 +231,8 @@ class FileSystem(object):
             # shutil.copy(_file, dest_path)
             
             self.copyfile(_file, dest_path)
-            self.set_date_from_filename(dest_path)
+            self.set_utime(media)
+
 
         db.add_hash(checksum, dest_path)
         db.update_hash_db()
@@ -250,72 +262,31 @@ class FileSystem(object):
             except: pass
         
 
-    def set_date_from_filename(self, file):
+    def set_utime(self, media):
         """ Set the modification time on the file base on the file name.
         """
-    
-        date_taken = None
-        file_name = os.path.basename(file)
-        # Initialize date taken to what's returned from the metadata function.
-        # If the folder and file name follow a time format of
-        #   YYYY-MM/DD-IMG_0001.JPG then we override the date_taken
-        (year, month, day, hour, minute, second) = [None] * 6
-        year_month_day_match = re.search('(\d{4})-(\d{2})-(\d{2})_(\d{2})-(\d{2})-(\d{2})', file_name)
-        if(year_month_day_match is not None):
-            (year, month, day, hour, minute, second) = year_month_day_match.groups()        
-
-        # check if the file system path indicated a date and if so we
-        #   override the metadata value
-        if(year is not None and month is not None and day is not None and hour is not None and minute is not None and second is not None):
-                date_taken = time.strptime(
-                    '{}-{}-{} {}:{}:{}'.format(year, month, day, hour, minute, second),
-                    '%Y-%m-%d %H:%M:%S'
-                )            
-        
-                os.utime(file, (time.time(), time.mktime(date_taken)))
-    
-    def set_date_from_path_video(self, video):
-        """Set the modification time on the file based on the file path.
-
-        Noop if the path doesn't match the format YYYY-MM/DD-IMG_0001.JPG.
-
-        :param elodie.media.video.Video video: An instance of Video.
-        """
-        date_taken = None
-
-        video_file_path = video.get_file_path()
 
         # Initialize date taken to what's returned from the metadata function.
         # If the folder and file name follow a time format of
-        #   YYYY-MM/DD-IMG_0001.JPG then we override the date_taken
-        (year, month, day) = [None] * 3
-        directory = os.path.dirname(video_file_path)
-        # If the directory matches we get back a match with
-        #   groups() = (year, month)
-        year_month_match = re.search('(\d{4})-(\d{2})', directory)
-        if(year_month_match is not None):
-            (year, month) = year_month_match.groups()
-        day_match = re.search(
-            '^(\d{2})',
-            os.path.basename(video.get_file_path())
+        #   YYYY-MM-DD_HH-MM-SS-IMG_0001.JPG then we override the date_taken
+        file_path = media.get_file_path()
+        metadata = media.get_metadata()
+        date_taken = metadata['date_taken']
+        base_name = metadata['base_name']
+        year_month_day_match = re.search(
+            '^(\d{4})-(\d{2})-(\d{2})_(\d{2})-(\d{2})-(\d{2})',
+            base_name
         )
-        if(day_match is not None):
-            day = day_match.group(1)
+        if(year_month_day_match is not None):
+            (year, month, day, hour, minute, second) = year_month_day_match.groups()  # noqa
+            date_taken = time.strptime(
+                '{}-{}-{} {}:{}:{}'.format(year, month, day, hour, minute, second),  # noqa
+                '%Y-%m-%d %H:%M:%S'
+            )
 
-        # check if the file system path indicated a date and if so we
-        #   override the metadata value
-        if(year is not None and month is not None):
-            if(day is not None):
-                date_taken = time.strptime(
-                    '{}-{}-{}'.format(year, month, day),
-                    '%Y-%m-%d'
-                )
-            else:
-                date_taken = time.strptime(
-                    '{}-{}'.format(year, month),
-                    '%Y-%m'
-                )
-
-            os.utime(video_file_path, (time.time(), time.mktime(date_taken)))
-            
-
+            os.utime(file_path, (time.time(), time.mktime(date_taken)))
+        else:
+            # We don't make any assumptions about time zones and
+            # assume local time zone.
+            date_taken_in_seconds = time.mktime(date_taken)
+            os.utime(file_path, (time.time(), (date_taken_in_seconds)))

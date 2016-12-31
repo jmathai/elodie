@@ -8,8 +8,6 @@ import tempfile
 import time
 import datetime
 
-from nose.plugins.skip import SkipTest
-
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))))
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
 
@@ -167,7 +165,6 @@ def test_set_title():
     assert metadata['title'] == 'my video title', metadata['title']
 
 def test_set_title_non_ascii():
-    raise SkipTest('gh-27, non-ascii characters')
     temporary_folder, folder = helper.create_working_folder()
 
     origin = '%s/video.mov' % folder
@@ -176,7 +173,8 @@ def test_set_title_non_ascii():
     video = Video(origin)
     origin_metadata = video.get_metadata()
 
-    status = video.set_title('形声字 / 形聲字')
+    unicode_title = u'形声字 / 形聲字' 
+    status = video.set_title(unicode_title)
 
     assert status == True, status
 
@@ -185,4 +183,4 @@ def test_set_title_non_ascii():
 
     shutil.rmtree(folder)
 
-    assert metadata['title'] == '形声字 / 形聲字', metadata['title']
+    assert metadata['title'] == unicode_title, metadata['title']
