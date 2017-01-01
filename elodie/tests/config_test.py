@@ -24,3 +24,8 @@ def test_load_config_singleton_success():
     assert config['MapQuest']['key'] == 'new-value', config.get('MapQuest', 'key')
 
     del load_config.config
+
+@patch('elodie.config.config_file', '%s/config.ini-does-not-exist' % BASE_PATH)
+def test_load_config_singleton_no_file():
+    config = load_config()
+    assert config == {}, config

@@ -125,22 +125,28 @@ def place_name(lat, lon):
     db = Db()
     # 3km distace radious for a match
     cached_place_name = db.get_location_name(lat, lon, 3000)
-    if(cached_place_name is not None):
+    # We check that it's a dict to coerce an upgrade of the location
+    #  db from a string location to a dictionary. See gh-160.
+    if(isinstance(cached_place_name, dict)):
         return cached_place_name
 
-    lookup_place_name = None
+    lookup_place_name = {}
     geolocation_info = lookup(lat=lat, lon=lon)
     if(geolocation_info is not None):
         if('address' in geolocation_info):
             address = geolocation_info['address']
-            if('city' in address):
-                lookup_place_name = address['city']
-            elif('state' in address):
-                lookup_place_name = address['state']
-            elif('country' in address):
-                lookup_place_name = address['country']
+            for loc in ['city', 'state', 'country']:
+                if(loc in address):
+                    lookup_place_name[loc] = address[loc]
+                    # In many cases the desired key is not available so we
+                    #  set the most specific as the default.
+                    if('default' not in lookup_place_name):
+                        lookup_place_name['default'] = address[loc]
 
-    if(lookup_place_name is not None):
+    if('default' not in lookup_place_name):
+        lookup_place_name = 'Unknown Location'
+
+    if(lookup_place_name is not {}):
         db.add_location(lat, lon, lookup_place_name)
         # TODO: Maybe this should only be done on exit and not for every write.
         db.update_location_db()
