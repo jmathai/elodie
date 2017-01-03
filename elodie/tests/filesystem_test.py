@@ -1,18 +1,19 @@
 from __future__ import absolute_import
 # Project imports
+import mock
 import os
 import re
 import shutil
-import time
 import sys
+import time
 from datetime import datetime
 from datetime import timedelta
-
-import mock
+from tempfile import gettempdir
 
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))))
 
 from . import helper
+from elodie.config import load_config
 from elodie.filesystem import FileSystem
 from elodie.media.text import Text
 from elodie.media.media import Media
@@ -190,18 +191,6 @@ def test_get_file_name_with_title():
 
     assert file_name == helper.path_tz_fix('2015-12-05_00-59-26-with-title-some-title.jpg'), file_name
 
-def test_get_folder_name_by_date():
-    filesystem = FileSystem()
-    time_tuple = (2010, 4, 15, 1, 2, 3, 0, 0, 0)
-    folder_name = filesystem.get_folder_name_by_date(time_tuple)
-
-    assert folder_name == '2010-04-Apr', folder_name
-
-    time_tuple = (2010, 9, 15, 1, 2, 3, 0, 0, 0)
-    folder_name = filesystem.get_folder_name_by_date(time_tuple)
-
-    assert folder_name == '2010-09-Sep', folder_name
-
 def test_get_folder_path_plain():
     filesystem = FileSystem()
     media = Photo(helper.get_file('plain.jpg'))
@@ -223,12 +212,112 @@ def test_get_folder_path_with_location():
 
     assert path == os.path.join('2015-12-Dec','Sunnyvale'), path
 
+@mock.patch('elodie.config.config_file', '%s/config.ini-custom-path' % gettempdir())
+def test_get_folder_path_with_custom_path():
+    with open('%s/config.ini-custom-path' % gettempdir(), 'w') as f:
+        f.write("""
+[MapQuest]
+key=czjNKTtFjLydLteUBwdgKAIC8OAbGLUx
+
+[Directory]
+date=%Y-%m-%d
+location=%country-%state-%city
+full_path=%date/%location
+        """)
+    if hasattr(load_config, 'config'):
+        del load_config.config
+    filesystem = FileSystem()
+    media = Photo(helper.get_file('with-location.jpg'))
+    path = filesystem.get_folder_path(media.get_metadata())
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    assert path == os.path.join('2015-12-05','United States of America-California-Sunnyvale'), path
+
 def test_get_folder_path_with_location_and_title():
     filesystem = FileSystem()
     media = Photo(helper.get_file('with-location-and-title.jpg'))
     path = filesystem.get_folder_path(media.get_metadata())
 
     assert path == os.path.join('2015-12-Dec','Sunnyvale'), path
+
+def test_parse_folder_name_default():
+    if hasattr(load_config, 'config'):
+        del load_config.config
+    filesystem = FileSystem()
+    place_name = {'default': u'California', 'country': u'United States of America', 'state': u'California', 'city': u'Sunnyvale'}
+    mask = '%city'
+    location_parts = re.findall('(%[^%]+)', mask)
+    path = filesystem.parse_mask_for_location(mask, location_parts, place_name)
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    assert path == 'Sunnyvale', path
+
+def test_parse_folder_name_multiple():
+    if hasattr(load_config, 'config'):
+        del load_config.config
+    filesystem = FileSystem()
+    place_name = {'default': u'California', 'country': u'United States of America', 'state': u'California', 'city': u'Sunnyvale'}
+    mask = '%city-%state-%country'
+    location_parts = re.findall('(%[^%]+)', mask)
+    path = filesystem.parse_mask_for_location(mask, location_parts, place_name)
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    assert path == 'Sunnyvale-California-United States of America', path
+
+def test_parse_folder_name_static_chars():
+    if hasattr(load_config, 'config'):
+        del load_config.config
+    filesystem = FileSystem()
+    place_name = {'default': u'California', 'country': u'United States of America', 'state': u'California', 'city': u'Sunnyvale'}
+    mask = '%city-is-the-city'
+    location_parts = re.findall('(%[^%]+)', mask)
+    path = filesystem.parse_mask_for_location(mask, location_parts, place_name)
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    assert path == 'Sunnyvale-is-the-city', path
+
+def test_parse_folder_name_key_not_found():
+    if hasattr(load_config, 'config'):
+        del load_config.config
+    filesystem = FileSystem()
+    place_name = {'default': u'California', 'country': u'United States of America', 'state': u'California'}
+    mask = '%city'
+    location_parts = re.findall('(%[^%]+)', mask)
+    path = filesystem.parse_mask_for_location(mask, location_parts, place_name)
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    assert path == 'California', path
+
+def test_parse_folder_name_key_not_found_with_static_chars():
+    if hasattr(load_config, 'config'):
+        del load_config.config
+    filesystem = FileSystem()
+    place_name = {'default': u'California', 'country': u'United States of America', 'state': u'California'}
+    mask = '%city-is-not-found'
+    location_parts = re.findall('(%[^%]+)', mask)
+    path = filesystem.parse_mask_for_location(mask, location_parts, place_name)
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    assert path == 'California', path
+
+def test_parse_folder_name_multiple_keys_not_found():
+    if hasattr(load_config, 'config'):
+        del load_config.config
+    filesystem = FileSystem()
+    place_name = {'default': u'United States of America', 'country': u'United States of America'}
+    mask = '%city-%state'
+    location_parts = re.findall('(%[^%]+)', mask)
+    path = filesystem.parse_mask_for_location(mask, location_parts, place_name)
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    assert path == 'United States of America', path
 
 def test_process_file_invalid():
     filesystem = FileSystem()
@@ -463,3 +552,95 @@ def test_set_utime_without_exif_date():
     assert initial_time == final_stat.st_mtime
     assert final_stat.st_mtime == time.mktime(metadata_final['date_taken']), (final_stat.st_mtime, time.mktime(metadata_final['date_taken']))
     assert initial_checksum == final_checksum
+
+@mock.patch('elodie.config.config_file', '%s/config.ini-does-not-exist' % gettempdir())
+def test_get_folder_path_definition_default():
+    if hasattr(load_config, 'config'):
+        del load_config.config
+    filesystem = FileSystem()
+    path_definition = filesystem.get_folder_path_definition()
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    assert path_definition == filesystem.default_folder_path_definition, path_definition
+
+@mock.patch('elodie.config.config_file', '%s/config.ini-date-location' % gettempdir())
+def test_get_folder_path_definition_date_location():
+    with open('%s/config.ini-date-location' % gettempdir(), 'w') as f:
+        f.write("""
+[Directory]
+date=%Y-%m-%d
+location=%country
+full_path=%date/%location
+        """)
+
+    if hasattr(load_config, 'config'):
+        del load_config.config
+    filesystem = FileSystem()
+    path_definition = filesystem.get_folder_path_definition()
+    expected = [
+        ('date', '%Y-%m-%d'), ('location', '%country')
+    ]
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    assert path_definition == expected, path_definition
+
+@mock.patch('elodie.config.config_file', '%s/config.ini-location-date' % gettempdir())
+def test_get_folder_path_definition_location_date():
+    with open('%s/config.ini-location-date' % gettempdir(), 'w') as f:
+        f.write("""
+[Directory]
+date=%Y-%m-%d
+location=%country
+full_path=%location/%date
+        """)
+
+    if hasattr(load_config, 'config'):
+        del load_config.config
+    filesystem = FileSystem()
+    path_definition = filesystem.get_folder_path_definition()
+    expected = [
+        ('location', '%country'), ('date', '%Y-%m-%d')
+    ]
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    assert path_definition == expected, path_definition
+
+@mock.patch('elodie.config.config_file', '%s/config.ini-cached' % gettempdir())
+def test_get_folder_path_definition_cached():
+    with open('%s/config.ini-cached' % gettempdir(), 'w') as f:
+        f.write("""
+[Directory]
+date=%Y-%m-%d
+location=%country
+full_path=%date/%location
+        """)
+
+    if hasattr(load_config, 'config'):
+        del load_config.config
+    filesystem = FileSystem()
+    path_definition = filesystem.get_folder_path_definition()
+    expected = [
+        ('date', '%Y-%m-%d'), ('location', '%country')
+    ]
+
+    assert path_definition == expected, path_definition
+
+    with open('%s/config.ini-cached' % gettempdir(), 'w') as f:
+        f.write("""
+[Directory]
+date=%uncached
+location=%uncached
+full_path=%date/%location
+        """)
+    if hasattr(load_config, 'config'):
+        del load_config.config
+    filesystem = FileSystem()
+    path_definition = filesystem.get_folder_path_definition()
+    expected = [
+        ('date', '%Y-%m-%d'), ('location', '%country')
+    ]
+    if hasattr(load_config, 'config'):
+        del load_config.config
