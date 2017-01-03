@@ -86,22 +86,29 @@ class Media(Base):
         # The lat/lon _keys array has an order of precedence.
         # The first key is writable and we will give the writable
         #   key precence when reading.
-        direction_multiplier = 1
+        direction_multiplier = 1.0
         for key in self.latitude_keys + self.longitude_keys:
+            if key not in exif:
+                continue
+
+            # Cast coordinate to a float due to a bug in exiftool's 
+            #   -json output format.
+            # https://github.com/jmathai/elodie/issues/171
+            # http://u88.n24.queensu.ca/exiftool/forum/index.php/topic,7952.0.html #noqa
+            this_coordinate = float(exif[key])
+
             # TODO: verify that we need to check ref key
             #   when self.set_gps_ref != True
-            if type == 'latitude' and key in self.latitude_keys and \
-                    key in exif:
+            if type == 'latitude' and key in self.latitude_keys:
                 if self.latitude_ref_key in exif and \
                         exif[self.latitude_ref_key] == 'S':
-                    direction_multiplier = -1
-                return exif[key] * direction_multiplier
-            elif type == 'longitude' and key in self.longitude_keys and \
-                    key in exif:
+                    direction_multiplier = -1.0
+                return this_coordinate * direction_multiplier
+            elif type == 'longitude' and key in self.longitude_keys:
                 if self.longitude_ref_key in exif and \
                         exif[self.longitude_ref_key] == 'W':
-                    direction_multiplier = -1
-                return exif[key] * direction_multiplier
+                    direction_multiplier = -1.0
+                return this_coordinate * direction_multiplier
 
         return None
 
