@@ -290,6 +290,27 @@ cp config.ini-sample ~/.elodie/config.ini
 # now you're ready to add your MapQuest key
 ```
 
+## Custom folder structured
+
+OK, so what if you don't like the folders being named "2016-01-Jan"? No problem!
+
+You can add a custom, date based folder structure by editing `~/.elodie/config.ini`
+
+By default, you'll see:
+
+```
+[Directory]
+dir=%Y-%m-%b
+```
+
+### Examples
+
+* To have just `201601`, use `dir=%Y%m`
+* For `Sunday, 01 January 2016`, use `dir=%A, %d %B %Y`
+* Python also has some pre-built formats. So you can get `Sun Jan 01 12:34:56 2016`, by using `%c`
+
+You can use any of [the standard Python time directives](https://docs.python.org/2/library/datetime.html#strftime-and-strptime-behavior) to create your ideal structure.
+
 ## Questions, comments or concerns?
 
 The best ways to provide feedback is by reaching out on Twitter at [@getelodie](https://twitter.com/getelodie), opening a [GitHub issue](https://github.com/jmathai/elodie/issues) or emailing me at [jaisen@jmathai.com](mailto:jaisen@jmathai.com).
