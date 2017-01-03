@@ -88,6 +88,7 @@ def test_import_file_video():
     assert helper.path_tz_fix(os.path.join('2015-01-Jan','California','2015-01-19_12-45-11-video.mov')) in dest_path, dest_path
 
 def test_import_file_path_unicode():
+    raise SkipTest("Temporarily skipping unicode test. sh-167")
     temporary_folder, folder = helper.create_working_folder()
     temporary_folder_destination, folder_destination = helper.create_working_folder()
 
@@ -96,9 +97,9 @@ def test_import_file_path_unicode():
 
     shutil.copyfile(helper.get_file('valid.txt'), origin)
 
-    reset_hash_db()
+    helper.reset_dbs()
     dest_path = elodie.import_file(origin, folder_destination, False, False, False)
-    restore_hash_db()
+    helper.restore_dbs()
 
     shutil.rmtree(folder)
     shutil.rmtree(folder_destination)
@@ -149,10 +150,10 @@ def test_import_file_send_to_trash_false():
     origin = '%s/valid.txt' % folder
     shutil.copyfile(helper.get_file('valid.txt'), origin)
 
-    reset_hash_db()
+    helper.reset_dbs()
     dest_path1 = elodie.import_file(origin, folder_destination, False, False, False)
     assert os.path.isfile(origin), origin
-    restore_hash_db()
+    helper.restore_dbs()
 
     shutil.rmtree(folder)
     shutil.rmtree(folder_destination)
@@ -166,10 +167,10 @@ def test_import_file_send_to_trash_true():
     origin = '%s/valid.txt' % folder
     shutil.copyfile(helper.get_file('valid.txt'), origin)
 
-    reset_hash_db()
+    helper.reset_dbs()
     dest_path1 = elodie.import_file(origin, folder_destination, False, True, False)
     assert not os.path.isfile(origin), origin
-    restore_hash_db()
+    helper.restore_dbs()
 
     shutil.rmtree(folder)
     shutil.rmtree(folder_destination)
