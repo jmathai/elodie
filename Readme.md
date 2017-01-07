@@ -191,7 +191,7 @@ Back to your photos. When I'm done you should see something like this. Notice th
 Not too bad, eh? Wait a second, what's *Unknown Location*? If I'm not able to figure out where a photo was taken I'll place it into a folder named *Unknown Location*. This typically happens when photos do not have GPS information in their EXIF. You shouldn't see this for photos taken on a smartphone but it's often the case with digital cameras and SLRs. I can help you add GPS information to those photos and get them organized better. Let me show you how.
 
 
-## Create your own folder structre
+## Create your own folder structure
 
 OK, so what if you don't like the folders being named "2016-01-Jan"? No problem!
 
