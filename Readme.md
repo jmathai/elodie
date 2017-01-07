@@ -191,11 +191,11 @@ Back to your photos. When I'm done you should see something like this. Notice th
 Not too bad, eh? Wait a second, what's *Unknown Location*? If I'm not able to figure out where a photo was taken I'll place it into a folder named *Unknown Location*. This typically happens when photos do not have GPS information in their EXIF. You shouldn't see this for photos taken on a smartphone but it's often the case with digital cameras and SLRs. I can help you add GPS information to those photos and get them organized better. Let me show you how.
 
 
-## Create your own folder structure
+### Create your own folder structure
 
-OK, so what if you don't like the folders being named "2016-01-Jan"? No problem!
+OK, so what if you don't like the folders being named `2015-07-Jul/Mountain View`? No problem!
 
-You can add a custom, date based folder structure by editing your `config.ini` file. This is what I include in the sample config file.
+You can add a custom folder structure by editing your `config.ini` file. This is what I include in the sample config file.
 
 ```
 [Directory]
@@ -206,7 +206,9 @@ full_path=%date/%location
 
 There needs to be 2 levels of folders and you can construct them using the date and location. Use `full_path` to determine how the 2 levels are nested. If for some reason your config is not correct I will use the default formatting which is found in `config.ini-sample`.
 
-### Customizing the date format
+The default formatting from the above config looks like `2015-07-Jul/Mountain View`.
+
+#### Customizing the date format
 
 You can use any of [the standard Python time directives](https://docs.python.org/2/library/datetime.html#strftime-and-strptime-behavior) to create your ideal structure.
 
@@ -214,7 +216,7 @@ You can use any of [the standard Python time directives](https://docs.python.org
 * For `Sunday, 01 January 2016`, use `date=%A, %d %B %Y`
 * Python also has some pre-built formats. So you can get `Sun Jan 01 12:34:56 2016`, by using `%c`
 
-### Customizing the location format
+#### Customizing the location format
 
 I use the [Open Street Maps Nominatim reverse geocoding API](http://wiki.openstreetmap.org/wiki/Nominatim#Example) provided by MapQuest. You can use `city`, `state` and `country` to construct the folder name.
 
