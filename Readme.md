@@ -190,6 +190,39 @@ Back to your photos. When I'm done you should see something like this. Notice th
 
 Not too bad, eh? Wait a second, what's *Unknown Location*? If I'm not able to figure out where a photo was taken I'll place it into a folder named *Unknown Location*. This typically happens when photos do not have GPS information in their EXIF. You shouldn't see this for photos taken on a smartphone but it's often the case with digital cameras and SLRs. I can help you add GPS information to those photos and get them organized better. Let me show you how.
 
+
+## Create your own folder structre
+
+OK, so what if you don't like the folders being named "2016-01-Jan"? No problem!
+
+You can add a custom, date based folder structure by editing your `config.ini` file. This is what I include in the sample config file.
+
+```
+[Directory]
+date=%Y-%m-%b
+location=%city
+full_path=%date/%location
+```
+
+There needs to be 2 levels of folders and you can construct them using the date and location. Use `full_path` to determine how the 2 levels are nested. If for some reason your config is not correct I will use the default formatting which is found in `config.ini-sample`.
+
+### Customizing the date format
+
+You can use any of [the standard Python time directives](https://docs.python.org/2/library/datetime.html#strftime-and-strptime-behavior) to create your ideal structure.
+
+* To have `201601`, use `date=%Y%m`
+* For `Sunday, 01 January 2016`, use `date=%A, %d %B %Y`
+* Python also has some pre-built formats. So you can get `Sun Jan 01 12:34:56 2016`, by using `%c`
+
+### Customizing the location format
+
+I use the [Open Street Maps Nominatim reverse geocoding API](http://wiki.openstreetmap.org/wiki/Nominatim#Example) provided by MapQuest. You can use `city`, `state` and `country` to construct the folder name.
+
+* To have `Sunnyvale`, use `location=%city`
+* To have `Sunnyvale-CA`, use `location=%city-%state
+
+Sometimes a location may not have all of the values available. If your format is `%city-%state` and `city` was not returned then the folder name will be `%state`. Take not that I'll strip out extra characters so you don't end up with folders name `-%state` when `city` is not found.
+
 ### Reorganize by changing location and dates
 
 If you notice some photos were incorrectly organized you should definitely let me know. In the example above I put two photos into an *Unknown Location* folder because I didn't find GPS information in their EXIF. To fix this I'll help you add GPS information into the photos' EXIF and then I'll reorganize them.
@@ -289,27 +322,6 @@ mkdir ~/.elodie
 cp config.ini-sample ~/.elodie/config.ini
 # now you're ready to add your MapQuest key
 ```
-
-## Custom folder structured
-
-OK, so what if you don't like the folders being named "2016-01-Jan"? No problem!
-
-You can add a custom, date based folder structure by editing `~/.elodie/config.ini`
-
-By default, you'll see:
-
-```
-[Directory]
-dir=%Y-%m-%b
-```
-
-### Examples
-
-* To have just `201601`, use `dir=%Y%m`
-* For `Sunday, 01 January 2016`, use `dir=%A, %d %B %Y`
-* Python also has some pre-built formats. So you can get `Sun Jan 01 12:34:56 2016`, by using `%c`
-
-You can use any of [the standard Python time directives](https://docs.python.org/2/library/datetime.html#strftime-and-strptime-behavior) to create your ideal structure.
 
 ## Questions, comments or concerns?
 
