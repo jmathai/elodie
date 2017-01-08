@@ -54,6 +54,8 @@ You'll notice that the photo was organized into an *Unknown Location* folder. Th
 
 You can view these instructions on the command line by typing `./elodie.py import --help`, `./elodie.py update --help` or `./elodie.py generate-db --help`.
 
+### Import photos
+
 ```
 Usage: elodie.py import [OPTIONS] [PATHS]...
 
@@ -72,6 +74,8 @@ Options:
   --help                   Show this message and exit.
 ```
 
+### Update photos
+
 ```
 Usage: elodie.py update [OPTIONS] FILES...
 
@@ -88,6 +92,8 @@ Options:
   --help           Show this message and exit.
 ```
 
+### (Re)Generate checksum database
+
 ```
 Usage: elodie.py generate-db [OPTIONS]
 
@@ -97,6 +103,12 @@ Usage: elodie.py generate-db [OPTIONS]
 Options:
   --source DIRECTORY  Source of your photo library.  [required]
   --help              Show this message and exit.
+```
+
+### Verify library against bit rot / data rot
+
+```
+Usage: elodie.py verify
 ```
 
 Now you're ready to learn more about Elodie.
