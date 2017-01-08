@@ -255,7 +255,10 @@ class FileSystem(object):
             
             # shutil.copy seems slow, changing to streaming according to
             # http://stackoverflow.com/questions/22078621/python-how-to-copy-files-fast
-            self.copyfile(_file, dest_path)
+            if (python_version == 3):
+                shutil.copy(_file, dest_path)
+            else:
+                self.copyfile(_file, dest_path)
             self.set_utime(media)
 
 
