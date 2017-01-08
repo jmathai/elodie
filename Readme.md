@@ -223,7 +223,7 @@ I use the [Open Street Maps Nominatim reverse geocoding API](http://wiki.openstr
 * To have `Sunnyvale`, use `location=%city`
 * To have `Sunnyvale-CA`, use `location=%city-%state
 
-Sometimes a location may not have all of the values available. If your format is `%city-%state` and `city` was not returned then the folder name will be `%state`. Take not that I'll strip out extra characters so you don't end up with folders name `-%state` when `city` is not found.
+Sometimes a location may not have all of the values available. If your format is `%city-%state` and `city` was not returned then the folder name will be `%state`. Take note that I'll strip out extra characters so you don't end up with folders name `-%state` when `city` is not found.
 
 ### Reorganize by changing location and dates
 
