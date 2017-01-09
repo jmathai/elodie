@@ -10,16 +10,19 @@ import os
 import re
 import shutil
 import time
+import sys
 
 from elodie import geolocation
 from elodie import log
 from elodie.config import load_config
 from elodie.localstorage import Db
 from elodie.media.base import Base, get_all_subclasses
-
+from elodie import constants
+from elodie import compatability
 
 class FileSystem(object):
     """A class for interacting with the file system."""
+    
 
     def __init__(self):
         # The default folder path is along the lines of 2015-01-Jan/Chicago
@@ -46,7 +49,7 @@ class FileSystem(object):
             pass
 
         return False
-
+    
     def delete_directory_if_empty(self, directory_path):
         """Delete a directory only if it's empty.
 
@@ -330,19 +333,77 @@ class FileSystem(object):
             shutil.move(_file, dest_path)
             os.utime(dest_path, (stat.st_atime, stat.st_mtime))
         else:
-            # Do not use copy2(), will have an issue when copying to a
-            # network/mounted drive using copy and manual
-            # set_date_from_filename gets the job done
-            shutil.copy(_file, dest_path)
+            # Do not use copy2(), will have an issue when copying to a network/mounted drive
+            # using copy and manual set_date_from_filename gets the job done
+            # shutil.copy(_file, dest_path)
+            
+            # shutil.copy seems slow, changing to streaming according to
+            # http://stackoverflow.com/questions/22078621/python-how-to-copy-files-fast
+            if (constants.python_version == 3):
+                shutil.copy(_file, dest_path)
+            else:
+                compatability._copyfile(_file, dest_path)
             self.set_utime(media)
+
 
         db.add_hash(checksum, dest_path)
         db.update_hash_db()
 
         return dest_path
 
-    def set_utime(self, media):
+    def copyfile(self, src, dst):
+        try:
+            O_BINARY = os.O_BINARY
+        except:
+            O_BINARY = 0
+
+        READ_FLAGS = os.O_RDONLY | O_BINARY
+        WRITE_FLAGS = os.O_WRONLY | os.O_CREAT | os.O_TRUNC | O_BINARY
+        BUFFER_SIZE = 128*1024
+        
+        try:
+            fin = os.open(src, READ_FLAGS)
+            stat = os.fstat(fin)
+            fout = os.open(dst, WRITE_FLAGS, stat.st_mode)
+            for x in iter(lambda: os.read(fin, BUFFER_SIZE), ""):
+                os.write(fout, x)
+        finally:
+            try: os.close(fin)
+            except: pass
+            try: os.close(fout)
+            except: pass
+        
+
+    def set_date_from_filename(self, file):
         """ Set the modification time on the file base on the file name.
+        """
+    
+        date_taken = None
+        file_name = os.path.basename(file)
+        # Initialize date taken to what's returned from the metadata function.
+        # If the folder and file name follow a time format of
+        #   YYYY-MM/DD-IMG_0001.JPG then we override the date_taken
+        (year, month, day, hour, minute, second) = [None] * 6
+        year_month_day_match = re.search('(\d{4})-(\d{2})-(\d{2})_(\d{2})-(\d{2})-(\d{2})', file_name)
+        if(year_month_day_match is not None):
+            (year, month, day, hour, minute, second) = year_month_day_match.groups()        
+
+        # check if the file system path indicated a date and if so we
+        #   override the metadata value
+        if(year is not None and month is not None and day is not None and hour is not None and minute is not None and second is not None):
+                date_taken = time.strptime(
+                    '{}-{}-{} {}:{}:{}'.format(year, month, day, hour, minute, second),
+                    '%Y-%m-%d %H:%M:%S'
+                )            
+        
+                os.utime(file, (time.time(), time.mktime(date_taken)))
+    
+    def set_date_from_path_video(self, video):
+        """Set the modification time on the file based on the file path.
+
+        Noop if the path doesn't match the format YYYY-MM/DD-IMG_0001.JPG.
+
+        :param elodie.media.video.Video video: An instance of Video.
         """
 
         # Initialize date taken to what's returned from the metadata function.
