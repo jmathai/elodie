@@ -18,11 +18,18 @@ def _decode(string, encoding='utf-8'):
     return string
 
 
-def _encode(string, encoding='utf-8'):
-    if hasattr(string, 'encode'):
-        try:
-            return string.encode(encoding)
-        except:
-            pass
+def _encode(string):
+    """Returns an ascii string.
+    Python3 converts bytes to unicode.
+    Python2 converts unicode to ascii"""
+    # Try Python3 first.
+    try:
+        return str(string, 'utf-8')
+    except TypeError:
+        pass
 
-    return string
+    # Try Python2 next.
+    try:
+        return string.encode('utf-8')
+    except:
+        pass

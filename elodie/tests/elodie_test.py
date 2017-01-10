@@ -5,7 +5,6 @@ import sys
 import shutil
 
 from click.testing import CliRunner
-from nose.plugins.skip import SkipTest
 from nose.tools import assert_raises
 from six import text_type, unichr as six_unichr
 
@@ -423,7 +422,7 @@ def test_update_time_on_video():
     assert metadata['date_taken'] != metadata_processed['date_taken']
     assert metadata_processed['date_taken'] == helper.time_convert((2000, 1, 1, 12, 0, 0, 5, 1, 0)), metadata_processed['date_taken']
 
-def test_update_with_directory_passed_in():
+def test_update_with_album_passed_in():
     temporary_folder, folder = helper.create_working_folder()
     temporary_folder_destination, folder_destination = helper.create_working_folder()
 
