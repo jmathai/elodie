@@ -1,4 +1,4 @@
-def _decode(string, encoding='utf8'):
+def _decode(string, encoding='utf-8'):
     """Return a utf8 encoded unicode string.
 
     Python2 and Python3 differ in how they handle strings.
@@ -18,3 +18,18 @@ def _decode(string, encoding='utf8'):
     return string
 
 
+def _encode(string):
+    """Returns an ascii string.
+    Python3 converts bytes to unicode.
+    Python2 converts unicode to ascii"""
+    # Try Python3 first.
+    try:
+        return str(string, 'utf-8')
+    except TypeError:
+        pass
+
+    # Try Python2 next.
+    try:
+        return string.encode('utf-8')
+    except:
+        pass

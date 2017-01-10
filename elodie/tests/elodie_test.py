@@ -5,7 +5,6 @@ import sys
 import shutil
 
 from click.testing import CliRunner
-from nose.plugins.skip import SkipTest
 from nose.tools import assert_raises
 from six import text_type, unichr as six_unichr
 
@@ -87,7 +86,7 @@ def test_import_file_video():
 
     assert helper.path_tz_fix(os.path.join('2015-01-Jan','California','2015-01-19_12-45-11-video.mov')) in dest_path, dest_path
 
-def test_import_file_path_utf8_encoded_ascii():
+def test_import_path_utf8_encoded_ascii():
     temporary_folder, folder = helper.create_working_folder()
     temporary_folder_destination, folder_destination = helper.create_working_folder()
 
@@ -98,15 +97,24 @@ def test_import_file_path_utf8_encoded_ascii():
     shutil.copyfile(helper.get_file('valid.txt'), origin)
 
     helper.reset_dbs()
-    dest_path = elodie.import_file(origin, folder_destination, False, False, False)
+
+    runner = CliRunner()
+    result = runner.invoke(elodie._import, ['--destination', folder_destination, origin])
     helper.restore_dbs()
+
+    found = False
+    for xxx, yyy, file in os.walk(folder_destination):
+        if u'2016-04-07_11-15-26-unicode\xa0filename-sample-title.txt' in file:
+            found = True
+            break
 
     shutil.rmtree(folder)
     shutil.rmtree(folder_destination)
 
-    assert helper.path_tz_fix(os.path.join('2016-04-Apr','London',u'2016-04-07_11-15-26-unicode\xa0filename-sample-title.txt')) in dest_path, dest_path
+    assert found == True
+    assert result.exit_code == 0, result.output
 
-def test_import_file_path_unicode():
+def test_import_path_unicode():
     temporary_folder, folder = helper.create_working_folder()
     temporary_folder_destination, folder_destination = helper.create_working_folder()
 
@@ -115,13 +123,21 @@ def test_import_file_path_unicode():
     shutil.copyfile(helper.get_file('valid.txt'), origin)
 
     helper.reset_dbs()
-    dest_path = elodie.import_file(origin, folder_destination, False, False, False)
+    runner = CliRunner()
+    result = runner.invoke(elodie._import, ['--destination', folder_destination, origin])
     helper.restore_dbs()
+
+    found = False
+    for xxx, yyy, file in os.walk(folder_destination):
+        if u'2016-04-07_11-15-26-unicode\xa0filename-sample-title.txt' in file:
+            found = True
+            break
 
     shutil.rmtree(folder)
     shutil.rmtree(folder_destination)
 
-    assert helper.path_tz_fix(os.path.join('2016-04-Apr','London',u'2016-04-07_11-15-26-unicode\xa0filename-sample-title.txt')) in dest_path, dest_path
+    assert found == True
+    assert result.exit_code == 0, result.output
     
 def test_import_file_allow_duplicate_false():
     temporary_folder, folder = helper.create_working_folder()
@@ -406,7 +422,7 @@ def test_update_time_on_video():
     assert metadata['date_taken'] != metadata_processed['date_taken']
     assert metadata_processed['date_taken'] == helper.time_convert((2000, 1, 1, 12, 0, 0, 5, 1, 0)), metadata_processed['date_taken']
 
-def test_update_with_directory_passed_in():
+def test_update_with_album_passed_in():
     temporary_folder, folder = helper.create_working_folder()
     temporary_folder_destination, folder_destination = helper.create_working_folder()
 

@@ -13,6 +13,7 @@ import time
 
 from elodie import geolocation
 from elodie import log
+from elodie.compatability import _decode
 from elodie.config import load_config
 from elodie.localstorage import Db
 from elodie.media.base import Base, get_all_subclasses
@@ -82,7 +83,7 @@ class FileSystem(object):
             for filename in filenames:
                 # If file extension is in `extensions` then append to the list
                 if os.path.splitext(filename)[1][1:].lower() in extensions:
-                    yield os.path.join(dirname, filename)
+                    yield os.path.join(_decode(dirname), _decode(filename))
 
     def get_current_directory(self):
         """Get the current working directory.
@@ -339,7 +340,7 @@ class FileSystem(object):
         db.add_hash(checksum, dest_path)
         db.update_hash_db()
 
-        return dest_path
+        return _decode(dest_path)
 
     def set_utime(self, media):
         """ Set the modification time on the file base on the file name.

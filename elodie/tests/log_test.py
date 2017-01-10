@@ -81,3 +81,17 @@ def test_calls_print_progress_with_new_line(fake_log):
     fake_log.warn.return_value = expected
     fake_log.error.return_value = expected
     call_log_and_assert(log.progress, [expected, True], with_new_line(expected))
+
+@patch('elodie.log')
+def test_write_without_params(fake_log):
+    expected = 'hello'
+    fake_log.write.return_value = expected
+    call_log_and_assert(log.write, [expected], with_new_line(expected))
+
+@patch('elodie.log')
+def test_write_with_params(fake_log):
+    string = 'hello %s'
+    params = ('world')
+    expected = string % params
+    fake_log.write.return_value = expected
+    call_log_and_assert(log.write, [string, params], with_new_line(expected))
