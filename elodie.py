@@ -18,6 +18,7 @@ if not verify_dependencies():
 from elodie import constants
 from elodie import geolocation
 from elodie import log
+from elodie.compatability import _decode, _encode
 from elodie.filesystem import FileSystem
 from elodie.localstorage import Db
 from elodie.media.base import Base, get_all_subclasses
@@ -37,19 +38,27 @@ def import_file(_file, destination, album_from_folder, trash, allow_duplicates):
     """
     if not os.path.exists(_file):
         log.warn('Could not find %s' % _file)
-        print('{"source":"%s", "error_msg":"Could not find %s"}' % \
-            (_file, _file))
+        log.write(
+            '{"source":"%s", "error_msg":"Could not find %s"}',
+            (_encode(_file), _encode(_file)),
+        )
         return
     # Check if the source, _file, is a child folder within destination
     elif destination.startswith(os.path.dirname(_file)):
-        print('{"source": "%s", "destination": "%s", "error_msg": "Source cannot be in destination"}' % (_file, destination))
+        log.write(
+            '{"source": "%s", "destination": "%s", "error_msg": "Source cannot be in destination"}',  #noqa
+            (_encode(_file), _encode(destination)),
+        )
         return
 
 
     media = Media.get_class_by_file(_file, get_all_subclasses())
     if not media:
         log.warn('Not a supported file (%s)' % _file)
-        print('{"source":"%s", "error_msg":"Not a supported file"}' % _file)
+        log.write(
+            '{"source":"%s", "error_msg":"Not a supported file"}',
+            _encode(_file),
+        )
         return
 
     if album_from_folder:
@@ -58,7 +67,7 @@ def import_file(_file, destination, album_from_folder, trash, allow_duplicates):
     dest_path = FILESYSTEM.process_file(_file, destination,
         media, allowDuplicate=allow_duplicates, move=False)
     if dest_path:
-        print('%s -> %s' % (_file, dest_path))
+        log.write('%s -> %s', (_encode(_file), _encode(dest_path)))
     if trash:
         send2trash(_file)
 
@@ -82,6 +91,10 @@ def import_file(_file, destination, album_from_folder, trash, allow_duplicates):
 def _import(destination, source, file, album_from_folder, trash, paths, allow_duplicates):
     """Import files or directories by reading their EXIF and organizing them accordingly.
     """
+    destination = _decode(destination)
+    source = _decode(source)
+    file = _decode(file)
+
     result = Result()
 
     destination = os.path.abspath(os.path.expanduser(destination))
@@ -93,6 +106,7 @@ def _import(destination, source, file, album_from_folder, trash, paths, allow_du
     if file:
         paths.add(file)
     for path in paths:
+        path = _decode(path)
         path = os.path.expanduser(path)
         if os.path.isdir(path):
             files.update(FILESYSTEM.get_all_files(path, None))
@@ -166,8 +180,10 @@ def update_location(media, file_path, location_name):
             'latitude'], location_coords['longitude'])
         if not location_status:
             log.error('Failed to update location')
-            print(('{"source":"%s",' % file_path,
-                '"error_msg":"Failed to update location"}'))
+            log.write(
+                '{"source":"%s","error_msg":"Failed to update location"}',
+                _encode(file_path),
+            )
             sys.exit(1)
     return True
 
@@ -181,7 +197,7 @@ def update_time(media, file_path, time_string):
     elif re.match(r'^\d{4}-\d{2}-\d{2} \d{2}:\d{2}\d{2}$', time_string):
         msg = ('Invalid time format. Use YYYY-mm-dd hh:ii:ss or YYYY-mm-dd')
         log.error(msg)
-        print('{"source":"%s", "error_msg":"%s"}' % (file_path, msg))
+        log.write('{"source":"%s", "error_msg":"%s"}', (file_path, msg))
         sys.exit(1)
 
     time = datetime.strptime(time_string, time_format)
@@ -214,10 +230,11 @@ def _update(album, location, time, title, paths):
 
     for current_file in files:
         if not os.path.exists(current_file):
-            if constants.debug:
-                print('Could not find %s' % current_file)
-            print('{"source":"%s", "error_msg":"Could not find %s"}' % \
-                (current_file, current_file))
+            log.warn('Could not find %s' % _encode(current_file))
+            log.write(
+                '{"source":"%s", "error_msg":"Could not find %s"}',
+                (_encode(current_file), _encode(current_file)),
+            )
             continue
 
         current_file = os.path.expanduser(current_file)
@@ -230,12 +247,14 @@ def _update(album, location, time, title, paths):
 
         updated = False
         if location:
+            location = _encode(location)
             update_location(media, current_file, location)
             updated = True
         if time:
             update_time(media, current_file, time)
             updated = True
         if album:
+            album = _encode(album)
             media.set_album(album)
             updated = True
 
@@ -249,6 +268,7 @@ def _update(album, location, time, title, paths):
         #  rename the file by updating the title instead of appending it.
         remove_old_title_from_name = False
         if title:
+            title = _encode(title)
             # We call get_metadata() to cache it before making any changes
             metadata = media.get_metadata()
             title_update_status = media.set_title(title)
@@ -274,8 +294,10 @@ def _update(album, location, time, title, paths):
             dest_path = FILESYSTEM.process_file(current_file, destination,
                 updated_media, move=True, allowDuplicate=True)
             log.info(u'%s -> %s' % (current_file, dest_path))
-            print('{"source":"%s", "destination":"%s"}' % (current_file,
-                dest_path))
+            log.write(
+                '{"source":"%s", "destination":"%s"}',
+                (_encode(current_file), _encode(dest_path)),
+            )
             # If the folder we moved the file out of or its parent are empty
             # we delete it.
             FILESYSTEM.delete_directory_if_empty(os.path.dirname(current_file))

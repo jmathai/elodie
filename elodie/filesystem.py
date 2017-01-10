@@ -340,7 +340,7 @@ class FileSystem(object):
         db.add_hash(checksum, dest_path)
         db.update_hash_db()
 
-        return dest_path
+        return _decode(dest_path)
 
     def set_utime(self, media):
         """ Set the modification time on the file base on the file name.

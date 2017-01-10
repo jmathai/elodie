@@ -1,4 +1,4 @@
-def _decode(string, encoding='utf8'):
+def _decode(string, encoding='utf-8'):
     """Return a utf8 encoded unicode string.
 
     Python2 and Python3 differ in how they handle strings.
@@ -14,5 +14,15 @@ def _decode(string, encoding='utf8'):
             pass
 
         return string.decode(encoding)
+
+    return string
+
+
+def _encode(string, encoding='utf-8'):
+    if hasattr(string, 'encode'):
+        try:
+            return string.encode(encoding)
+        except:
+            pass
 
     return string

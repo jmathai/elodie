@@ -41,6 +41,9 @@ def error_json(payload):
     _print(dumps(payload))
 
 
+def write(string, params=()):
+    print(string % params)
+
 def _print(string):
     if(constants.debug is True):
         print(string)
