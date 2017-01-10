@@ -1,12 +1,18 @@
 def _decode(string, encoding='utf8'):
-    # Unicode is not defined in Python 3 and throws a NameError
-    # If we encounter a NameError we just assume it's unicode (py3)
-    try:
-        is_unicode = isinstance(string, unicode)
-    except NameError:
-        is_unicode = False
+    """Return a utf8 encoded unicode string.
 
-    if is_unicode and hasattr(string, 'decode'):
+    Python2 and Python3 differ in how they handle strings.
+    So we do a few checks to see if the string is ascii or unicode.
+    Then we decode it if needed.
+    """
+    if hasattr(string, 'decode'):
+        # If the string is already unicode we return it.
+        try:
+            if isinstance(string, unicode):
+                return string
+        except NameError:
+            pass
+
         return string.decode(encoding)
 
     return string

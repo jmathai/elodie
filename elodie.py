@@ -197,12 +197,21 @@ def update_time(media, file_path, time_string):
 @click.option('--time', help=('Update the image time. Time should be in '
                               'YYYY-mm-dd hh:ii:ss or YYYY-mm-dd format.'))
 @click.option('--title', help='Update the image title.')
-@click.argument('files', nargs=-1, type=click.Path(dir_okay=False),
+@click.argument('paths', nargs=-1,
                 required=True)
-def _update(album, location, time, title, files):
+def _update(album, location, time, title, paths):
     """Update a file's EXIF. Automatically modifies the file's location and file name accordingly.
     """
     result = Result()
+
+    files = set()
+    for path in paths:
+        path = os.path.expanduser(path)
+        if os.path.isdir(path):
+            files.update(FILESYSTEM.get_all_files(path, None))
+        else:
+            files.add(path)
+
     for current_file in files:
         if not os.path.exists(current_file):
             if constants.debug:
