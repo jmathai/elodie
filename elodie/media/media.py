@@ -48,7 +48,7 @@ class Media(Base):
         self.longitude_keys = ['EXIF:GPSLongitude']
         self.latitude_ref_key = 'EXIF:GPSLatitudeRef'
         self.longitude_ref_key = 'EXIF:GPSLongitudeRef'
-        self.original_name_key = 'XMP-xmpDM:OriginalFileName'
+        self.original_name_key = 'XMP:OriginalFileName'
         self.set_gps_ref = True
         self.exiftool_addedargs = [
             '-overwrite_original',
