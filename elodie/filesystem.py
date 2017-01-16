@@ -16,34 +16,13 @@ from elodie import geolocation
 from elodie import log
 from elodie.localstorage import Db
 from elodie.media.base import Base, get_all_subclasses
-
+from elodie import constants
+from elodie import compatability
 
 class FileSystem(object):
 
     """A class for interacting with the file system."""
     
-    def copyfile(self, src, dst):
-        try:
-            O_BINARY = os.O_BINARY
-        except:
-            O_BINARY = 0
-
-        READ_FLAGS = os.O_RDONLY | O_BINARY
-        WRITE_FLAGS = os.O_WRONLY | os.O_CREAT | os.O_TRUNC | O_BINARY
-        BUFFER_SIZE = 128*1024
-        
-        try:
-            fin = os.open(src, READ_FLAGS)
-            stat = os.fstat(fin)
-            fout = os.open(dst, WRITE_FLAGS, stat.st_mode)
-            for x in iter(lambda: os.read(fin, BUFFER_SIZE), ""):
-                os.write(fout, x)
-        finally:
-            try: os.close(fin)
-            except: pass
-            try: os.close(fout)
-            except: pass
-        
 
     def create_directory(self, directory_path):
         """Create a directory if it does not already exist.
@@ -255,8 +234,12 @@ class FileSystem(object):
             
             # shutil.copy seems slow, changing to streaming according to
             # http://stackoverflow.com/questions/22078621/python-how-to-copy-files-fast
-            self.copyfile(_file, dest_path)
-            self.set_date_from_filename(dest_path)
+            if (constants.python_version == 3):
+                shutil.copy(_file, dest_path)
+            else:
+                compatability._copyfile(_file, dest_path)
+            self.set_utime(media)
+
 
         db.add_hash(checksum, dest_path)
         db.update_hash_db()
