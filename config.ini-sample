@@ -6,3 +6,5 @@ date=%Y-%m-%b
 location=%city
 full_path=%date/%location
 
+[File]
+name=%Y-%m-%d_%H-%M-%S-%title-%name.%extension

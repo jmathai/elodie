@@ -28,6 +28,9 @@ class FileSystem(object):
         ]
         self.cached_folder_path_definition = None
 
+        self.default_file_name_definition = '%Y-%m-%d_%H-%M-%S-%title-%name.%extension'  #noqa
+        self.cached_file_name_definition = None
+
     def create_directory(self, directory_path):
         """Create a directory if it does not already exist.
 
@@ -91,6 +94,23 @@ class FileSystem(object):
         """
         return os.getcwd()
 
+    def get_file_name_definition(self):
+        # If we've done this already then return it immediately without
+        # incurring any extra work
+        if self.cached_file_name_definition is not None:
+            return self.cached_file_name_definition
+
+        config = load_config()
+
+        if('File' not in config):
+            return self.default_file_name_definition
+
+        config_directory = config['File']
+        self.cached_file_name_definition config = config['File']['name']
+
+        return self.cached_file_name_definition config
+
+
     def get_file_name(self, media):
         """Generate file name for a photo or video using its metadata.
 
@@ -109,6 +129,8 @@ class FileSystem(object):
         metadata = media.get_metadata()
         if(metadata is None):
             return None
+
+        file_name_definition = self.get_file_name_definition()
 
         # If the file has EXIF title we use that in the file name
         #   (i.e. my-favorite-photo-img_1234.jpg)
