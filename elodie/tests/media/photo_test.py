@@ -317,7 +317,7 @@ def _test_photo_type_get(type, date):
     if not photo_file:
         photo_file = helper.download_file(photo_name, folder)
         if not photo_file or not os.path.isfile(photo_file):
-            raise SkipTest('nef file not downlaoded')
+            raise SkipTest('{} file not downlaoded'.format(type))
 
         # downloading for each test is costly so we save it in the working directory
         file_path_save_as = helper.get_file_path(photo_name)

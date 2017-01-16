@@ -17,39 +17,45 @@ if not verify_dependencies():
 
 from elodie import constants
 from elodie import geolocation
-from elodie.media.base import Base
+from elodie import log
+from elodie.compatability import _decode
+from elodie.filesystem import FileSystem
+from elodie.localstorage import Db
+from elodie.media.base import Base, get_all_subclasses
 from elodie.media.media import Media
 from elodie.media.text import Text
 from elodie.media.audio import Audio
 from elodie.media.photo import Photo
 from elodie.media.video import Video
-from elodie.filesystem import FileSystem
-from elodie.localstorage import Db
+from elodie.result import Result
 
 
-DB = Db()
 FILESYSTEM = FileSystem()
 
 
 def import_file(_file, destination, album_from_folder, trash, allow_duplicates):
+
+    _file = _decode(_file)
+    destination = _decode(destination)
+
     """Set file metadata and move it to destination.
     """
     if not os.path.exists(_file):
-        if constants.debug:
-            print('Could not find %s' % _file)
+        log.warn('Could not find %s' % _file)
         print('{"source":"%s", "error_msg":"Could not find %s"}' % \
             (_file, _file))
         return
-
-    media = Media.get_class_by_file(_file, [Text, Audio, Photo, Video])
-    if not media:
-        if constants.debug:
-            print('Not a supported file (%s)' % _file)
-        print('{"source":"%s", "error_msg":"Not a supported file"}' % _file)
+    # Check if the source, _file, is a child folder within destination
+    elif destination.startswith(os.path.dirname(_file)):
+        print('{"source": "%s", "destination": "%s", "error_msg": "Source cannot be in destination"}' % (_file, destination))
         return
 
-    if media.__name__ == 'Video':
-        FILESYSTEM.set_date_from_path_video(media)
+
+    media = Media.get_class_by_file(_file, get_all_subclasses())
+    if not media:
+        log.warn('Not a supported file (%s)' % _file)
+        print('{"source":"%s", "error_msg":"Not a supported file"}' % _file)
+        return
 
     if album_from_folder:
         media.set_album_from_folder()
@@ -81,11 +87,15 @@ def import_file(_file, destination, album_from_folder, trash, allow_duplicates):
 def _import(destination, source, file, album_from_folder, trash, paths, allow_duplicates):
     """Import files or directories by reading their EXIF and organizing them accordingly.
     """
-    destination = os.path.expanduser(destination)
+    result = Result()
+
+    destination = _decode(destination)
+    destination = os.path.abspath(os.path.expanduser(destination))
 
     files = set()
     paths = set(paths)
     if source:
+        source = _decode(source)
         paths.add(source)
     if file:
         paths.add(file)
@@ -97,8 +107,59 @@ def _import(destination, source, file, album_from_folder, trash, paths, allow_du
             files.add(path)
 
     for current_file in files:
-        import_file(current_file, destination, album_from_folder,
+        dest_path = import_file(current_file, destination, album_from_folder,
                     trash, allow_duplicates)
+        result.append((current_file, dest_path))
+
+    result.write()
+
+
+@click.command('generate-db')
+@click.option('--source', type=click.Path(file_okay=False),
+              required=True, help='Source of your photo library.')
+def _generate_db(source):
+    """Regenerate the hash.json database which contains all of the sha1 signatures of media files.
+    """
+    result = Result()
+    source = os.path.abspath(os.path.expanduser(source))
+
+    if not os.path.isdir(source):
+        log.error('Source is not a valid directory %s' % source)
+        sys.exit(1)
+        
+    db = Db()
+    db.backup_hash_db()
+    db.reset_hash_db()
+
+    for current_file in FILESYSTEM.get_all_files(source):
+        result.append((current_file, True))
+        db.add_hash(db.checksum(current_file), current_file)
+        log.progress()
+    
+    db.update_hash_db()
+    log.progress('', True)
+    result.write()
+
+@click.command('verify')
+def _verify():
+    result = Result()
+    db = Db()
+    for checksum, file_path in db.all():
+        if not os.path.isfile(file_path):
+            result.append((file_path, False))
+            log.progress('x')
+            continue
+
+        actual_checksum = db.checksum(file_path)
+        if checksum == actual_checksum:
+            result.append((file_path, True))
+            log.progress()
+        else:
+            result.append((file_path, False))
+            log.progress('x')
+
+    log.progress('', True)
+    result.write()
 
 
 def update_location(media, file_path, location_name):
@@ -111,8 +172,7 @@ def update_location(media, file_path, location_name):
         location_status = media.set_location(location_coords[
             'latitude'], location_coords['longitude'])
         if not location_status:
-            if constants.debug:
-                print('Failed to update location')
+            log.error('Failed to update location')
             print(('{"source":"%s",' % file_path,
                 '"error_msg":"Failed to update location"}'))
             sys.exit(1)
@@ -127,8 +187,7 @@ def update_time(media, file_path, time_string):
         time_string = '%s 00:00:00' % time_string
     elif re.match(r'^\d{4}-\d{2}-\d{2} \d{2}:\d{2}\d{2}$', time_string):
         msg = ('Invalid time format. Use YYYY-mm-dd hh:ii:ss or YYYY-mm-dd')
-        if constants.debug:
-            print(msg)
+        log.error(msg)
         print('{"source":"%s", "error_msg":"%s"}' % (file_path, msg))
         sys.exit(1)
 
@@ -150,28 +209,29 @@ def update_time(media, file_path, time_string):
 def _update(album, location, time, title, files):
     """Update a file's EXIF. Automatically modifies the file's location and file name accordingly.
     """
-    for file_path in files:
-        if not os.path.exists(file_path):
+    result = Result()
+    for current_file in files:
+        if not os.path.exists(current_file):
             if constants.debug:
-                print('Could not find %s' % file_path)
+                print('Could not find %s' % current_file)
             print('{"source":"%s", "error_msg":"Could not find %s"}' % \
-                (file_path, file_path))
+                (current_file, current_file))
             continue
 
-        file_path = os.path.expanduser(file_path)
+        current_file = os.path.expanduser(current_file)
         destination = os.path.expanduser(os.path.dirname(os.path.dirname(
-                                         os.path.dirname(file_path))))
+                                         os.path.dirname(current_file))))
 
-        media = Media.get_class_by_file(file_path, [Text, Audio, Photo, Video])
+        media = Media.get_class_by_file(current_file, get_all_subclasses())
         if not media:
             continue
 
         updated = False
         if location:
-            update_location(media, file_path, location)
+            update_location(media, current_file, location)
             updated = True
         if time:
-            update_time(media, file_path, time)
+            update_time(media, current_file, time)
             updated = True
         if album:
             media.set_album(album)
@@ -200,8 +260,8 @@ def _update(album, location, time, title, files):
             updated = True
 
         if updated:
-            updated_media = Media.get_class_by_file(file_path,
-                                                    [Text, Audio, Photo, Video])
+            updated_media = Media.get_class_by_file(current_file,
+                                                    get_all_subclasses())
             # See comments above on why we have to do this when titles
             # get updated.
             if remove_old_title_from_name and len(original_title) > 0:
@@ -209,17 +269,21 @@ def _update(album, location, time, title, files):
                 updated_media.set_metadata_basename(
                     original_base_name.replace('-%s' % original_title, ''))
 
-            dest_path = FILESYSTEM.process_file(file_path, destination,
+            dest_path = FILESYSTEM.process_file(current_file, destination,
                 updated_media, move=True, allowDuplicate=True)
-            if constants.debug:
-                print(u'%s -> %s' % (file_path, dest_path))
-            print('{"source":"%s", "destination":"%s"}' % (file_path,
+            log.info(u'%s -> %s' % (current_file, dest_path))
+            print('{"source":"%s", "destination":"%s"}' % (current_file,
                 dest_path))
             # If the folder we moved the file out of or its parent are empty
             # we delete it.
-            FILESYSTEM.delete_directory_if_empty(os.path.dirname(file_path))
+            FILESYSTEM.delete_directory_if_empty(os.path.dirname(current_file))
             FILESYSTEM.delete_directory_if_empty(
-                os.path.dirname(os.path.dirname(file_path)))
+                os.path.dirname(os.path.dirname(current_file)))
+            result.append((current_file, dest_path))
+        else:
+            result.append((current_file, False))
+
+    result.write()
 
 
 @click.group()
@@ -229,6 +293,8 @@ def main():
 
 main.add_command(_import)
 main.add_command(_update)
+main.add_command(_generate_db)
+main.add_command(_verify)
 
 
 if __name__ == '__main__':

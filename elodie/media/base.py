@@ -187,6 +187,8 @@ class Base(object):
 
     @classmethod
     def get_class_by_file(cls, _file, classes):
+        """Static method to get a media object by file.
+        """
         if not isinstance(_file, basestring) or not os.path.isfile(_file):
             return None
 
@@ -206,3 +208,21 @@ class Base(object):
         :returns: tuple(str)
         """
         return cls.extensions
+
+
+def get_all_subclasses(cls=None):
+    """Module method to get all subclasses of Base.
+    """
+    subclasses = set()
+
+    this_class = Base
+    if cls is not None:
+        this_class = cls
+
+    subclasses.add(this_class)
+
+    this_class_subclasses = this_class.__subclasses__()
+    for child_class in this_class_subclasses:
+        subclasses.update(get_all_subclasses(child_class))
+
+    return subclasses

@@ -62,6 +62,14 @@ def test_add_hash_explicit_write():
     # Instnatiate new db class to confirm random_key exists
     db2 = Db()
     assert db2.check_hash(random_key) == True
+
+def test_backup_hash_db():
+    db = Db()
+    backup_file_name = db.backup_hash_db()
+    file_exists = os.path.isfile(backup_file_name)
+    os.remove(backup_file_name)
+    
+    assert file_exists, backup_file_name
     
 def test_check_hash_exists():
     db = Db()
@@ -98,6 +106,50 @@ def test_get_hash_does_not_exist():
     random_key = helper.random_string(10)
 
     assert db.get_hash(random_key) is None, 'Lookup for hash that should not exist did not return None'
+
+def test_get_all():
+    db = Db()
+    db.reset_hash_db()
+
+    random_keys = []
+    random_values = []
+    for _ in range(10):
+        random_keys.append(helper.random_string(10))
+        random_values.append(helper.random_string(12))
+        db.add_hash(random_keys[-1:][0], random_values[-1:][0], False)
+
+    counter = 0
+    for key, value in db.all():
+        assert key in random_keys, key
+        assert value in random_values, value
+        counter += 1
+
+    assert counter == 10, counter
+
+def test_get_all_empty():
+    db = Db()
+    db.reset_hash_db()
+
+    counter = 0
+    for key, value in db.all():
+        counter += 1
+
+    # there's a final iteration because of the generator
+    assert counter == 0, counter
+
+def test_reset_hash_db():
+    db = Db()
+
+    random_key = helper.random_string(10)
+    random_value = helper.random_string(12)
+
+    # Test with explicit False value as 3rd param
+    db.add_hash(random_key, random_value, False)
+    
+    assert random_key in db.hash_db, random_key
+    db.reset_hash_db()
+    assert random_key not in db.hash_db, random_key
+
 
 def test_update_hash_db():
     db = Db()
