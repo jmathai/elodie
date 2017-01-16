@@ -65,7 +65,6 @@ def test_set_original_name():
     files = ['plain.jpg', 'audio.m4a', 'photo.nef', 'video.mov']
 
     for file in files:
-        print(file)
         ext = os.path.splitext(file)[1]
 
         temporary_folder, folder = helper.create_working_folder()
