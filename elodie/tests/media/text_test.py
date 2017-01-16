@@ -268,3 +268,20 @@ def test_set_location_without_header():
     shutil.rmtree(folder)
 
     assert helper.isclose(metadata['latitude'], 11.1111111111), metadata['latitude']
+
+def test_set_original_name():
+    temporary_folder, folder = helper.create_working_folder()
+
+    random_file_name = '%s.txt' % helper.random_string(10)
+    origin = '%s/%s' % (folder, random_file_name)
+    shutil.copyfile(helper.get_file('valid.txt'), origin)
+
+    text = Text(origin)
+    metadata = text.get_metadata()
+    text.set_original_name()
+    metadata_updated = text.get_metadata()
+
+    shutil.rmtree(folder)
+
+    assert metadata['original_name'] is None, metadata['original_name']
+    assert metadata_updated['original_name'] == random_file_name, metadata_updated['original_name']

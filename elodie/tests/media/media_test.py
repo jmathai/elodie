@@ -61,6 +61,29 @@ def test_get_class_by_file_invalid_type():
                                     [Photo, Video, Audio])
     assert media is None
 
+def test_set_original_name():
+    files = ['plain.jpg', 'audio.m4a', 'photo.nef', 'video.mov']
+
+    for file in files:
+        print(file)
+        ext = os.path.splitext(file)[1]
+
+        temporary_folder, folder = helper.create_working_folder()
+
+        random_file_name = '%s.%s' % (helper.random_string(10), ext)
+        origin = '%s/%s' % (folder, random_file_name)
+        shutil.copyfile(helper.get_file(file), origin)
+
+        media = Media.get_class_by_file(origin, [Audio, Media, Photo, Video])
+        metadata = media.get_metadata()
+        media.set_original_name()
+        metadata_updated = media.get_metadata()
+
+        shutil.rmtree(folder)
+
+        assert metadata['original_name'] is None, metadata['original_name']
+        assert metadata_updated['original_name'] == random_file_name, metadata_updated['original_name']
+
 def is_valid():
     media = Media()
 
