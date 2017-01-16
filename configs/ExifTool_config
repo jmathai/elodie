@@ -67,7 +67,7 @@
     MyAlias => 'FocalLengthIn35mmFormat',
 );
 
-# Custom definition for albums
+# Custom definition for albums and original file name
 %Image::ExifTool::UserDefined::elodie = (
     GROUPS => { 0 => 'XMP', 1 => 'XMP-elodie', 2 => 'Image' },
     NAMESPACE => { 'elodie' => 'https://github.com/jmathai/elodie/' },
@@ -75,6 +75,7 @@
     # Example 8.  XMP-xxx:NewXMPxxxTag1
     # - replace "NewXMPxxxTag1" with your own tag name (eg. "MyTag")
     Album => { Writable => 'lang-alt' },
+    OriginalFileName => { Writable => 'lang-alt' },
 );
 
 # NOTE: All tag names used in the following tables are case sensitive.
