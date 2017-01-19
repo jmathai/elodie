@@ -14,15 +14,14 @@ import sys
 
 from elodie import geolocation
 from elodie import log
+from elodie.config import load_config
 from elodie.localstorage import Db
 from elodie.media.base import Base, get_all_subclasses
 from elodie import constants
 from elodie import compatability
 
 class FileSystem(object):
-
     """A class for interacting with the file system."""
-    
 
     def create_directory(self, directory_path):
         """Create a directory if it does not already exist.
@@ -137,36 +136,74 @@ class FileSystem(object):
             metadata['extension'])
         return file_name.lower()
 
-    def get_folder_name_by_date(self, time_obj):
-        """Get date based folder name.
+    def get_folder_path_definition(self):
+        # If we've done this already then return it immediately without
+        # incurring any extra work
+        if self.cached_folder_path_definition is not None:
+            return self.cached_folder_path_definition
 
-        :param time time_obj: Time object to be used to determine folder name.
-        :returns: str
-        """
-        return time.strftime('%Y-%m-%b', time_obj)
+        config = load_config()
+
+        # If Directory is in the config we assume full_path and its
+        #  corresponding values (date, location) are also present
+        if('Directory' not in config):
+            return self.default_folder_path_definition
+
+        config_directory = config['Directory']
+
+        path_parts = re.search(
+                         '\%([^/]+)\/\%([^/]+)',
+                         config_directory['full_path']
+                     )
+
+        if not path_parts or len(path_parts.groups()) != 2:
+            return self.default_folder_path_definition
+
+        path_part_groups = path_parts.groups()
+        self.cached_folder_path_definition = [
+            (path_part_groups[0], config_directory[path_part_groups[0]]),
+            (path_part_groups[1], config_directory[path_part_groups[1]]),
+        ]
+        return self.cached_folder_path_definition
 
     def get_folder_path(self, metadata):
         """Get folder path by various parameters.
 
-        :param time time_obj: Time object to be used to determine folder name.
+        :param metadata dict: Metadata dictionary.
         :returns: str
         """
+        path_parts = self.get_folder_path_definition()
         path = []
-        if(metadata['date_taken'] is not None):
-            path.append(time.strftime('%Y-%m-%b', metadata['date_taken']))
+        for path_part in path_parts:
+            part, mask = path_part
+            if part == 'date':
+                path.append(time.strftime(mask, metadata['date_taken']))
+            elif part == 'location':
+                if(
+                    metadata['latitude'] is not None and
+                    metadata['longitude'] is not None
+                ):
+                    place_name = geolocation.place_name(
+                        metadata['latitude'],
+                        metadata['longitude']
+                    )
+                    if(place_name is not None):
+                        location_parts = re.findall('(%[^%]+)', mask)
+                        parsed_folder_name = self.parse_mask_for_location(
+                            mask,
+                            location_parts,
+                            place_name,
+                        )
+                        path.append(parsed_folder_name)
 
+        # For now we always make the leaf folder an album if it's in the EXIF.
+        # This is to preserve backwards compatability until we figure out how
+        # to include %album in the config.ini syntax.
         if(metadata['album'] is not None):
-            path.append(metadata['album'])
-        elif(
-            metadata['latitude'] is not None and
-            metadata['longitude'] is not None
-        ):
-            place_name = geolocation.place_name(
-                metadata['latitude'],
-                metadata['longitude']
-            )
-            if(place_name is not None):
-                path.append(place_name)
+            if(len(path) == 1):
+                path.append(metadata['album'])
+            elif(len(path) == 2):
+                path[1] = metadata['album']
 
         # if we don't have a 2nd level directory we use 'Unknown Location'
         if(len(path) < 2):
@@ -174,6 +211,66 @@ class FileSystem(object):
 
         # return '/'.join(path[::-1])
         return os.path.join(*path)
+
+    def parse_mask_for_location(self, mask, location_parts, place_name):
+        """Takes a mask for a location and interpolates the actual place names.
+
+        Given these parameters here are the outputs.
+
+        mask=%city
+        location_parts=[('%city','%city','city')]
+        place_name={'city': u'Sunnyvale'}
+        output=Sunnyvale
+
+        mask=%city-%state
+        location_parts=[('%city-','%city','city'), ('%state','%state','state')]
+        place_name={'city': u'Sunnyvale', 'state': u'California'}
+        output=Sunnyvale-California
+
+        mask=%country
+        location_parts=[('%country','%country','country')]
+        place_name={'default': u'Sunnyvale', 'city': u'Sunnyvale'}
+        output=Sunnyvale
+
+
+        :param str mask: The location mask in the form of %city-%state, etc
+        :param list location_parts: A list of tuples in the form of
+            [('%city-', '%city', 'city'), ('%state', '%state', 'state')]
+        :param dict place_name: A dictionary of place keywords and names like
+            {'default': u'California', 'state': u'California'}
+        :returns: str
+        """
+        found = False
+        folder_name = mask
+        for loc_part in location_parts:
+            # We assume the search returns a tuple of length 2.
+            # If not then it's a bad mask in config.ini.
+            # loc_part = '%country-random'
+            # component_full = '%country-random'
+            # component = '%country'
+            # key = 'country
+            component_full, component, key = re.search(
+                '((%([a-z]+))[^%]*)',
+                loc_part
+            ).groups()
+
+            if(key in place_name):
+                found = True
+                replace_target = component
+                replace_with = place_name[key]
+            else:
+                replace_target = component_full
+                replace_with = ''
+
+            folder_name = folder_name.replace(
+                replace_target,
+                replace_with,
+            )
+
+        if(not found and folder_name == ''):
+            folder_name = place_name['default']
+
+        return folder_name
 
     def process_file(self, _file, destination, media, **kwargs):
         move = False
@@ -246,8 +343,59 @@ class FileSystem(object):
 
         return dest_path
 
-    def set_utime(self, media):
+    def copyfile(self, src, dst):
+        try:
+            O_BINARY = os.O_BINARY
+        except:
+            O_BINARY = 0
+
+        READ_FLAGS = os.O_RDONLY | O_BINARY
+        WRITE_FLAGS = os.O_WRONLY | os.O_CREAT | os.O_TRUNC | O_BINARY
+        BUFFER_SIZE = 128*1024
+        
+        try:
+            fin = os.open(src, READ_FLAGS)
+            stat = os.fstat(fin)
+            fout = os.open(dst, WRITE_FLAGS, stat.st_mode)
+            for x in iter(lambda: os.read(fin, BUFFER_SIZE), ""):
+                os.write(fout, x)
+        finally:
+            try: os.close(fin)
+            except: pass
+            try: os.close(fout)
+            except: pass
+        
+
+    def set_date_from_filename(self, file):
         """ Set the modification time on the file base on the file name.
+        """
+    
+        date_taken = None
+        file_name = os.path.basename(file)
+        # Initialize date taken to what's returned from the metadata function.
+        # If the folder and file name follow a time format of
+        #   YYYY-MM/DD-IMG_0001.JPG then we override the date_taken
+        (year, month, day, hour, minute, second) = [None] * 6
+        year_month_day_match = re.search('(\d{4})-(\d{2})-(\d{2})_(\d{2})-(\d{2})-(\d{2})', file_name)
+        if(year_month_day_match is not None):
+            (year, month, day, hour, minute, second) = year_month_day_match.groups()        
+
+        # check if the file system path indicated a date and if so we
+        #   override the metadata value
+        if(year is not None and month is not None and day is not None and hour is not None and minute is not None and second is not None):
+                date_taken = time.strptime(
+                    '{}-{}-{} {}:{}:{}'.format(year, month, day, hour, minute, second),
+                    '%Y-%m-%d %H:%M:%S'
+                )            
+        
+                os.utime(file, (time.time(), time.mktime(date_taken)))
+    
+    def set_date_from_path_video(self, video):
+        """Set the modification time on the file based on the file path.
+
+        Noop if the path doesn't match the format YYYY-MM/DD-IMG_0001.JPG.
+
+        :param elodie.media.video.Video video: An instance of Video.
         """
 
         # Initialize date taken to what's returned from the metadata function.

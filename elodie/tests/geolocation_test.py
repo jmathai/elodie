@@ -9,6 +9,7 @@ import random
 import re
 import sys
 from mock import patch
+from tempfile import gettempdir
 
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))))
 
@@ -110,6 +111,33 @@ def test_lookup_with_valid_key():
     latLng = res['results'][0]['locations'][0]['latLng']
     assert latLng['lat'] == 37.36883, latLng
     assert latLng['lng'] == -122.03635, latLng
+
+@mock.patch('elodie.constants.location_db', '%s/location.json-cached' % gettempdir())
+def test_place_name_deprecated_string_cached():
+    # See gh-160 for backwards compatability needed when a string is stored instead of a dict
+    helper.reset_dbs()
+    with open('%s/location.json-cached' % gettempdir(), 'w') as f:
+        f.write("""
+[{"lat": 37.3667027222222, "long": -122.033383611111, "name": "OLDVALUE"}]
+"""
+    )
+    place_name = geolocation.place_name(37.3667027222222, -122.033383611111)
+    helper.restore_dbs()
+
+    assert place_name['city'] == 'Sunnyvale', place_name
+
+@mock.patch('elodie.constants.location_db', '%s/location.json-cached' % gettempdir())
+def test_place_name_cached():
+    helper.reset_dbs()
+    with open('%s/location.json-cached' % gettempdir(), 'w') as f:
+        f.write("""
+[{"lat": 37.3667027222222, "long": -122.033383611111, "name": {"city": "UNITTEST"}}]
+"""
+    )
+    place_name = geolocation.place_name(37.3667027222222, -122.033383611111)
+    helper.restore_dbs()
+
+    assert place_name['city'] == 'UNITTEST', place_name
 
 @mock.patch('elodie.geolocation.__KEY__', 'invalid_key')
 def test_lookup_with_invalid_key():
