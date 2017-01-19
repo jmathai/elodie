@@ -22,14 +22,6 @@ from elodie import compatability
 
 class FileSystem(object):
     """A class for interacting with the file system."""
-    
-
-    def __init__(self):
-        # The default folder path is along the lines of 2015-01-Jan/Chicago
-        self.default_folder_path_definition = [
-            ('date', '%Y-%m-%b'), ('location', '%city')
-        ]
-        self.cached_folder_path_definition = None
 
     def create_directory(self, directory_path):
         """Create a directory if it does not already exist.

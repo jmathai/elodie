@@ -28,7 +28,8 @@ def _copyfile(src, dst):
 
     READ_FLAGS = os.O_RDONLY | O_BINARY
     WRITE_FLAGS = os.O_WRONLY | os.O_CREAT | os.O_TRUNC | O_BINARY
-    BUFFER_SIZE = 128*1024
+    TEN_MEGABYTES = 10485760
+    BUFFER_SIZE = min(TEN_MEGABYTES, os.path.getsize(source))
         
     try:
         fin = os.open(src, READ_FLAGS)
