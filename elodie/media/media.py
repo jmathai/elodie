@@ -94,10 +94,10 @@ class Media(Base):
             if key not in exif:
                 continue
 
-            # Cast coordinate to a float due to a bug in exiftool's 
+            # Cast coordinate to a float due to a bug in exiftool's
             #   -json output format.
             # https://github.com/jmathai/elodie/issues/171
-            # http://u88.n24.queensu.ca/exiftool/forum/index.php/topic,7952.0.html #noqa
+            # http://u88.n24.queensu.ca/exiftool/forum/index.php/topic,7952.0.html  # noqa
             this_coordinate = float(exif[key])
 
             # TODO: verify that we need to check ref key
@@ -149,7 +149,6 @@ class Media(Base):
             return None
 
         return exiftool_attributes[self.original_name_key]
-        
 
     def get_title(self):
         """Get the title for a photo of video
