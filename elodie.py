@@ -87,6 +87,7 @@ def import_file(_file, destination, album_from_folder, trash, allow_duplicates):
 def _import(destination, source, file, album_from_folder, trash, paths, allow_duplicates):
     """Import files or directories by reading their EXIF and organizing them accordingly.
     """
+    has_errors = False
     result = Result()
 
     destination = _decode(destination)
@@ -110,8 +111,12 @@ def _import(destination, source, file, album_from_folder, trash, paths, allow_du
         dest_path = import_file(current_file, destination, album_from_folder,
                     trash, allow_duplicates)
         result.append((current_file, dest_path))
+        has_errors = has_errors is True or not dest_path
 
     result.write()
+
+    if has_errors:
+        sys.exit(1)
 
 
 @click.command('generate-db')
@@ -209,6 +214,7 @@ def update_time(media, file_path, time_string):
 def _update(album, location, time, title, paths):
     """Update a file's EXIF. Automatically modifies the file's location and file name accordingly.
     """
+    has_errors = False
     result = Result()
 
     files = set()
@@ -221,6 +227,8 @@ def _update(album, location, time, title, paths):
 
     for current_file in files:
         if not os.path.exists(current_file):
+            has_errors = True
+            result.append((current_file, False))
             if constants.debug:
                 print('Could not find %s' % current_file)
             print('{"source":"%s", "error_msg":"Could not find %s"}' % \
@@ -289,10 +297,16 @@ def _update(album, location, time, title, paths):
             FILESYSTEM.delete_directory_if_empty(
                 os.path.dirname(os.path.dirname(current_file)))
             result.append((current_file, dest_path))
+            # Trip has_errors to False if it's already False or dest_path is.
+            has_errors = has_errors is True or not dest_path
         else:
+            has_errors = False
             result.append((current_file, False))
 
     result.write()
+    
+    if has_errors:
+        sys.exit(1)
 
 
 @click.group()
