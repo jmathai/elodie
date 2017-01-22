@@ -87,6 +87,7 @@ def import_file(_file, destination, album_from_folder, trash, allow_duplicates):
 def _import(destination, source, file, album_from_folder, trash, paths, allow_duplicates):
     """Import files or directories by reading their EXIF and organizing them accordingly.
     """
+    has_errors = False
     result = Result()
 
     destination = _decode(destination)
@@ -110,8 +111,12 @@ def _import(destination, source, file, album_from_folder, trash, paths, allow_du
         dest_path = import_file(current_file, destination, album_from_folder,
                     trash, allow_duplicates)
         result.append((current_file, dest_path))
+        has_errors = has_errors is True or not dest_path
 
     result.write()
+
+    if has_errors:
+        sys.exit(1)
 
 
 @click.command('generate-db')
