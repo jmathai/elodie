@@ -71,7 +71,11 @@ def test_set_original_name():
 
         random_file_name = '%s.%s' % (helper.random_string(10), ext)
         origin = '%s/%s' % (folder, random_file_name)
-        shutil.copyfile(helper.get_file(file), origin)
+        file_path = helper.get_file(file)
+        if file_path is False:
+            file_path = helper.download_file(file, folder)
+
+        shutil.copyfile(file_path, origin)
 
         media = Media.get_class_by_file(origin, [Audio, Media, Photo, Video])
         metadata = media.get_metadata()
