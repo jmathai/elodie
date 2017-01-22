@@ -1,0 +1,3 @@
+{"date_taken":1460027726.0,"latitude":"51.521435","longitude":"0.162714","title":"sample title","original_name":"originalname.txt"}
+
+This file has a valid header.
