@@ -125,7 +125,7 @@ def test_set_original_name():
 
         temporary_folder, folder = helper.create_working_folder()
 
-        random_file_name = '%s.%s' % (helper.random_string(10), ext)
+        random_file_name = '%s%s' % (helper.random_string(10), ext)
         origin = '%s/%s' % (folder, random_file_name)
         file_path = helper.get_file(file)
         if file_path is False:
