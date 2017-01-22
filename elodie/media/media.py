@@ -236,7 +236,15 @@ class Media(Base):
         return status
 
     def set_original_name(self):
+        """Sets the original name EXIF tag if not already set.
+
+        :returns: True, False, None
+        """
         if(not self.is_valid()):
+            return None
+
+        # If EXIF original name tag is set then we return.
+        if self.get_original_name() is not None:
             return None
 
         source = self.source

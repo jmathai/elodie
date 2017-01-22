@@ -61,6 +61,62 @@ def test_get_class_by_file_invalid_type():
                                     [Photo, Video, Audio])
     assert media is None
 
+def test_get_original_name():
+    temporary_folder, folder = helper.create_working_folder()
+
+    origin = '%s/%s' % (folder, 'with-original-name.jpg')
+    file = helper.get_file('with-original-name.jpg')
+    
+    shutil.copyfile(file, origin)
+
+    media = Media.get_class_by_file(origin, [Photo])
+    original_name = media.get_original_name()
+
+    assert original_name == 'originalfilename.jpg', original_name
+
+def test_get_original_name_invalid_file():
+    temporary_folder, folder = helper.create_working_folder()
+
+    origin = '%s/%s' % (folder, 'invalid.jpg')
+    file = helper.get_file('invalid.jpg')
+    
+    shutil.copyfile(file, origin)
+
+    media = Media.get_class_by_file(origin, [Photo])
+    original_name = media.get_original_name()
+
+    assert original_name is None, original_name
+    
+def test_set_original_name_when_exists():
+    temporary_folder, folder = helper.create_working_folder()
+
+    origin = '%s/%s' % (folder, 'with-original-name.jpg')
+    file = helper.get_file('with-original-name.jpg')
+    
+    shutil.copyfile(file, origin)
+
+    media = Media.get_class_by_file(origin, [Photo])
+    result = media.set_original_name()
+
+    assert result is None, result
+
+def test_set_original_name_when_does_not_exist():
+    temporary_folder, folder = helper.create_working_folder()
+
+    origin = '%s/%s' % (folder, 'plain.jpg')
+    file = helper.get_file('plain.jpg')
+    
+    shutil.copyfile(file, origin)
+
+    media = Media.get_class_by_file(origin, [Photo])
+    metadata_before = media.get_metadata()
+    result = media.set_original_name()
+    metadata_after = media.get_metadata()
+
+    assert metadata_before['original_name'] is None, metadata_before
+    assert metadata_after['original_name'] == 'plain.jpg', metadata_after
+    assert result is True, result
+
 def test_set_original_name():
     files = ['plain.jpg', 'audio.m4a', 'photo.nef', 'video.mov']
 

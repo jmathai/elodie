@@ -291,6 +291,7 @@ class FileSystem(object):
             print('%s is not a valid media file. Skipping...' % _file)
             return
 
+        media.set_original_name()
         metadata = media.get_metadata()
 
         directory_name = self.get_folder_path(metadata)
