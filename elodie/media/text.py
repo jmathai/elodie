@@ -72,6 +72,16 @@ class Text(Base):
         self.parse_metadata_line()
         return super(Text, self).get_metadata()
 
+    def get_original_name(self):
+        self.parse_metadata_line()
+
+        # We return the value if found in metadata
+        if(isinstance(self.metadata_line, dict) and
+                'original_name' in self.metadata_line):
+            return self.metadata_line['original_name']
+
+        return super(Text, self).get_original_name()
+
     def get_title(self):
         self.parse_metadata_line()
 
@@ -92,17 +102,35 @@ class Text(Base):
         self.reset_cache()
         return status
 
-    def set_location(self, latitude, longitude):
-        status = self.write_metadata(latitude=latitude, longitude=longitude)
-        self.reset_cache()
-        return status
-
     def set_date_taken(self, passed_in_time):
         if(time is None):
             return False
 
         seconds_since_epoch = time.mktime(passed_in_time.timetuple())
         status = self.write_metadata(date_taken=seconds_since_epoch)
+        self.reset_cache()
+        return status
+
+    def set_original_name(self):
+        """Sets the original name if not already set.
+
+        :returns: True, False, None
+        """
+        if(not self.is_valid()):
+            return None
+
+        # If EXIF original name tag is set then we return.
+        if self.get_original_name() is not None:
+            return None
+
+        source = self.source
+        name = os.path.basename(source)
+        status = self.write_metadata(original_name=name)
+        self.reset_cache()
+        return status
+
+    def set_location(self, latitude, longitude):
+        status = self.write_metadata(latitude=latitude, longitude=longitude)
         self.reset_cache()
         return status
 

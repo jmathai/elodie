@@ -90,6 +90,7 @@ class Base(object):
             'album': self.get_album(),
             'title': self.get_title(),
             'mime_type': self.get_mimetype(),
+            'original_name': self.get_original_name(),
             'base_name': os.path.splitext(os.path.basename(source))[0],
             'extension': self.get_extension(),
             'directory_path': os.path.dirname(source)
@@ -100,7 +101,7 @@ class Base(object):
     def get_mimetype(self):
         """Get the mimetype of the file.
 
-        :returns: str or None for a non-video
+        :returns: str or None for unsupported files.
         """
         if(not self.is_valid()):
             return None
@@ -111,6 +112,15 @@ class Base(object):
             return None
 
         return mimetype[0]
+
+    def get_original_name(self):
+        """Get the original name of the file from before it was imported.
+        Does not include the extension.
+        Overridden by Media class for files with EXIF.
+
+        :returns: str or None for unsupported files.
+        """
+        return None
 
     def get_title(self):
         """Base method for getting the title of a file
@@ -184,6 +194,12 @@ class Base(object):
         for key in kwargs:
             if(key in metadata):
                 self.metadata[key] = kwargs[key]
+
+    def set_original_name(self):
+        """Stores the original file name into EXIF/metadata.
+        :returns: bool
+        """
+        return False
 
     @classmethod
     def get_class_by_file(cls, _file, classes):

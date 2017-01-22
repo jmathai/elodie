@@ -29,6 +29,18 @@ def test_text_extensions():
 
     assert extensions == valid_extensions, valid_extensions
 
+def test_get_original_name():
+    media = Text(helper.get_file('with-original-name.txt'))
+    original_name = media.get_original_name()
+
+    assert original_name == 'originalname.txt', original_name
+
+def test_get_original_name_when_does_not_exist():
+    media = Text(helper.get_file('valid.txt'))
+    original_name = media.get_original_name()
+
+    assert original_name is None, original_name
+
 def test_get_title():
     text = Text(helper.get_file('valid.txt'))
     text.get_metadata()
@@ -268,3 +280,20 @@ def test_set_location_without_header():
     shutil.rmtree(folder)
 
     assert helper.isclose(metadata['latitude'], 11.1111111111), metadata['latitude']
+
+def test_set_original_name():
+    temporary_folder, folder = helper.create_working_folder()
+
+    random_file_name = '%s.txt' % helper.random_string(10)
+    origin = '%s/%s' % (folder, random_file_name)
+    shutil.copyfile(helper.get_file('valid.txt'), origin)
+
+    text = Text(origin)
+    metadata = text.get_metadata()
+    text.set_original_name()
+    metadata_updated = text.get_metadata()
+
+    shutil.rmtree(folder)
+
+    assert metadata['original_name'] is None, metadata['original_name']
+    assert metadata_updated['original_name'] == random_file_name, metadata_updated['original_name']
