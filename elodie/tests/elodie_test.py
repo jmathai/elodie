@@ -210,6 +210,27 @@ def test_import_destination_in_source():
 
     assert dest_path is None, dest_path
 
+def test_import_invalid_file_exit_code():
+    temporary_folder, folder = helper.create_working_folder()
+    temporary_folder_destination, folder_destination = helper.create_working_folder()
+
+    # use a good and bad
+    origin_invalid = '%s/invalid.jpg' % folder
+    shutil.copyfile(helper.get_file('invalid.jpg'), origin_invalid)
+
+    origin_valid = '%s/valid.jpg' % folder
+    shutil.copyfile(helper.get_file('plain.jpg'), origin_valid)
+
+    helper.reset_dbs()
+    runner = CliRunner()
+    result = runner.invoke(elodie._import, ['--destination', folder_destination, origin_invalid, origin_valid])
+    helper.restore_dbs()
+
+    shutil.rmtree(folder)
+    shutil.rmtree(folder_destination)
+
+    assert result.exit_code == 1, result.exit_code
+
 def test_update_location_on_audio():
     temporary_folder, folder = helper.create_working_folder()
     temporary_folder_destination, folder_destination = helper.create_working_folder()
@@ -427,6 +448,27 @@ def test_update_with_directory_passed_in():
     shutil.rmtree(folder_destination)
 
     assert updated_file_exists, updated_file_path
+
+def test_update_invalid_file_exit_code():
+    temporary_folder, folder = helper.create_working_folder()
+    temporary_folder_destination, folder_destination = helper.create_working_folder()
+
+    # use a good and bad
+    origin_invalid = '%s/invalid.jpg' % folder
+    shutil.copyfile(helper.get_file('invalid.jpg'), origin_invalid)
+
+    origin_valid = '%s/valid.jpg' % folder
+    shutil.copyfile(helper.get_file('plain.jpg'), origin_valid)
+
+    helper.reset_dbs()
+    runner = CliRunner()
+    result = runner.invoke(elodie._update, ['--album', 'test', origin_invalid, origin_valid])
+    helper.restore_dbs()
+
+    shutil.rmtree(folder)
+    shutil.rmtree(folder_destination)
+
+    assert result.exit_code == 1, result.exit_code
 
 def test_regenerate_db_invalid_source():
     runner = CliRunner()

@@ -3,6 +3,7 @@ Settings used by Elodie.
 """
 
 from os import path
+from sys import version_info
 
 #: If True, debug messages will be printed.
 debug = False
@@ -24,3 +25,6 @@ exiftool_config = path.join(script_directory, 'configs', 'ExifTool_config')
 
 #: Accepted language in responses from MapQuest
 accepted_language = 'en'
+
+# check python version, required in filesystem.py to trigger appropriate method
+python_version = version_info.major
