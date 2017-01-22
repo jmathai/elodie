@@ -29,6 +29,18 @@ def test_text_extensions():
 
     assert extensions == valid_extensions, valid_extensions
 
+def test_get_original_name():
+    media = Text(helper.get_file('with-original-name.txt'))
+    original_name = media.get_original_name()
+
+    assert original_name == 'originalname.txt', original_name
+
+def test_get_original_name_when_does_not_exist():
+    media = Text(helper.get_file('valid.txt'))
+    original_name = media.get_original_name()
+
+    assert original_name is None, original_name
+
 def test_get_title():
     text = Text(helper.get_file('valid.txt'))
     text.get_metadata()

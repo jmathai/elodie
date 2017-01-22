@@ -24,6 +24,10 @@ from elodie.media.video import Video
 os.environ['TZ'] = 'GMT'
 
 
+def test_get_all_subclasses():
+    subclasses = get_all_subclasses(Base)
+    expected = {Media, Base, Text, Photo, Video, Audio}
+    assert subclasses == expected, subclasses
 
 def test_get_class_by_file_without_extension():
     base_file = helper.get_file('withoutextension')
@@ -31,6 +35,32 @@ def test_get_class_by_file_without_extension():
     cls = Base.get_class_by_file(base_file, [Audio, Text, Photo, Video])
     
     assert cls is None, cls
+
+def test_get_original_name():
+    temporary_folder, folder = helper.create_working_folder()
+
+    origin = '%s/%s' % (folder, 'with-original-name.jpg')
+    file = helper.get_file('with-original-name.jpg')
+    
+    shutil.copyfile(file, origin)
+
+    media = Media.get_class_by_file(origin, [Photo])
+    original_name = media.get_original_name()
+
+    assert original_name == 'originalfilename.jpg', original_name
+
+def test_get_original_name_invalid_file():
+    temporary_folder, folder = helper.create_working_folder()
+
+    origin = '%s/%s' % (folder, 'invalid.jpg')
+    file = helper.get_file('invalid.jpg')
+    
+    shutil.copyfile(file, origin)
+
+    media = Media.get_class_by_file(origin, [Photo])
+    original_name = media.get_original_name()
+
+    assert original_name is None, original_name
 
 def test_set_album_from_folder_invalid_file():
     temporary_folder, folder = helper.create_working_folder()
@@ -106,8 +136,3 @@ def test_set_metadata_basename():
     new_metadata = photo.get_metadata()
 
     assert new_metadata['base_name'] == new_basename, new_metadata['base_name']
-
-def test_get_all_subclasses():
-    subclasses = get_all_subclasses(Base)
-    expected = {Media, Base, Text, Photo, Video, Audio}
-    assert subclasses == expected, subclasses
