@@ -10,6 +10,8 @@ are used to represent the actual files.
 """
 from __future__ import print_function
 
+import os
+
 # load modules
 from elodie import constants
 from elodie.dependencies import get_exiftool
@@ -46,6 +48,7 @@ class Media(Base):
         self.longitude_keys = ['EXIF:GPSLongitude']
         self.latitude_ref_key = 'EXIF:GPSLatitudeRef'
         self.longitude_ref_key = 'EXIF:GPSLongitudeRef'
+        self.original_name_key = 'XMP:OriginalFileName'
         self.set_gps_ref = True
         self.exiftool_addedargs = [
             '-overwrite_original',
@@ -91,10 +94,10 @@ class Media(Base):
             if key not in exif:
                 continue
 
-            # Cast coordinate to a float due to a bug in exiftool's 
+            # Cast coordinate to a float due to a bug in exiftool's
             #   -json output format.
             # https://github.com/jmathai/elodie/issues/171
-            # http://u88.n24.queensu.ca/exiftool/forum/index.php/topic,7952.0.html #noqa
+            # http://u88.n24.queensu.ca/exiftool/forum/index.php/topic,7952.0.html  # noqa
             this_coordinate = float(exif[key])
 
             # TODO: verify that we need to check ref key
@@ -128,6 +131,24 @@ class Media(Base):
                 return False
 
         return metadata
+
+    def get_original_name(self):
+        """Get the original name stored in EXIF.
+
+        :returns: str
+        """
+        if(not self.is_valid()):
+            return None
+
+        exiftool_attributes = self.get_exiftool_attributes()
+
+        if exiftool_attributes is None:
+            return None
+
+        if(self.original_name_key not in exiftool_attributes):
+            return None
+
+        return exiftool_attributes[self.original_name_key]
 
     def get_title(self):
         """Get the title for a photo of video
@@ -211,6 +232,25 @@ class Media(Base):
         status = self.__set_tags(tags)
         self.reset_cache()
 
+        return status
+
+    def set_original_name(self):
+        """Sets the original name EXIF tag if not already set.
+
+        :returns: True, False, None
+        """
+        if(not self.is_valid()):
+            return None
+
+        # If EXIF original name tag is set then we return.
+        if self.get_original_name() is not None:
+            return None
+
+        source = self.source
+        name = os.path.basename(source)
+        tags = {self.original_name_key: name}
+        status = self.__set_tags(tags)
+        self.reset_cache()
         return status
 
     def set_title(self, title):

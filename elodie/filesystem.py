@@ -291,6 +291,7 @@ class FileSystem(object):
             print('%s is not a valid media file. Skipping...' % _file)
             return
 
+        media.set_original_name()
         metadata = media.get_metadata()
 
         directory_name = self.get_folder_path(metadata)
@@ -334,9 +335,8 @@ class FileSystem(object):
             # Do not use copy2(), will have an issue when copying to a
             # network/mounted drive using copy and manual
             # set_date_from_filename gets the job done
-            # Do not use copy2(), will have an issue when copying to a network/mounted drive
             # shutil.copy seems slow, changing to streaming according to
-            # http://stackoverflow.com/questions/22078621/python-how-to-copy-files-fast
+            # http://stackoverflow.com/questions/22078621/python-how-to-copy-files-fast  # noqa
             compatability._copyfile(_file, dest_path)
             self.set_utime(media)
 

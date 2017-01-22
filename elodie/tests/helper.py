@@ -36,11 +36,16 @@ def create_working_folder():
 
 def download_file(name, destination):
     try:
-        final_name = '{}/{}{}'.format(destination, random_string(10), os.path.splitext(name)[1])
-        urllib.urlretrieve(
-            'https://s3.amazonaws.com/jmathai/github/elodie/{}'.format(name),
-            final_name
-        )
+        url_to_file = 'https://s3.amazonaws.com/jmathai/github/elodie/{}'.format(name)
+        # urlretrieve works differently for python 2 and 3
+        if constants.python_version < 3:
+            final_name = '{}/{}{}'.format(destination, random_string(10), os.path.splitext(name)[1])
+            urllib.urlretrieve(
+                url_to_file,
+                final_name
+            )
+        else:
+            final_name, headers = urllib.request.urlretrieve(url_to_file)
         return final_name
     except Exception as e:
         return False

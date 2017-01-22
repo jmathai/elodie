@@ -3,6 +3,7 @@ import shutil
 
 from elodie import constants
 
+
 def _decode(string, encoding='utf8'):
     """Return a utf8 encoded unicode string.
 
@@ -22,6 +23,7 @@ def _decode(string, encoding='utf8'):
 
     return string
 
+
 def _copyfile(src, dst):
     # Python 3 hangs using open/write method
     if (constants.python_version == 3):
@@ -37,7 +39,7 @@ def _copyfile(src, dst):
     WRITE_FLAGS = os.O_WRONLY | os.O_CREAT | os.O_TRUNC | O_BINARY
     TEN_MEGABYTES = 10485760
     BUFFER_SIZE = min(TEN_MEGABYTES, os.path.getsize(src))
-        
+
     try:
         fin = os.open(src, READ_FLAGS)
         stat = os.fstat(fin)
@@ -45,7 +47,11 @@ def _copyfile(src, dst):
         for x in iter(lambda: os.read(fin, BUFFER_SIZE), ""):
             os.write(fout, x)
     finally:
-        try: os.close(fin)
-        except: pass
-        try: os.close(fout)
-        except: pass
+        try:
+            os.close(fin)
+        except:
+            pass
+        try:
+            os.close(fout)
+        except:
+            pass
