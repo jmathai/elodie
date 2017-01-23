@@ -297,3 +297,22 @@ def test_set_original_name():
 
     assert metadata['original_name'] is None, metadata['original_name']
     assert metadata_updated['original_name'] == random_file_name, metadata_updated['original_name']
+
+def test_set_original_name_with_arg():
+    temporary_folder, folder = helper.create_working_folder()
+
+    random_file_name = '%s.txt' % helper.random_string(10)
+    origin = '%s/%s' % (folder, random_file_name)
+    shutil.copyfile(helper.get_file('valid.txt'), origin)
+
+    new_name = helper.random_string(15)
+
+    text = Text(origin)
+    metadata = text.get_metadata()
+    text.set_original_name(new_name)
+    metadata_updated = text.get_metadata()
+
+    shutil.rmtree(folder)
+
+    assert metadata['original_name'] is None, metadata['original_name']
+    assert metadata_updated['original_name'] == new_name, metadata_updated['original_name']

@@ -234,7 +234,7 @@ class Media(Base):
 
         return status
 
-    def set_original_name(self):
+    def set_original_name(self, name=None):
         """Sets the original name EXIF tag if not already set.
 
         :returns: True, False, None
@@ -247,7 +247,10 @@ class Media(Base):
             return None
 
         source = self.source
-        name = os.path.basename(source)
+
+        if not name:
+            name = os.path.basename(source)
+
         tags = {self.original_name_key: name}
         status = self.__set_tags(tags)
         self.reset_cache()
