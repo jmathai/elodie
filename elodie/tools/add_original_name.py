@@ -65,8 +65,9 @@ def parse_original_name_from_media(metadata):
 
     trimmed_base_name = re.sub(date_regex, '', base_name)
     if title:
+        normalized_title = re.sub(r'\W+', '-', title.lower())
         trimmed_base_name = trimmed_base_name.replace(
-            '-{}'.format(title), 
+            '-{}'.format(normalized_title), 
             ''
         )
 
