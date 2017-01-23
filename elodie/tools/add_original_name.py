@@ -34,7 +34,7 @@ def main(argv):
                 
         else:
             status = add_original_name(source, subclasses)
-            result.append((source, status))
+            result.append((path, status))
 
     result.write()
 
