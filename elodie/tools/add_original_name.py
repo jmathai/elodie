@@ -33,13 +33,17 @@ def main(argv):
                 result.append((source, status))
                 
         else:
-            status = add_original_name(source, subclasses)
+            status = add_original_name(path, subclasses)
             result.append((path, status))
 
     result.write()
 
 def add_original_name(source, subclasses):
     media = Media.get_class_by_file(source, subclasses)
+    if media is None:
+        print('{} is not a valid media object'.format(source))
+        return
+
     metadata = media.get_metadata()
     if metadata['original_name'] is not None:
         print('{} already has OriginalFileName...Skipping'.format(source))
