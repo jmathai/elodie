@@ -111,7 +111,7 @@ class Text(Base):
         self.reset_cache()
         return status
 
-    def set_original_name(self):
+    def set_original_name(self, name=None):
         """Sets the original name if not already set.
 
         :returns: True, False, None
@@ -124,7 +124,10 @@ class Text(Base):
             return None
 
         source = self.source
-        name = os.path.basename(source)
+
+        if not name:
+            name = os.path.basename(source)
+
         status = self.write_metadata(original_name=name)
         self.reset_cache()
         return status
