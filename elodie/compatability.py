@@ -1,10 +1,11 @@
 import os
 import shutil
+import sys
 
 from elodie import constants
 
 
-def _decode(string, encoding='utf8'):
+def _decode(string, encoding=sys.getfilesystemencoding()):
     """Return a utf8 encoded unicode string.
 
     Python2 and Python3 differ in how they handle strings.
