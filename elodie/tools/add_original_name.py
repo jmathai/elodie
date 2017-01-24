@@ -30,11 +30,10 @@ def main(argv):
         if os.path.isdir(path):
             for source in filesystem.get_all_files(path, None):
                 status = add_original_name(source, subclasses)
-                result.append((source, status))
-                
+                result.append((_decode(source), status))
         else:
             status = add_original_name(path, subclasses)
-            result.append((path, status))
+            result.append((_decode(path), status))
 
     result.write()
 
@@ -48,11 +47,10 @@ def add_original_name(source, subclasses):
     if metadata['original_name'] is not None:
         print('{} already has OriginalFileName...Skipping'.format(source))
         return
-    
+
     original_name = parse_original_name_from_media(metadata)
     return media.set_original_name(original_name)
-    
-    
+
 def parse_original_name_from_media(metadata):
     # 2015-07-23_04-31-12-img_9414-test3.jpg
     base_name = metadata['base_name']
