@@ -139,6 +139,14 @@ def test_place_name_cached():
 
     assert place_name['city'] == 'UNITTEST', place_name
 
+def test_place_name_no_default():
+    # See gh-160 for backwards compatability needed when a string is stored instead of a dict
+    helper.reset_dbs()
+    place_name = geolocation.place_name(123456.000, 123456.000)
+    helper.restore_dbs()
+
+    assert place_name['default'] == 'Unknown Location', place_name
+
 @mock.patch('elodie.geolocation.__KEY__', 'invalid_key')
 def test_lookup_with_invalid_key():
     res = geolocation.lookup(location='Sunnyvale, CA')
