@@ -144,7 +144,7 @@ def place_name(lat, lon):
                         lookup_place_name['default'] = address[loc]
 
     if('default' not in lookup_place_name):
-        lookup_place_name = 'Unknown Location'
+        lookup_place_name = {'default': 'Unknown Location'}
 
     if(lookup_place_name is not {}):
         db.add_location(lat, lon, lookup_place_name)
