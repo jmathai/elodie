@@ -111,18 +111,24 @@ class FileSystem(object):
         if(metadata is None):
             return None
 
-        # If the file has EXIF title we use that in the file name
-        #   (i.e. my-favorite-photo-img_1234.jpg)
-        # We want to remove the date prefix we add to the name.
-        # This helps when re-running the program on file which were already
-        #   processed.
-        base_name = re.sub(
-            '^\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}-',
-            '',
-            metadata['base_name']
-        )
-        if(len(base_name) == 0):
-            base_name = metadata['base_name']
+        # First we check if we have metadata['original_name'].
+        # We have to do this for backwards compatibility because
+        #   we original did not store this back into EXIF.
+        if(metadata['original_name'] is not None):
+            base_name = os.path.splitext(metadata['original_name'])[0]
+        else:
+            # If the file has EXIF title we use that in the file name
+            #   (i.e. my-favorite-photo-img_1234.jpg)
+            # We want to remove the date prefix we add to the name.
+            # This helps when re-running the program on file which were already
+            #   processed.
+            base_name = re.sub(
+                '^\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}-',
+                '',
+                metadata['base_name']
+            )
+            if(len(base_name) == 0):
+                base_name = metadata['base_name']
 
         if(
             'title' in metadata and

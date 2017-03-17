@@ -191,6 +191,20 @@ def test_get_file_name_with_title():
 
     assert file_name == helper.path_tz_fix('2015-12-05_00-59-26-with-title-some-title.jpg'), file_name
 
+def test_get_file_name_with_original_name_exif():
+    filesystem = FileSystem()
+    media = Photo(helper.get_file('with-filename-in-exif.jpg'))
+    file_name = filesystem.get_file_name(media)
+
+    assert file_name == helper.path_tz_fix('2015-12-05_00-59-26-foobar.jpg'), file_name
+
+def test_get_file_name_with_original_name_title_exif():
+    filesystem = FileSystem()
+    media = Photo(helper.get_file('with-filename-and-title-in-exif.jpg'))
+    file_name = filesystem.get_file_name(media)
+
+    assert file_name == helper.path_tz_fix('2015-12-05_00-59-26-foobar-foobar-title.jpg'), file_name
+
 def test_get_folder_path_plain():
     filesystem = FileSystem()
     media = Photo(helper.get_file('plain.jpg'))
