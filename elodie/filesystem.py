@@ -114,7 +114,7 @@ class FileSystem(object):
         # First we check if we have metadata['original_name'].
         # We have to do this for backwards compatibility because
         #   we original did not store this back into EXIF.
-        if(metadata['original_name'] is not None):
+        if('original_name' in metadata and metadata['original_name']):
             base_name = os.path.splitext(metadata['original_name'])[0]
         else:
             # If the file has EXIF title we use that in the file name
