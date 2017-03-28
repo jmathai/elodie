@@ -329,11 +329,6 @@ class FileSystem(object):
             shutil.move(_file, dest_path)
             os.utime(dest_path, (stat.st_atime, stat.st_mtime))
         else:
-            # Do not use copy2(), will have an issue when copying to a
-            # network/mounted drive using copy and manual
-            # set_date_from_filename gets the job done
-            # shutil.copy seems slow, changing to streaming according to
-            # http://stackoverflow.com/questions/22078621/python-how-to-copy-files-fast  # noqa
             compatability._copyfile(_file, dest_path)
             self.set_utime(media)
 
@@ -343,7 +338,7 @@ class FileSystem(object):
         return dest_path
 
     def set_utime(self, media):
-        """ Set the modification time on the file base on the file name.
+        """ Set the modification time on the file based on the file name.
         """
 
         # Initialize date taken to what's returned from the metadata function.
