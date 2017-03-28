@@ -163,18 +163,18 @@ class FileSystem(object):
 
         config_directory = config['Directory']
 
-        path_parts = re.search(
-                         '\%([^/]+)\/\%([^/]+)',
+        # Find all subpatterns of full_path that map to directories.
+        #  I.e. %foo/%bar => ['foo', 'bar']
+        path_parts = re.findall(
+                         '\%([a-z]+)',
                          config_directory['full_path']
                      )
 
-        if not path_parts or len(path_parts.groups()) != 2:
+        if not path_parts or len(path_parts) == 0:
             return self.default_folder_path_definition
 
-        path_part_groups = path_parts.groups()
         self.cached_folder_path_definition = [
-            (path_part_groups[0], config_directory[path_part_groups[0]]),
-            (path_part_groups[1], config_directory[path_part_groups[1]]),
+            (part, config_directory[part]) for part in path_parts
         ]
         return self.cached_folder_path_definition
 
@@ -188,25 +188,21 @@ class FileSystem(object):
         path = []
         for path_part in path_parts:
             part, mask = path_part
-            if part == 'date':
+            if part in ('date', 'day', 'month', 'year'):
                 path.append(time.strftime(mask, metadata['date_taken']))
-            elif part == 'location':
-                if(
-                    metadata['latitude'] is not None and
-                    metadata['longitude'] is not None
-                ):
-                    place_name = geolocation.place_name(
-                        metadata['latitude'],
-                        metadata['longitude']
-                    )
-                    if(place_name is not None):
-                        location_parts = re.findall('(%[^%]+)', mask)
-                        parsed_folder_name = self.parse_mask_for_location(
-                            mask,
-                            location_parts,
-                            place_name,
-                        )
-                        path.append(parsed_folder_name)
+            elif part in ('location', 'city', 'state', 'country'):
+                place_name = geolocation.place_name(
+                    metadata['latitude'],
+                    metadata['longitude']
+                )
+
+                location_parts = re.findall('(%[^%]+)', mask)
+                parsed_folder_name = self.parse_mask_for_location(
+                    mask,
+                    location_parts,
+                    place_name,
+                )
+                path.append(parsed_folder_name)
 
         # For now we always make the leaf folder an album if it's in the EXIF.
         # This is to preserve backwards compatability until we figure out how
@@ -217,11 +213,6 @@ class FileSystem(object):
             elif(len(path) == 2):
                 path[1] = metadata['album']
 
-        # if we don't have a 2nd level directory we use 'Unknown Location'
-        if(len(path) < 2):
-            path.append('Unknown Location')
-
-        # return '/'.join(path[::-1])
         return os.path.join(*path)
 
     def parse_mask_for_location(self, mask, location_parts, place_name):
