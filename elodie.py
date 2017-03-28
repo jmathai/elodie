@@ -185,18 +185,14 @@ def update_location(media, file_path, location_name):
             sys.exit(1)
 
         config = load_config()
-        if ('Location' in config) and (config['Location'].getboolean('write_location')):
+        if 'Location' in config and config['Location'].getboolean('write_location'):
             # If config says to update locations
             log.info(u'Human readable location = %s' % (location_name))
-            print('Human readable location = %s' % (location_name))
-
-            print('lat = %s' % location_coords['latitude'])
-            print('lon = %s' % location_coords['longitude'])
             place_name = geolocation.place_name(location_coords['latitude'],
                                               location_coords['longitude']
                 )
             if (place_name is not None):
-                media.set_address(place_name)
+                media.set_address_tags(place_name)
 
     return True
 

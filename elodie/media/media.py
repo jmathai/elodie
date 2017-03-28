@@ -211,11 +211,10 @@ class Media(Base):
         self.reset_cache()
         return status
 
-    def set_address(self, location):
+    def set_address_tags(self, location):
         if(not self.is_valid()):
             return None
 
-        print('DEBUG - location = %s' % location)
         if (location is not None):
             tags = {self.country_key: location['country'],
                     self.state_key: location['state'],
