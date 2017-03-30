@@ -26,8 +26,15 @@ def _decode(string, encoding=sys.getfilesystemencoding()):
 
 
 def _copyfile(src, dst):
-    # Python 3 hangs using open/write method
+    # shutil.copy seems slow, changing to streaming according to
+    # http://stackoverflow.com/questions/22078621/python-how-to-copy-files-fast  # noqa
+    # Python 3 hangs using open/write method so we proceed with shutil.copy
+    #  and only perform the optimized write for Python 2.
     if (constants.python_version == 3):
+        # Do not use copy2(), it will have an issue when copying to a
+        #  network/mounted drive.
+        # Using copy and manual set_date_from_filename gets the job done.
+        # The calling function is responsible for setting the time.
         shutil.copy(src, dst)
         return
 

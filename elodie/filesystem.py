@@ -114,7 +114,7 @@ class FileSystem(object):
         # First we check if we have metadata['original_name'].
         # We have to do this for backwards compatibility because
         #   we original did not store this back into EXIF.
-        if(metadata['original_name'] is not None):
+        if('original_name' in metadata and metadata['original_name']):
             base_name = os.path.splitext(metadata['original_name'])[0]
         else:
             # If the file has EXIF title we use that in the file name
@@ -163,18 +163,18 @@ class FileSystem(object):
 
         config_directory = config['Directory']
 
-        path_parts = re.search(
-                         '\%([^/]+)\/\%([^/]+)',
+        # Find all subpatterns of full_path that map to directories.
+        #  I.e. %foo/%bar => ['foo', 'bar']
+        path_parts = re.findall(
+                         '\%([a-z]+)',
                          config_directory['full_path']
                      )
 
-        if not path_parts or len(path_parts.groups()) != 2:
+        if not path_parts or len(path_parts) == 0:
             return self.default_folder_path_definition
 
-        path_part_groups = path_parts.groups()
         self.cached_folder_path_definition = [
-            (path_part_groups[0], config_directory[path_part_groups[0]]),
-            (path_part_groups[1], config_directory[path_part_groups[1]]),
+            (part, config_directory[part]) for part in path_parts
         ]
         return self.cached_folder_path_definition
 
@@ -188,25 +188,21 @@ class FileSystem(object):
         path = []
         for path_part in path_parts:
             part, mask = path_part
-            if part == 'date':
+            if part in ('date', 'day', 'month', 'year'):
                 path.append(time.strftime(mask, metadata['date_taken']))
-            elif part == 'location':
-                if(
-                    metadata['latitude'] is not None and
-                    metadata['longitude'] is not None
-                ):
-                    place_name = geolocation.place_name(
-                        metadata['latitude'],
-                        metadata['longitude']
-                    )
-                    if(place_name is not None):
-                        location_parts = re.findall('(%[^%]+)', mask)
-                        parsed_folder_name = self.parse_mask_for_location(
-                            mask,
-                            location_parts,
-                            place_name,
-                        )
-                        path.append(parsed_folder_name)
+            elif part in ('location', 'city', 'state', 'country'):
+                place_name = geolocation.place_name(
+                    metadata['latitude'],
+                    metadata['longitude']
+                )
+
+                location_parts = re.findall('(%[^%]+)', mask)
+                parsed_folder_name = self.parse_mask_for_location(
+                    mask,
+                    location_parts,
+                    place_name,
+                )
+                path.append(parsed_folder_name)
 
         # For now we always make the leaf folder an album if it's in the EXIF.
         # This is to preserve backwards compatability until we figure out how
@@ -217,11 +213,6 @@ class FileSystem(object):
             elif(len(path) == 2):
                 path[1] = metadata['album']
 
-        # if we don't have a 2nd level directory we use 'Unknown Location'
-        if(len(path) < 2):
-            path.append('Unknown Location')
-
-        # return '/'.join(path[::-1])
         return os.path.join(*path)
 
     def parse_mask_for_location(self, mask, location_parts, place_name):
@@ -338,11 +329,6 @@ class FileSystem(object):
             shutil.move(_file, dest_path)
             os.utime(dest_path, (stat.st_atime, stat.st_mtime))
         else:
-            # Do not use copy2(), will have an issue when copying to a
-            # network/mounted drive using copy and manual
-            # set_date_from_filename gets the job done
-            # shutil.copy seems slow, changing to streaming according to
-            # http://stackoverflow.com/questions/22078621/python-how-to-copy-files-fast  # noqa
             compatability._copyfile(_file, dest_path)
             self.set_utime(media)
 
@@ -352,7 +338,7 @@ class FileSystem(object):
         return dest_path
 
     def set_utime(self, media):
-        """ Set the modification time on the file base on the file name.
+        """ Set the modification time on the file based on the file name.
         """
 
         # Initialize date taken to what's returned from the metadata function.

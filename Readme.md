@@ -122,7 +122,8 @@ I work tirelessly to make sure your photos are always sorted and organized so yo
 You don't love me yet but you will.
 
 I only do 3 things.
-* Firstly I organize your existing collection of photos.
+
+* Firstly I organize your existing collection of photos into a customizable folder structure.
 * Second I help make it easy for all the photos you haven't taken yet to flow into the exact location they belong.
 * Third but not least I promise to do all this without a yucky propietary database that some friends of mine use.
 
@@ -152,16 +153,15 @@ Updating EXIF of photos from the command line.
 
 I'm most helpful when I'm fully utilized to keep your photos organized.
 
-Here's an example of a very asynchronous setup.
+Here's an example of how I can create 3 geographically distributed copies of your meticulously organized photo library.
+
 * Specify a folder in your Dropbox/Google Drive to store the organized photo library.
-* Set up a Hazel rule to notify me when photos arrive in `~/Downloads` so I can import them.
-  * The rule waits 1 minute before processing the photo which gives you a chance to move it elsewhere if it's not something you want in the library.
-* Use AirDrop to transfer files from any iPhone to your laptop. That goes to `~/Downloads` for the Hazel rule to process.
-  * AirDrop is fast, easy for anyone to use and once the transfer is finished your don't have to stick around. I'll move it to Dropbox/Google Drive and Dropbox/Google Drive will sync it to their servers.
+* Set up a cron job to import photos in `~/Ready-To-Upload`.
+* Add photos to `~/Ready-To-Upload` and wait for your cron job to trigger.
 * Periodically recategorize photos by fixing their location or date or by adding them to an album.
 * Have a Synology at home set to automatically sync down from Dropbox/Google Drive.
 
-This setup means you can quickly get photos off your or anyone's phone and know that they'll be organized and backed up in 3 locations by the time you're ready to view them.
+This setup means you can quickly get photos off your phone or dSLR and know that they'll be organized and backed up in 3 locations by the time you're ready to view or share them.
 
 <p align="center"><img src ="creative/workflow-simplified-white-bg.png" /></p>
 
@@ -209,33 +209,60 @@ OK, so what if you don't like the folders being named `2015-07-Jul/Mountain View
 
 You can add a custom folder structure by editing your `config.ini` file. This is what I include in the sample config file.
 
+#### Custom folder examples
+
+Sometimes examples are easier to understand than explainations so I'll start there. If you'd like to understand my magic I explain it in more detail below these examples. You customize your folder structure in the `Directory` section of your `config.ini`.
+
 ```
-[Directory]
-date=%Y-%m-%b
-location=%city
+location=%city, %state
+year=%Y
+full_path=%year/%location
+
+# 2015/Sunnyvale, California
+
+location=%city, %state
+month=%B
+year=%Y
+full_path=%year/%month/%location
+
+# 2015/December/Sunnyvale, California
+
+location=%city, %state
+month=%m
+year=%Y
+date=%year-%month
 full_path=%date/%location
+
+# 2015-12/Sunnyvale, California
+
+full_path=%country/%state/%city
+
+# US/California/Sunnyvale
+
 ```
 
-There needs to be 2 levels of folders and you can construct them using the date and location. Use `full_path` to determine how the 2 levels are nested. If for some reason your config is not correct I will use the default formatting which is found in `config.ini-sample`.
+#### How folder customization works
 
-The default formatting from the above config looks like `2015-07-Jul/Mountain View`.
+You can construct your folder structure using a combination of the location and dates. Under the `Directory` section of your `config.ini` file you can define placeholder names and assign each a value. For example, `date=%Y-%m` would create a date placeholder with a value of YYYY-MM which would be filled in with the date from the EXIF on the photo.
 
-#### Customizing the date format
+The placeholders can be used to define the folder structure you'd like to create. The example above happens to be the default structure and would look like `2015-07-Jul/Mountain View`.
 
-You can use any of [the standard Python time directives](https://docs.python.org/2/library/datetime.html#strftime-and-strptime-behavior) to create your ideal structure.
+I have a few built-in location placeholders you can use.
 
-* To have `201601`, use `date=%Y%m`
-* For `Sunday, 01 January 2016`, use `date=%A, %d %B %Y`
-* Python also has some pre-built formats. So you can get `Sun Jan 01 12:34:56 2016`, by using `%c`
+* `%city` the name of the city the photo was taken. Requires geolocation data in EXIF.
+* `%state` the name of the state the photo was taken. Requires geolocation data in EXIF.
+* `%country` the name of the country the photo was taken. Requires geolocation data in EXIF.
 
-#### Customizing the location format
+I also have some date placeholders you can customize. You can use any of [the standard Python time directives](https://docs.python.org/2/library/datetime.html#strftime-and-strptime-behavior) to customize the date format to your liking.
 
-I use the [Open Street Maps Nominatim reverse geocoding API](http://wiki.openstreetmap.org/wiki/Nominatim#Example) provided by MapQuest. You can use `city`, `state` and `country` to construct the folder name.
+* `%day` the day the photo was taken.
+* `%month` the month the photo was taken.
+* `%year` the year the photo was taken.
 
-* To have `Sunnyvale`, use `location=%city`
-* To have `Sunnyvale-CA`, use `location=%city-%state
+In addition to my built-in and date placeholders you can combine them into a single folder name using my complex placeholders.
 
-Sometimes a location may not have all of the values available. If your format is `%city-%state` and `city` was not returned then the folder name will be `%state`. Take note that I'll strip out extra characters so you don't end up with folders name `-%state` when `city` is not found.
+* `%location` can be used to combine multiple values of `%city`, `%state` and `%country`. For example, `location=%city, %state` would result in folder names like `Sunnyvale, California`.
+* `%date` can be used to combine multiple values from [the standard Python time directives](https://docs.python.org/2/library/datetime.html#strftime-and-strptime-behavior). For example, `date=%Y-%m` would result in folder names like `2015-12`.
 
 ### Reorganize by changing location and dates
 
