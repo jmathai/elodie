@@ -19,6 +19,7 @@ from elodie import log
 from elodie.localstorage import Db
 
 __KEY__ = None
+__DEFAULT_LOCATION__ = 'Unknown Location'
 
 
 def coordinates_by_name(name):
@@ -115,10 +116,14 @@ def get_key():
 
 
 def place_name(lat, lon):
+    lookup_place_name_default = {'default': __DEFAULT_LOCATION__}
+    if(lat is None or lon is None):
+        return lookup_place_name_default
+
     # Convert lat/lon to floats
-    if not isinstance(lat, float):
+    if(not isinstance(lat, float)):
         lat = float(lat)
-    if not isinstance(lon, float):
+    if(not isinstance(lon, float)):
         lon = float(lon)
 
     # Try to get cached location first
@@ -132,19 +137,18 @@ def place_name(lat, lon):
 
     lookup_place_name = {}
     geolocation_info = lookup(lat=lat, lon=lon)
-    if(geolocation_info is not None):
-        if('address' in geolocation_info):
-            address = geolocation_info['address']
-            for loc in ['city', 'state', 'country']:
-                if(loc in address):
-                    lookup_place_name[loc] = address[loc]
-                    # In many cases the desired key is not available so we
-                    #  set the most specific as the default.
-                    if('default' not in lookup_place_name):
-                        lookup_place_name['default'] = address[loc]
+    if(geolocation_info is not None and 'address' in geolocation_info):
+        address = geolocation_info['address']
+        for loc in ['city', 'state', 'country']:
+            if(loc in address):
+                lookup_place_name[loc] = address[loc]
+                # In many cases the desired key is not available so we
+                #  set the most specific as the default.
+                if('default' not in lookup_place_name):
+                    lookup_place_name['default'] = address[loc]
 
     if('default' not in lookup_place_name):
-        lookup_place_name = {'default': 'Unknown Location'}
+        lookup_place_name = lookup_place_name_default
 
     if(lookup_place_name is not {}):
         db.add_location(lat, lon, lookup_place_name)
