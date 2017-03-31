@@ -236,8 +236,18 @@ def _update(album, location, time, title, paths):
             continue
 
         current_file = os.path.expanduser(current_file)
-        destination = os.path.expanduser(os.path.dirname(os.path.dirname(
-                                         os.path.dirname(current_file))))
+
+        # The destination folder structure could contain any number of levels
+        #  So we calculate that and traverse up the tree.
+        # '/path/to/file/photo.jpg' -> '/path/to/file' ->
+        #  ['path','to','file'] -> ['path','to'] -> '/path/to'
+        current_directory = os.path.dirname(current_file)
+        destination_depth = -1 * len(FILESYSTEM.get_folder_path_definition())
+        destination = os.sep.join(
+                          os.path.normpath(
+                              current_directory
+                          ).split(os.sep)[:destination_depth]
+                      )
 
         media = Media.get_class_by_file(current_file, get_all_subclasses())
         if not media:

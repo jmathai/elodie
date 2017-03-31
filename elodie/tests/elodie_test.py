@@ -1,5 +1,6 @@
 # Project imports
 from imp import load_source
+import mock
 import os
 import sys
 import shutil
@@ -8,6 +9,7 @@ from click.testing import CliRunner
 from nose.plugins.skip import SkipTest
 from nose.tools import assert_raises
 from six import text_type, unichr as six_unichr
+from tempfile import gettempdir
 
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))))
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))))
@@ -15,6 +17,7 @@ sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirna
 import helper
 elodie = load_source('elodie', os.path.abspath('{}/../../elodie.py'.format(os.path.dirname(os.path.realpath(__file__)))))
 
+from elodie.config import load_config
 from elodie.localstorage import Db
 from elodie.media.audio import Audio
 from elodie.media.photo import Photo
@@ -426,6 +429,38 @@ def test_update_time_on_video():
     assert status == True, status
     assert metadata['date_taken'] != metadata_processed['date_taken']
     assert metadata_processed['date_taken'] == helper.time_convert((2000, 1, 1, 12, 0, 0, 5, 1, 0)), metadata_processed['date_taken']
+
+@mock.patch('elodie.config.config_file', '%s/config.ini-custom-path' % gettempdir())
+def test_update_with_more_than_two_levels_of_directories():
+    with open('%s/config.ini-custom-path' % gettempdir(), 'w') as f:
+        f.write("""
+[Directory]
+year=%Y
+month=%m
+day=%d
+full_path=%year/%month/%day
+        """)
+
+    temporary_folder, folder = helper.create_working_folder()
+    temporary_folder_destination, folder_destination = helper.create_working_folder()
+
+    origin = '%s/plain.jpg' % folder
+    shutil.copyfile(helper.get_file('plain.jpg'), origin)
+
+    if hasattr(load_config, 'config'):
+        del load_config.config
+    helper.reset_dbs()
+    runner = CliRunner()
+    result = runner.invoke(elodie._import, ['--destination', folder_destination, folder])
+    runner2 = CliRunner()
+    result = runner2.invoke(elodie._update, ['--title', 'test title', folder_destination])
+    helper.restore_dbs()
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+
+    updated_file_path = '{}/2015/12/05/2015-12-05_00-59-26-plain-test-title.jpg'.format(folder_destination)
+    assert os.path.isfile(updated_file_path), updated_file_path
 
 def test_update_with_directory_passed_in():
     temporary_folder, folder = helper.create_working_folder()
