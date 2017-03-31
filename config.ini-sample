@@ -6,3 +6,5 @@ date=%Y-%m-%b
 location=%city
 full_path=%date/%location
 
+[Location]
+write_location=false

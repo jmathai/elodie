@@ -50,6 +50,10 @@ class Media(Base):
         self.longitude_ref_key = 'EXIF:GPSLongitudeRef'
         self.original_name_key = 'XMP:OriginalFileName'
         self.set_gps_ref = True
+        self.country_key = 'XMP:Country'
+        self.state_key = 'XMP:State'
+        self.city_key = 'XMP:City'
+        self.Location_key = 'XMP:Location'
         self.exiftool_addedargs = [
             '-overwrite_original',
             u'-config',
@@ -205,6 +209,21 @@ class Media(Base):
 
         status = self.__set_tags(tags)
         self.reset_cache()
+        return status
+
+    def set_address_tags(self, location):
+        if(not self.is_valid()):
+            return None
+
+        if (location is not None):
+            tags = {self.country_key: location['country'],
+                    self.state_key: location['state'],
+                    self.city_key: location['city']
+                    }
+
+        status = self.__set_tags(tags)
+        self.reset_cache()
+
         return status
 
     def set_location(self, latitude, longitude):

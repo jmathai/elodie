@@ -28,6 +28,7 @@ from elodie.media.audio import Audio
 from elodie.media.photo import Photo
 from elodie.media.video import Video
 from elodie.result import Result
+from elodie.config import load_config
 
 
 FILESYSTEM = FileSystem()
@@ -171,6 +172,7 @@ def update_location(media, file_path, location_name):
     """Update location exif metadata of media.
     """
     location_coords = geolocation.coordinates_by_name(location_name)
+    print('DEBUG - location_coords = %s' % (location_coords))
 
     if location_coords and 'latitude' in location_coords and \
             'longitude' in location_coords:
@@ -181,8 +183,18 @@ def update_location(media, file_path, location_name):
             print(('{"source":"%s",' % file_path,
                 '"error_msg":"Failed to update location"}'))
             sys.exit(1)
-    return True
 
+        config = load_config()
+        if 'Location' in config and config['Location'].getboolean('write_location'):
+            # If config says to update locations
+            log.info(u'Human readable location = %s' % (location_name))
+            place_name = geolocation.place_name(location_coords['latitude'],
+                                              location_coords['longitude']
+                )
+            if (place_name is not None):
+                media.set_address_tags(place_name)
+
+    return True
 
 def update_time(media, file_path, time_string):
     """Update time exif metadata of media.
