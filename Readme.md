@@ -207,7 +207,7 @@ Not too bad, eh? Wait a second, what's *Unknown Location*? If I'm not able to fi
 
 OK, so what if you don't like the folders being named `2015-07-Jul/Mountain View`? No problem!
 
-You can add a custom folder structure by editing your `config.ini` file. This is what I include in the sample config file.
+You can add a custom folder structure by editing your `config.ini` file.
 
 #### Custom folder examples
 
@@ -217,28 +217,23 @@ Sometimes examples are easier to understand than explainations so I'll start the
 location=%city, %state
 year=%Y
 full_path=%year/%location
-
-# 2015/Sunnyvale, California
+# -> 2015/Sunnyvale, California
 
 location=%city, %state
 month=%B
 year=%Y
 full_path=%year/%month/%location
-
-# 2015/December/Sunnyvale, California
+# -> 2015/December/Sunnyvale, California
 
 location=%city, %state
 month=%m
 year=%Y
 date=%year-%month
 full_path=%date/%location
-
-# 2015-12/Sunnyvale, California
+# -> 2015-12/Sunnyvale, California
 
 full_path=%country/%state/%city
-
-# US/California/Sunnyvale
-
+# -> US/California/Sunnyvale
 ```
 
 #### How folder customization works
