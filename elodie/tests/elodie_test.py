@@ -451,7 +451,7 @@ full_path=%year/%month/%day
         del load_config.config
     print(elodie.config.config_file)
     cfg = load_config()
-    print(cfg)
+    print(cfg['Directory'])
     helper.reset_dbs()
     runner = CliRunner()
     result = runner.invoke(elodie._import, ['--destination', folder_destination, folder])
