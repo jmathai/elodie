@@ -449,16 +449,12 @@ full_path=%year/%month/%day
 
     if hasattr(load_config, 'config'):
         del load_config.config
-    print(elodie.config.config_file)
     cfg = load_config()
-    print(cfg['Directory']['full_path'])
     helper.reset_dbs()
     runner = CliRunner()
     result = runner.invoke(elodie._import, ['--destination', folder_destination, folder])
-    print(result.output)
     runner2 = CliRunner()
     result = runner2.invoke(elodie._update, ['--title', 'test title', folder_destination])
-    print(result.output)
     helper.restore_dbs()
     if hasattr(load_config, 'config'):
         del load_config.config
