@@ -430,9 +430,9 @@ def test_update_time_on_video():
     assert metadata['date_taken'] != metadata_processed['date_taken']
     assert metadata_processed['date_taken'] == helper.time_convert((2000, 1, 1, 12, 0, 0, 5, 1, 0)), metadata_processed['date_taken']
 
-@mock.patch('elodie.config.config_file', '%s/config.ini-custom-path' % gettempdir())
+@mock.patch('elodie.config.config_file', '%s/config.ini-multiple-directories' % gettempdir())
 def test_update_with_more_than_two_levels_of_directories():
-    with open('%s/config.ini-custom-path' % gettempdir(), 'w') as f:
+    with open('%s/config.ini-multiple-directories' % gettempdir(), 'w') as f:
         f.write("""
 [Directory]
 year=%Y
@@ -449,18 +449,15 @@ full_path=%year/%month/%day
 
     if hasattr(load_config, 'config'):
         del load_config.config
+    print(elodie.config.config_file)
     helper.reset_dbs()
     runner = CliRunner()
     result = runner.invoke(elodie._import, ['--destination', folder_destination, folder])
     print(result.output)
-
-    if hasattr(load_config, 'config'):
-        del load_config.config
     runner2 = CliRunner()
     result = runner2.invoke(elodie._update, ['--title', 'test title', folder_destination])
     print(result.output)
     helper.restore_dbs()
-
     if hasattr(load_config, 'config'):
         del load_config.config
 
