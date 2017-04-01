@@ -161,7 +161,6 @@ class FileSystem(object):
         if('Directory' not in config):
             return self.default_folder_path_definition
 
-        print(config)
         config_directory = config['Directory']
 
         # Find all subpatterns of full_path that map to directories.

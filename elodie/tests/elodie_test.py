@@ -450,7 +450,8 @@ full_path=%year/%month/%day
     if hasattr(load_config, 'config'):
         del load_config.config
     print(elodie.config.config_file)
-    print(load_config.config)
+    cfg = load_config()
+    print(cfg)
     helper.reset_dbs()
     runner = CliRunner()
     result = runner.invoke(elodie._import, ['--destination', folder_destination, folder])
