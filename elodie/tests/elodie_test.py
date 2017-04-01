@@ -453,10 +453,14 @@ full_path=%year/%month/%day
     runner = CliRunner()
     result = runner.invoke(elodie._import, ['--destination', folder_destination, folder])
     print(result.output)
+
+    if hasattr(load_config, 'config'):
+        del load_config.config
     runner2 = CliRunner()
     result = runner2.invoke(elodie._update, ['--title', 'test title', folder_destination])
     print(result.output)
     helper.restore_dbs()
+
     if hasattr(load_config, 'config'):
         del load_config.config
 
