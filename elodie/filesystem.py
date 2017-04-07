@@ -24,10 +24,15 @@ class FileSystem(object):
 
     def __init__(self):
         # The default folder path is along the lines of 2015-01-Jan/Chicago
-        self.default_folder_path_definition = [
-            ('date', '%Y-%m-%b'), ('location', '%city')
-        ]
+        self.default_folder_path_definition = {
+            'date': '%Y-%m-%b',
+            'location': '%city',
+            'full_path': '%date/%album|%location|"{}"'.format(
+                            geolocation.__DEFAULT_LOCATION__
+                         ),
+        }
         self.cached_folder_path_definition = None
+        self.default_parts = ['album', 'city', 'state', 'country']
 
     def create_directory(self, directory_path):
         """Create a directory if it does not already exist.
@@ -149,6 +154,22 @@ class FileSystem(object):
         return file_name.lower()
 
     def get_folder_path_definition(self):
+        """Returns a list of folder definitions.
+
+        Each element in the list represents a folder.
+        Fallback folders are supported and are nested lists.
+        Return values take the following form.
+        [
+            ('date', '%Y-%m-%d'),
+            [
+                ('location', '%city'),
+                ('album', ''),
+                ('"Unknown Location", '')
+            ]
+        ]
+
+        :returns: list
+        """
         # If we've done this already then return it immediately without
         # incurring any extra work
         if self.cached_folder_path_definition is not None:
@@ -158,28 +179,47 @@ class FileSystem(object):
 
         # If Directory is in the config we assume full_path and its
         #  corresponding values (date, location) are also present
-        if('Directory' not in config):
-            return self.default_folder_path_definition
-
-        config_directory = config['Directory']
+        config_directory = self.default_folder_path_definition
+        if('Directory' in config):
+            config_directory = config['Directory']
 
         # Find all subpatterns of full_path that map to directories.
         #  I.e. %foo/%bar => ['foo', 'bar']
+        #  I.e. %foo/%bar|%example|"something" => ['foo', 'bar|example|"something"']
         path_parts = re.findall(
-                         '\%([a-z]+)',
+                         '(\%[^/]+)',
                          config_directory['full_path']
                      )
+        print(path_parts)
 
         if not path_parts or len(path_parts) == 0:
             return self.default_folder_path_definition
 
-        self.cached_folder_path_definition = [
-            (part, config_directory[part]) for part in path_parts
-        ]
+        self.cached_folder_path_definition = []
+        for part in path_parts:
+            if part in config_directory:
+                part = part[1:]
+                self.cached_folder_path_definition.append(
+                    [(part, config_directory[part])]
+                )
+            elif part in self.default_parts:
+                part = part[1:]
+                self.cached_folder_path_definition.append(
+                    [(part, '')]
+                )
+            else:
+                this_part = []
+                for p in part.split('|'):
+                    p = p[1:]
+                    this_part.append(
+                        (p, config_directory[p] if p in config_directory else '')
+                    )
+                self.cached_folder_path_definition.append(this_part)
+
         return self.cached_folder_path_definition
 
     def get_folder_path(self, metadata):
-        """Get folder path by various parameters.
+        """Given a media's metadata this function returns the folder path as a string.
 
         :param metadata dict: Metadata dictionary.
         :returns: str
@@ -187,31 +227,39 @@ class FileSystem(object):
         path_parts = self.get_folder_path_definition()
         path = []
         for path_part in path_parts:
-            part, mask = path_part
-            if part in ('date', 'day', 'month', 'year'):
-                path.append(time.strftime(mask, metadata['date_taken']))
-            elif part in ('location', 'city', 'state', 'country'):
-                place_name = geolocation.place_name(
-                    metadata['latitude'],
-                    metadata['longitude']
-                )
+            # We support fallback values so that
+            #  'album|city|"Unknown Location"
+            #  %album|%city|"Unknown Location" results in
+            #  My Album - when an album exists
+            #  Sunnyvale - when no album exists but a city exists
+            #  Unknown Location - when neither an album nor location exist
+            for this_part in path_part:
+                part, mask = this_part
+                if part in ('date', 'day', 'month', 'year'):
+                    path.append(
+                        time.strftime(mask, metadata['date_taken'])
+                    )
+                    break
+                elif part in ('location', 'city', 'state', 'country'):
+                    place_name = geolocation.place_name(
+                        metadata['latitude'],
+                        metadata['longitude']
+                    )
 
-                location_parts = re.findall('(%[^%]+)', mask)
-                parsed_folder_name = self.parse_mask_for_location(
-                    mask,
-                    location_parts,
-                    place_name,
-                )
-                path.append(parsed_folder_name)
-
-        # For now we always make the leaf folder an album if it's in the EXIF.
-        # This is to preserve backwards compatability until we figure out how
-        # to include %album in the config.ini syntax.
-        if(metadata['album'] is not None):
-            if(len(path) == 1):
-                path.append(metadata['album'])
-            elif(len(path) == 2):
-                path[1] = metadata['album']
+                    location_parts = re.findall('(%[^%]+)', mask)
+                    parsed_folder_name = self.parse_mask_for_location(
+                        mask,
+                        location_parts,
+                        place_name,
+                    )
+                    path.append(parsed_folder_name)
+                    break
+                elif part in ('album'):
+                    if metadata['album']:
+                        path.append(metadata['album'])
+                        break
+                elif part.startswith('"') and part.endswith('"'):
+                    path.append(part[1:-1])
 
         return os.path.join(*path)
 
