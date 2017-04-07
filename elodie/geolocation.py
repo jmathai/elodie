@@ -147,13 +147,14 @@ def place_name(lat, lon):
                 if('default' not in lookup_place_name):
                     lookup_place_name['default'] = address[loc]
 
-    if('default' not in lookup_place_name):
-        lookup_place_name = lookup_place_name_default
-
     if(lookup_place_name is not {}):
         db.add_location(lat, lon, lookup_place_name)
         # TODO: Maybe this should only be done on exit and not for every write.
         db.update_location_db()
+
+    if('default' not in lookup_place_name):
+        lookup_place_name = lookup_place_name_default
+
     return lookup_place_name
 
 
