@@ -190,7 +190,6 @@ class FileSystem(object):
                          '(\%[^/]+)',
                          config_directory['full_path']
                      )
-        print(path_parts)
 
         if not path_parts or len(path_parts) == 0:
             return self.default_folder_path_definition

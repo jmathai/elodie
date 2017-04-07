@@ -588,6 +588,37 @@ def test_process_video_with_album_then_title():
     assert origin_checksum != destination_checksum, destination_checksum
     assert helper.path_tz_fix(os.path.join('2015-01-Jan','test_album','2015-01-19_12-45-11-movie-test_title.mov')) in destination, destination
 
+@mock.patch('elodie.config.config_file', '%s/config.ini-multiple-directories' % gettempdir())
+def test_process_twice_more_than_two_levels_of_directories():
+    with open('%s/config.ini-multiple-directories' % gettempdir(), 'w') as f:
+        f.write("""
+[Directory]
+year=%Y
+month=%m
+day=%d
+full_path=%year/%month/%day
+        """)
+
+    filesystem = FileSystem()
+    temporary_folder, folder = helper.create_working_folder()
+
+    origin = os.path.join(folder,'plain.jpg')
+    shutil.copyfile(helper.get_file('plain.jpg'), origin)
+
+    media = Photo(origin)
+    destination = filesystem.process_file(origin, temporary_folder, media, allowDuplicate=True)
+
+    assert helper.path_tz_fix(os.path.join('2015','12','05', '2015-12-05_00-59-26-plain.jpg')) in destination, destination
+
+    media_second = Photo(destination)
+    media_second.set_title('foo')
+    destination_second = filesystem.process_file(destination, temporary_folder, media_second, allowDuplicate=True)
+
+    assert destination.replace('.jpg', '-foo.jpg') == destination_second, destination_second
+
+    shutil.rmtree(folder)
+    shutil.rmtree(os.path.dirname(os.path.dirname(destination)))
+
 def test_set_utime_with_exif_date():
     filesystem = FileSystem()
     temporary_folder, folder = helper.create_working_folder()
