@@ -226,6 +226,20 @@ def test_get_folder_path_with_location():
 
     assert path == os.path.join('2015-12-Dec','Sunnyvale'), path
 
+@mock.patch('elodie.config.config_file', '%s/config.ini-original-default-unknown-location' % gettempdir())
+def test_get_folder_path_with_original_default_unknown_location():
+    with open('%s/config.ini-original-default-with-unknown-location' % gettempdir(), 'w') as f:
+        f.write('')
+    if hasattr(load_config, 'config'):
+        del load_config.config
+    filesystem = FileSystem()
+    media = Photo(helper.get_file('plain.jpg'))
+    path = filesystem.get_folder_path(media.get_metadata())
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    assert path == os.path.join('2015-12-Dec','Unknown Location'), path
+
 @mock.patch('elodie.config.config_file', '%s/config.ini-custom-path' % gettempdir())
 def test_get_folder_path_with_custom_path():
     with open('%s/config.ini-custom-path' % gettempdir(), 'w') as f:
@@ -248,10 +262,33 @@ full_path=%date/%location
 
     assert path == os.path.join('2015-12-05','United States of America-California-Sunnyvale'), path
 
+@mock.patch('elodie.config.config_file', '%s/config.ini-fallback' % gettempdir())
+def test_get_folder_path_with_fallback_folder():
+    with open('%s/config.ini-fallback' % gettempdir(), 'w') as f:
+        f.write("""
+[Directory]
+year=%Y
+month=%m
+full_path=%year/%month/%album|%"No Album Fool"/%month
+        """)
+#full_path=%year/%album|"No Album"
+    if hasattr(load_config, 'config'):
+        del load_config.config
+    filesystem = FileSystem()
+    media = Photo(helper.get_file('plain.jpg'))
+    path = filesystem.get_folder_path(media.get_metadata())
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    assert path == os.path.join('2015','12','No Album Fool','12'), path
+
 @mock.patch('elodie.config.config_file', '%s/config.ini-location-date' % gettempdir())
 def test_get_folder_path_with_with_more_than_two_levels():
     with open('%s/config.ini-location-date' % gettempdir(), 'w') as f:
         f.write("""
+[MapQuest]
+key=czjNKTtFjLydLteUBwdgKAIC8OAbGLUx
+
 [Directory]
 year=%Y
 month=%m
@@ -551,6 +588,37 @@ def test_process_video_with_album_then_title():
     assert origin_checksum != destination_checksum, destination_checksum
     assert helper.path_tz_fix(os.path.join('2015-01-Jan','test_album','2015-01-19_12-45-11-movie-test_title.mov')) in destination, destination
 
+@mock.patch('elodie.config.config_file', '%s/config.ini-multiple-directories' % gettempdir())
+def test_process_twice_more_than_two_levels_of_directories():
+    with open('%s/config.ini-multiple-directories' % gettempdir(), 'w') as f:
+        f.write("""
+[Directory]
+year=%Y
+month=%m
+day=%d
+full_path=%year/%month/%day
+        """)
+
+    filesystem = FileSystem()
+    temporary_folder, folder = helper.create_working_folder()
+
+    origin = os.path.join(folder,'plain.jpg')
+    shutil.copyfile(helper.get_file('plain.jpg'), origin)
+
+    media = Photo(origin)
+    destination = filesystem.process_file(origin, temporary_folder, media, allowDuplicate=True)
+
+    assert helper.path_tz_fix(os.path.join('2015','12','05', '2015-12-05_00-59-26-plain.jpg')) in destination, destination
+
+    media_second = Photo(destination)
+    media_second.set_title('foo')
+    destination_second = filesystem.process_file(destination, temporary_folder, media_second, allowDuplicate=True)
+
+    assert destination.replace('.jpg', '-foo.jpg') == destination_second, destination_second
+
+    shutil.rmtree(folder)
+    shutil.rmtree(os.path.dirname(os.path.dirname(destination)))
+
 def test_set_utime_with_exif_date():
     filesystem = FileSystem()
     temporary_folder, folder = helper.create_working_folder()
@@ -618,7 +686,7 @@ def test_get_folder_path_definition_default():
     if hasattr(load_config, 'config'):
         del load_config.config
 
-    assert path_definition == filesystem.default_folder_path_definition, path_definition
+    assert path_definition == [[('date', '%Y-%m-%b')], [('album', ''), ('location', '%city'), ('Unknown Location"', '')]], path_definition
 
 @mock.patch('elodie.config.config_file', '%s/config.ini-date-location' % gettempdir())
 def test_get_folder_path_definition_date_location():
@@ -635,7 +703,7 @@ full_path=%date/%location
     filesystem = FileSystem()
     path_definition = filesystem.get_folder_path_definition()
     expected = [
-        ('date', '%Y-%m-%d'), ('location', '%country')
+        [('date', '%Y-%m-%d')], [('location', '%country')]
     ]
     if hasattr(load_config, 'config'):
         del load_config.config
@@ -657,7 +725,7 @@ full_path=%location/%date
     filesystem = FileSystem()
     path_definition = filesystem.get_folder_path_definition()
     expected = [
-        ('location', '%country'), ('date', '%Y-%m-%d')
+        [('location', '%country')], [('date', '%Y-%m-%d')]
     ]
     if hasattr(load_config, 'config'):
         del load_config.config
@@ -679,7 +747,7 @@ full_path=%date/%location
     filesystem = FileSystem()
     path_definition = filesystem.get_folder_path_definition()
     expected = [
-        ('date', '%Y-%m-%d'), ('location', '%country')
+        [('date', '%Y-%m-%d')], [('location', '%country')]
     ]
 
     assert path_definition == expected, path_definition
@@ -696,7 +764,7 @@ full_path=%date/%location
     filesystem = FileSystem()
     path_definition = filesystem.get_folder_path_definition()
     expected = [
-        ('date', '%Y-%m-%d'), ('location', '%country')
+        [('date', '%Y-%m-%d')], [('location', '%country')]
     ]
     if hasattr(load_config, 'config'):
         del load_config.config
@@ -717,7 +785,7 @@ full_path=%year/%month/%day
     filesystem = FileSystem()
     path_definition = filesystem.get_folder_path_definition()
     expected = [
-        ('year', '%Y'), ('month', '%m'), ('day', '%d')
+        [('year', '%Y')], [('month', '%m')], [('day', '%d')]
     ]
     if hasattr(load_config, 'config'):
         del load_config.config
@@ -738,8 +806,29 @@ full_path=%year
     filesystem = FileSystem()
     path_definition = filesystem.get_folder_path_definition()
     expected = [
-        ('year', '%Y')
+        [('year', '%Y')]
     ]
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    assert path_definition == expected, path_definition
+
+@mock.patch('elodie.config.config_file', '%s/config.ini-multi-level-custom' % gettempdir())
+def test_get_folder_path_definition_multi_level_custom():
+    with open('%s/config.ini-multi-level-custom' % gettempdir(), 'w') as f:
+        f.write("""
+[Directory]
+year=%Y
+month=%M
+full_path=%year/%album|%month|%"foo"/%month
+        """)
+
+    if hasattr(load_config, 'config'):
+        del load_config.config
+    filesystem = FileSystem()
+    path_definition = filesystem.get_folder_path_definition()
+    
+    expected = [[('year', '%Y')], [('album', ''), ('month', '%M'), ('"foo"', '')], [('month', '%M')]]
     if hasattr(load_config, 'config'):
         del load_config.config
 
