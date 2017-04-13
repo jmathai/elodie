@@ -231,10 +231,22 @@ year=%Y
 date=%year-%month
 full_path=%date/%location
 # -> 2015-12/Sunnyvale, California
-
-full_path=%country/%state/%city
-# -> US/California/Sunnyvale
 ```
+
+#### Using fallback folders
+
+There are times when the EXIF needed to correctly name a folder doesn't exist on a photo. I came up with fallback folders to help you deal with situations such as this. Here's how it works.
+
+You can specify a series of folder names by separating them with a `|`. That's a pipe, not an L. Let's look at an example.
+
+```
+month=%m
+year=%Ykkkk
+location=%city
+full_path=%month/%year/%album|%location|%"Beats me"
+```
+
+What this asks me to do is to name the last folder the same as the album I find in EXIF. If I don't find an album in EXIF then I should use the location. If there's no GPS in the EXIf then I should name the last folder `Beats me`.
 
 #### How folder customization works
 
@@ -242,7 +254,7 @@ You can construct your folder structure using a combination of the location and 
 
 The placeholders can be used to define the folder structure you'd like to create. The example above happens to be the default structure and would look like `2015-07-Jul/Mountain View`.
 
-I have a few built-in location placeholders you can use.
+I have a few built-in location placeholders you can use. Use this to construct the `%location` you use in `full_path`.
 
 * `%city` the name of the city the photo was taken. Requires geolocation data in EXIF.
 * `%state` the name of the state the photo was taken. Requires geolocation data in EXIF.
