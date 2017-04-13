@@ -369,6 +369,12 @@ class FileSystem(object):
                     checksum_file
                 ))
 
+        # If source and destination are identical then
+        #  we should not write the file. gh-210
+        if(_file == dest_path):
+            print('Final source and destination path should not be identical')
+            return
+
         self.create_directory(dest_directory)
 
         if(move is True):

@@ -619,6 +619,27 @@ full_path=%year/%month/%day
     shutil.rmtree(folder)
     shutil.rmtree(os.path.dirname(os.path.dirname(destination)))
 
+def test_process_existing_file_without_changes():
+    # gh-210
+    filesystem = FileSystem()
+    temporary_folder, folder = helper.create_working_folder()
+
+    origin = os.path.join(folder,'plain.jpg')
+    shutil.copyfile(helper.get_file('plain.jpg'), origin)
+
+    media = Photo(origin)
+    destination = filesystem.process_file(origin, temporary_folder, media, allowDuplicate=True)
+
+    assert helper.path_tz_fix(os.path.join('2015-12-Dec', 'Unknown Location', '2015-12-05_00-59-26-plain.jpg')) in destination, destination
+
+    media_second = Photo(destination)
+    destination_second = filesystem.process_file(destination, temporary_folder, media_second, allowDuplicate=True)
+
+    assert destination_second is None, destination_second
+
+    shutil.rmtree(folder)
+    shutil.rmtree(os.path.dirname(os.path.dirname(destination)))
+
 def test_set_utime_with_exif_date():
     filesystem = FileSystem()
     temporary_folder, folder = helper.create_working_folder()
