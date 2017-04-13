@@ -241,7 +241,7 @@ You can specify a series of folder names by separating them with a `|`. That's a
 
 ```
 month=%m
-year=%Ykkkk
+year=%Y
 location=%city
 full_path=%month/%year/%album|%location|%"Beats me"
 ```
