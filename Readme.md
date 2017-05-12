@@ -228,8 +228,7 @@ full_path=%year/%month/%location
 location=%city, %state
 month=%m
 year=%Y
-date=%year-%month
-full_path=%date/%location
+full_path=%year-%month/%location
 # -> 2015-12/Sunnyvale, California
 ```
 
