@@ -318,7 +318,10 @@ class FileSystem(object):
             )
 
         if(not found and folder_name == ''):
-            folder_name = place_name['default']
+            if(isinstance(place_name, str)):
+                folder_name = place_name
+            else:
+                folder_name = place_name['default']            
 
         return folder_name
 
