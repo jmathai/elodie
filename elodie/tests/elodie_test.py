@@ -550,3 +550,19 @@ def test_verify_error():
 
     assert origin in result.output, result.output
     assert 'Error           1' in result.output, result.output
+
+def test_cli_debug_import():
+    runner = CliRunner()
+    # import
+    result = runner.invoke(elodie._import, ['--destination', '/does/not/exist', '/does/not/exist'])
+    assert "Could not find /does/not/exist\n" not in result.output, result.output
+    result = runner.invoke(elodie._import, ['--destination', '/does/not/exist', '--debug', '/does/not/exist'])
+    assert "Could not find /does/not/exist\n" in result.output, result.output
+
+def test_cli_debug_update():
+    runner = CliRunner()
+    # update
+    result = runner.invoke(elodie._update, ['--location', 'foobar', '/does/not/exist'])
+    assert "Could not find /does/not/exist\n" not in result.output, result.output
+    result = runner.invoke(elodie._update, ['--location', 'foobar', '--debug', '/does/not/exist'])
+    assert "Could not find /does/not/exist\n" in result.output, result.output
