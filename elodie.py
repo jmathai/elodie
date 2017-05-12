@@ -83,10 +83,13 @@ def import_file(_file, destination, album_from_folder, trash, allow_duplicates):
               help='After copying files, move the old files to the trash.')
 @click.option('--allow-duplicates', default=False, is_flag=True,
               help='Import the file even if it\'s already been imported.')
+@click.option('--debug', default=False, is_flag=True,
+              help='Override the value in constants.py with True.')
 @click.argument('paths', nargs=-1, type=click.Path())
-def _import(destination, source, file, album_from_folder, trash, paths, allow_duplicates):
+def _import(destination, source, file, album_from_folder, trash, allow_duplicates, debug, paths):
     """Import files or directories by reading their EXIF and organizing them accordingly.
     """
+    constants.debug = debug
     has_errors = False
     result = Result()
 
@@ -122,9 +125,12 @@ def _import(destination, source, file, album_from_folder, trash, paths, allow_du
 @click.command('generate-db')
 @click.option('--source', type=click.Path(file_okay=False),
               required=True, help='Source of your photo library.')
-def _generate_db(source):
+@click.option('--debug', default=False, is_flag=True,
+              help='Override the value in constants.py with True.')
+def _generate_db(source, debug):
     """Regenerate the hash.json database which contains all of the sha1 signatures of media files.
     """
+    constants.debug = debug
     result = Result()
     source = os.path.abspath(os.path.expanduser(source))
 
@@ -146,7 +152,10 @@ def _generate_db(source):
     result.write()
 
 @click.command('verify')
-def _verify():
+@click.option('--debug', default=False, is_flag=True,
+              help='Override the value in constants.py with True.')
+def _verify(debug):
+    constants.debug = debug
     result = Result()
     db = Db()
     for checksum, file_path in db.all():
@@ -209,11 +218,14 @@ def update_time(media, file_path, time_string):
 @click.option('--time', help=('Update the image time. Time should be in '
                               'YYYY-mm-dd hh:ii:ss or YYYY-mm-dd format.'))
 @click.option('--title', help='Update the image title.')
+@click.option('--debug', default=False, is_flag=True,
+              help='Override the value in constants.py with True.')
 @click.argument('paths', nargs=-1,
                 required=True)
-def _update(album, location, time, title, paths):
+def _update(album, location, time, title, paths, debug):
     """Update a file's EXIF. Automatically modifies the file's location and file name accordingly.
     """
+    constants.debug = debug
     has_errors = False
     result = Result()
 
@@ -229,8 +241,7 @@ def _update(album, location, time, title, paths):
         if not os.path.exists(current_file):
             has_errors = True
             result.append((current_file, False))
-            if constants.debug:
-                print('Could not find %s' % current_file)
+            log.warn('Could not find %s' % current_file)
             print('{"source":"%s", "error_msg":"Could not find %s"}' % \
                 (current_file, current_file))
             continue
