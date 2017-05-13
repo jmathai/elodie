@@ -50,70 +50,7 @@ Now that you've got the minimum dependencies installed you can start using Elodi
 
 You'll notice that the photo was organized into an *Unknown Location* folder. That's because you haven't set up your MapQuest API ([instructions](#using-openstreetmap-data-from-mapquest)).
 
-### Usage Instructions
-
-You can view these instructions on the command line by typing `./elodie.py import --help`, `./elodie.py update --help` or `./elodie.py generate-db --help`.
-
-### Import photos
-
-```
-Usage: elodie.py import [OPTIONS] [PATHS]...
-
-  Import files or directories by reading their EXIF and organizing them
-  accordingly.
-
-Options:
-  --destination DIRECTORY  Copy imported files into this directory.
-                           [required]
-  --source DIRECTORY       Import files from this directory, if specified.
-  --file PATH              Import this file, if specified.
-  --album-from-folder      Use images' folders as their album names.
-  --trash                  After copying files, move the old files to the
-                           trash.
-  --allow-duplicates       Import the file even if it's already been imported.
-  --help                   Show this message and exit.
-```
-
-### Update photos
-
-```
-Usage: elodie.py update [OPTIONS] FILES...
-
-  Update a file's EXIF. Automatically modifies the file's location and file
-  name accordingly.
-
-Options:
-  --album TEXT     Update the image album.
-  --location TEXT  Update the image location. Location should be the name of a
-                   place, like "Las Vegas, NV".
-  --time TEXT      Update the image time. Time should be in YYYY-mm-dd
-                   hh:ii:ss or YYYY-mm-dd format.
-  --title TEXT     Update the image title.
-  --help           Show this message and exit.
-```
-
-### (Re)Generate checksum database
-
-```
-Usage: elodie.py generate-db [OPTIONS]
-
-  Regenerate the hash.json database which contains all of the sha1
-  signatures of media files.
-
-Options:
-  --source DIRECTORY  Source of your photo library.  [required]
-  --help              Show this message and exit.
-```
-
-### Verify library against bit rot / data rot
-
-```
-Usage: elodie.py verify
-```
-
 Now you're ready to learn more about Elodie.
-
-<p align="center"><img src ="creative/logo@300x.png" /></p>
 
 [Read a 3 part blog post on why I was created](https://medium.com/vantage/understanding-my-need-for-an-automated-photo-workflow-a2ff95b46f8f#.dmwyjlc57) and how [I can be used with Google Photos](https://medium.com/@jmathai/my-automated-photo-workflow-using-google-photos-and-elodie-afb753b8c724).
 
@@ -127,23 +64,9 @@ I only do 3 things.
 * Second I help make it easy for all the photos you haven't taken yet to flow into the exact location they belong.
 * Third but not least I promise to do all this without a yucky propietary database that some friends of mine use.
 
-*NOTE: make sure you've installed everything I need before running the commands below. [Instructions](#quickstart-guide) at the top of this page.*
-
-## The dream setup I am optimized for
-
-I'm most helpful when I'm fully utilized to keep your photos organized.
-
-Here's an example of how I can create 3 geographically distributed copies of your meticulously organized photo library.
-
-* Specify a folder in your Dropbox/Google Drive to store the organized photo library.
-* Set up a cron job to import photos in `~/Ready-To-Upload`.
-* Add photos to `~/Ready-To-Upload` and wait for your cron job to trigger.
-* Periodically recategorize photos by fixing their location or date or by adding them to an album.
-* Have a Synology at home set to automatically sync down from Dropbox/Google Drive.
-
-This setup means you can quickly get photos off your phone or dSLR and know that they'll be organized and backed up in 3 locations by the time you're ready to view or share them.
-
 <p align="center"><img src ="creative/workflow-simplified-white-bg.png" /></p>
+
+*NOTE: make sure you've installed everything I need before running the commands below. [Instructions](#quickstart-guide) at the top of this page.*
 
 ## Let's organize your existing photos
 
@@ -182,6 +105,66 @@ Back to your photos. When I'm done you should see something like this. Notice th
 
 Not too bad, eh? Wait a second, what's *Unknown Location*? If I'm not able to figure out where a photo was taken I'll place it into a folder named *Unknown Location*. This typically happens when photos do not have GPS information in their EXIF. You shouldn't see this for photos taken on a smartphone but it's often the case with digital cameras and SLRs. I can help you add GPS information to those photos and get them organized better. Let me show you how.
 
+### Usage Instructions
+
+You can view these instructions on the command line by typing `./elodie.py import --help`, `./elodie.py update --help` or `./elodie.py generate-db --help`.
+
+#### Import photos
+
+```
+Usage: elodie.py import [OPTIONS] [PATHS]...
+
+  Import files or directories by reading their EXIF and organizing them
+  accordingly.
+
+Options:
+  --destination DIRECTORY  Copy imported files into this directory.
+                           [required]
+  --source DIRECTORY       Import files from this directory, if specified.
+  --file PATH              Import this file, if specified.
+  --album-from-folder      Use images' folders as their album names.
+  --trash                  After copying files, move the old files to the
+                           trash.
+  --allow-duplicates       Import the file even if it's already been imported.
+  --help                   Show this message and exit.
+```
+
+#### Update photos
+
+```
+Usage: elodie.py update [OPTIONS] FILES...
+
+  Update a file's EXIF. Automatically modifies the file's location and file
+  name accordingly.
+
+Options:
+  --album TEXT     Update the image album.
+  --location TEXT  Update the image location. Location should be the name of a
+                   place, like "Las Vegas, NV".
+  --time TEXT      Update the image time. Time should be in YYYY-mm-dd
+                   hh:ii:ss or YYYY-mm-dd format.
+  --title TEXT     Update the image title.
+  --help           Show this message and exit.
+```
+
+#### (Re)Generate checksum database
+
+```
+Usage: elodie.py generate-db [OPTIONS]
+
+  Regenerate the hash.json database which contains all of the sha1
+  signatures of media files.
+
+Options:
+  --source DIRECTORY  Source of your photo library.  [required]
+  --help              Show this message and exit.
+```
+
+#### Verify library against bit rot / data rot
+
+```
+Usage: elodie.py verify
+```
 
 ### Create your own folder structure
 
