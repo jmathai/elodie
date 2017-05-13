@@ -45,12 +45,14 @@ Now that you've got the minimum dependencies installed you can start using Elodi
 
 ```
 # Run these commands from the root of the repository you just cloned.
-./elodie.py import --destination="/where/i/want/my/photos/to/go" /where/my/photo/is.jpg
+./elodie.py import --debug --destination="/where/i/want/my/photos/to/go" /where/my/photo/is.jpg
 ```
 
 You'll notice that the photo was organized into an *Unknown Location* folder. That's because you haven't set up your MapQuest API ([instructions](#using-openstreetmap-data-from-mapquest)).
 
 Now you're ready to learn more about Elodie.
+
+## Slowstart guide
 
 [Read a 3 part blog post on why I was created](https://medium.com/vantage/understanding-my-need-for-an-automated-photo-workflow-a2ff95b46f8f#.dmwyjlc57) and how [I can be used with Google Photos](https://medium.com/@jmathai/my-automated-photo-workflow-using-google-photos-and-elodie-afb753b8c724).
 
@@ -63,8 +65,6 @@ I only do 3 things.
 * Firstly I organize your existing collection of photos into a customizable folder structure.
 * Second I help make it easy for all the photos you haven't taken yet to flow into the exact location they belong.
 * Third but not least I promise to do all this without a yucky propietary database that some friends of mine use.
-
-<p align="center"><img src ="creative/workflow-simplified-white-bg.png" /></p>
 
 *NOTE: make sure you've installed everything I need before running the commands below. [Instructions](#quickstart-guide) at the top of this page.*
 
