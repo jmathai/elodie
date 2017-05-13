@@ -129,26 +129,6 @@ I only do 3 things.
 
 *NOTE: make sure you've installed everything I need before running the commands below. [Instructions](#quickstart-guide) at the top of this page.*
 
-## Two interfaces, same result
-
-I can be used as a GUI taskbar app or through the command line. My GUI app is great for updating EXIF on existing photos while my command line tools are great for setting up automated jobs.
-
-Read the [instructions on building the GUI taskbar app](tree/master/app) for more information.
-
-## See me in action
-
-Updating EXIF of photos using the GUI taskbar app.
-
-[![IMAGE ALT TEXT](http://img.youtube.com/vi/fF_jGCaMog0/0.jpg)](http://www.youtube.com/watch?v=fF_jGCaMog0 "Updating Photos Using GUI Taskbar App")
-
-Importing and organizing photos from the command line.
-
-[![IMAGE ALT TEXT](http://img.youtube.com/vi/oOvKpUO3LLs/0.jpg)](http://www.youtube.com/watch?v=oOvKpUO3LLs "Import Photos Using the Command Line")
-
-Updating EXIF of photos from the command line.
-
-[![IMAGE ALT TEXT](http://img.youtube.com/vi/7kqirQRQ--4/0.jpg)](http://www.youtube.com/watch?v=7kqirQRQ--4 "Updating Photos Using the Command Line")
-
 ## The dream setup I am optimized for
 
 I'm most helpful when I'm fully utilized to keep your photos organized.
