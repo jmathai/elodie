@@ -31,8 +31,16 @@ class FileSystem(object):
                             geolocation.__DEFAULT_LOCATION__
                          ),
         }
-        self.cached_folder_path_definition = None
+        self.default_file_path_definition = {
+            'date': '%Y-%m-%b',
+            'location': '%city',
+            'full_path': '%date/%album|%location|"{}"'.format(
+                            geolocation.__DEFAULT_LOCATION__
+                         ),
+        }
+        self.cached_path_definitions = {}
         self.default_parts = ['album', 'city', 'state', 'country']
+        self.kind = {'folder': 'folder', 'file': 'file'}
 
     def create_directory(self, directory_path):
         """Create a directory if it does not already exist.
@@ -98,7 +106,13 @@ class FileSystem(object):
         return os.getcwd()
 
     def get_file_name(self, media):
-        """Generate file name for a photo or video using its metadata.
+        return self.get_file_name_v1(media)
+
+
+    def get_file_name_v1(self, media):
+        """Original and depcrecated version of get_file_name.
+        This method acts as a fallback. See #107 for details.
+        Generate file name for a photo or video using its metadata.
 
         We use an ISO8601-like format for the file name prefix. Instead of
         colons as the separator for hours, minutes and seconds we use a hyphen.
@@ -153,7 +167,7 @@ class FileSystem(object):
             metadata['extension'])
         return file_name.lower()
 
-    def get_folder_path_definition(self):
+    def get_path_definition(self, kind=None):
         """Returns a list of folder definitions.
 
         Each element in the list represents a folder.
@@ -172,38 +186,47 @@ class FileSystem(object):
         """
         # If we've done this already then return it immediately without
         # incurring any extra work
-        if self.cached_folder_path_definition is not None:
-            return self.cached_folder_path_definition
+        if kind in self.cached_path_definitions:
+            return self.cached_path_definitions[kind]
 
         config = load_config()
 
-        # If Directory is in the config we assume full_path and its
-        #  corresponding values (date, location) are also present
-        config_directory = self.default_folder_path_definition
-        if('Directory' in config):
-            config_directory = config['Directory']
+        if kind == self.kind['folder']:
+            # If Directory is in the config we assume full_path and its
+            #  corresponding values (date, location) are also present
+            config_def = self.default_folder_path_definition
+            if 'Directory' in config:
+                config_def = config['Directory']
+        elif kind == self.kind['file']:
+            config_def = self.default_file_path_definition
+            if 'File' in config:
+                config_def = config['File']
+        else:
+            pass
+
+
 
         # Find all subpatterns of full_path that map to directories.
         #  I.e. %foo/%bar => ['foo', 'bar']
         #  I.e. %foo/%bar|%example|"something" => ['foo', 'bar|example|"something"']
         path_parts = re.findall(
                          '(\%[^/]+)',
-                         config_directory['full_path']
+                         config_def['full_path']
                      )
 
         if not path_parts or len(path_parts) == 0:
             return self.default_folder_path_definition
 
-        self.cached_folder_path_definition = []
+        self.cached_path_definitions[kind] = []
         for part in path_parts:
-            if part in config_directory:
+            if part in config_def:
                 part = part[1:]
-                self.cached_folder_path_definition.append(
-                    [(part, config_directory[part])]
+                self.cached_path_definitions[kind].append(
+                    [(part, config_def[part])]
                 )
             elif part in self.default_parts:
                 part = part[1:]
-                self.cached_folder_path_definition.append(
+                self.cached_path_definitions[kind].append(
                     [(part, '')]
                 )
             else:
@@ -211,11 +234,11 @@ class FileSystem(object):
                 for p in part.split('|'):
                     p = p[1:]
                     this_part.append(
-                        (p, config_directory[p] if p in config_directory else '')
+                        (p, config_def[p] if p in config_def else '')
                     )
-                self.cached_folder_path_definition.append(this_part)
+                self.cached_path_definitions[kind].append(this_part)
 
-        return self.cached_folder_path_definition
+        return self.cached_path_definitions[kind]
 
     def get_folder_path(self, metadata):
         """Given a media's metadata this function returns the folder path as a string.
@@ -223,7 +246,7 @@ class FileSystem(object):
         :param metadata dict: Metadata dictionary.
         :returns: str
         """
-        path_parts = self.get_folder_path_definition()
+        path_parts = self.get_path_definition(self.kind['folder'])
         path = []
         for path_part in path_parts:
             # We support fallback values so that

@@ -703,7 +703,7 @@ def test_get_folder_path_definition_default():
     if hasattr(load_config, 'config'):
         del load_config.config
     filesystem = FileSystem()
-    path_definition = filesystem.get_folder_path_definition()
+    path_definition = filesystem.get_path_definition(filesystem.kind['folder'])
     if hasattr(load_config, 'config'):
         del load_config.config
 
@@ -722,7 +722,7 @@ full_path=%date/%location
     if hasattr(load_config, 'config'):
         del load_config.config
     filesystem = FileSystem()
-    path_definition = filesystem.get_folder_path_definition()
+    path_definition = filesystem.get_path_definition(filesystem.kind['folder'])
     expected = [
         [('date', '%Y-%m-%d')], [('location', '%country')]
     ]
@@ -744,7 +744,7 @@ full_path=%location/%date
     if hasattr(load_config, 'config'):
         del load_config.config
     filesystem = FileSystem()
-    path_definition = filesystem.get_folder_path_definition()
+    path_definition = filesystem.get_path_definition(filesystem.kind['folder'])
     expected = [
         [('location', '%country')], [('date', '%Y-%m-%d')]
     ]
@@ -766,7 +766,7 @@ full_path=%date/%location
     if hasattr(load_config, 'config'):
         del load_config.config
     filesystem = FileSystem()
-    path_definition = filesystem.get_folder_path_definition()
+    path_definition = filesystem.get_path_definition(filesystem.kind['folder'])
     expected = [
         [('date', '%Y-%m-%d')], [('location', '%country')]
     ]
@@ -783,7 +783,7 @@ full_path=%date/%location
     if hasattr(load_config, 'config'):
         del load_config.config
     filesystem = FileSystem()
-    path_definition = filesystem.get_folder_path_definition()
+    path_definition = filesystem.get_path_definition(filesystem.kind['folder'])
     expected = [
         [('date', '%Y-%m-%d')], [('location', '%country')]
     ]
@@ -804,7 +804,7 @@ full_path=%year/%month/%day
     if hasattr(load_config, 'config'):
         del load_config.config
     filesystem = FileSystem()
-    path_definition = filesystem.get_folder_path_definition()
+    path_definition = filesystem.get_path_definition(filesystem.kind['folder'])
     expected = [
         [('year', '%Y')], [('month', '%m')], [('day', '%d')]
     ]
@@ -825,7 +825,7 @@ full_path=%year
     if hasattr(load_config, 'config'):
         del load_config.config
     filesystem = FileSystem()
-    path_definition = filesystem.get_folder_path_definition()
+    path_definition = filesystem.get_path_definition(filesystem.kind['folder'])
     expected = [
         [('year', '%Y')]
     ]
@@ -847,7 +847,7 @@ full_path=%year/%album|%month|%"foo"/%month
     if hasattr(load_config, 'config'):
         del load_config.config
     filesystem = FileSystem()
-    path_definition = filesystem.get_folder_path_definition()
+    path_definition = filesystem.get_path_definition(filesystem.kind['folder'])
     
     expected = [[('year', '%Y')], [('album', ''), ('month', '%M'), ('"foo"', '')], [('month', '%M')]]
     if hasattr(load_config, 'config'):
