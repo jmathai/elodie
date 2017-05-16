@@ -205,43 +205,43 @@ def test_get_file_name_with_original_name_title_exif():
 
     assert file_name == helper.path_tz_fix('2015-12-05_00-59-26-foobar-foobar-title.jpg'), file_name
 
-def test_get_folder_path_plain():
+def test_get_path():
     filesystem = FileSystem()
     media = Photo(helper.get_file('plain.jpg'))
-    path = filesystem.get_folder_path(media.get_metadata())
+    path = filesystem.get_path(filesystem.kind['folder'], media.get_metadata())
 
     assert path == os.path.join('2015-12-Dec','Unknown Location'), path
 
-def test_get_folder_path_with_title():
+def test_get_path():
     filesystem = FileSystem()
     media = Photo(helper.get_file('with-title.jpg'))
-    path = filesystem.get_folder_path(media.get_metadata())
+    path = filesystem.get_path(filesystem.kind['folder'], media.get_metadata())
 
     assert path == os.path.join('2015-12-Dec','Unknown Location'), path
 
-def test_get_folder_path_with_location():
+def test_get_path():
     filesystem = FileSystem()
     media = Photo(helper.get_file('with-location.jpg'))
-    path = filesystem.get_folder_path(media.get_metadata())
+    path = filesystem.get_path(filesystem.kind['folder'], media.get_metadata())
 
     assert path == os.path.join('2015-12-Dec','Sunnyvale'), path
 
 @mock.patch('elodie.config.config_file', '%s/config.ini-original-default-unknown-location' % gettempdir())
-def test_get_folder_path_with_original_default_unknown_location():
+def test_get_path_with_original_default_unknown_location():
     with open('%s/config.ini-original-default-with-unknown-location' % gettempdir(), 'w') as f:
         f.write('')
     if hasattr(load_config, 'config'):
         del load_config.config
     filesystem = FileSystem()
     media = Photo(helper.get_file('plain.jpg'))
-    path = filesystem.get_folder_path(media.get_metadata())
+    path = filesystem.get_path(filesystem.kind['folder'], media.get_metadata())
     if hasattr(load_config, 'config'):
         del load_config.config
 
     assert path == os.path.join('2015-12-Dec','Unknown Location'), path
 
 @mock.patch('elodie.config.config_file', '%s/config.ini-custom-path' % gettempdir())
-def test_get_folder_path_with_custom_path():
+def test_get_path_with_custom_path():
     with open('%s/config.ini-custom-path' % gettempdir(), 'w') as f:
         f.write("""
 [MapQuest]
@@ -256,14 +256,14 @@ full_path=%date/%location
         del load_config.config
     filesystem = FileSystem()
     media = Photo(helper.get_file('with-location.jpg'))
-    path = filesystem.get_folder_path(media.get_metadata())
+    path = filesystem.get_path(filesystem.kind['folder'], media.get_metadata())
     if hasattr(load_config, 'config'):
         del load_config.config
 
     assert path == os.path.join('2015-12-05','United States of America-California-Sunnyvale'), path
 
 @mock.patch('elodie.config.config_file', '%s/config.ini-fallback' % gettempdir())
-def test_get_folder_path_with_fallback_folder():
+def test_get_path_with_fallback_folder():
     with open('%s/config.ini-fallback' % gettempdir(), 'w') as f:
         f.write("""
 [Directory]
@@ -276,14 +276,14 @@ full_path=%year/%month/%album|%"No Album Fool"/%month
         del load_config.config
     filesystem = FileSystem()
     media = Photo(helper.get_file('plain.jpg'))
-    path = filesystem.get_folder_path(media.get_metadata())
+    path = filesystem.get_path(filesystem.kind['folder'], media.get_metadata())
     if hasattr(load_config, 'config'):
         del load_config.config
 
     assert path == os.path.join('2015','12','No Album Fool','12'), path
 
 @mock.patch('elodie.config.config_file', '%s/config.ini-location-date' % gettempdir())
-def test_get_folder_path_with_with_more_than_two_levels():
+def test_get_path_with_with_more_than_two_levels():
     with open('%s/config.ini-location-date' % gettempdir(), 'w') as f:
         f.write("""
 [MapQuest]
@@ -301,14 +301,14 @@ full_path=%year/%month/%location
 
     filesystem = FileSystem()
     media = Photo(helper.get_file('with-location.jpg'))
-    path = filesystem.get_folder_path(media.get_metadata())
+    path = filesystem.get_path(filesystem.kind['folder'], media.get_metadata())
     if hasattr(load_config, 'config'):
         del load_config.config
 
     assert path == os.path.join('2015','12','Sunnyvale, California'), path
 
 @mock.patch('elodie.config.config_file', '%s/config.ini-location-date' % gettempdir())
-def test_get_folder_path_with_with_only_one_level():
+def test_get_path_with_with_only_one_level():
     with open('%s/config.ini-location-date' % gettempdir(), 'w') as f:
         f.write("""
 [Directory]
@@ -321,16 +321,16 @@ full_path=%year
 
     filesystem = FileSystem()
     media = Photo(helper.get_file('plain.jpg'))
-    path = filesystem.get_folder_path(media.get_metadata())
+    path = filesystem.get_path(filesystem.kind['folder'], media.get_metadata())
     if hasattr(load_config, 'config'):
         del load_config.config
 
     assert path == os.path.join('2015'), path
 
-def test_get_folder_path_with_location_and_title():
+def test_get_path_with_location_and_title():
     filesystem = FileSystem()
     media = Photo(helper.get_file('with-location-and-title.jpg'))
-    path = filesystem.get_folder_path(media.get_metadata())
+    path = filesystem.get_path(filesystem.kind['folder'], media.get_metadata())
 
     assert path == os.path.join('2015-12-Dec','Sunnyvale'), path
 
@@ -699,7 +699,7 @@ def test_set_utime_without_exif_date():
     assert initial_checksum == final_checksum
 
 @mock.patch('elodie.config.config_file', '%s/config.ini-does-not-exist' % gettempdir())
-def test_get_folder_path_definition_default():
+def test_get_path_definition_default():
     if hasattr(load_config, 'config'):
         del load_config.config
     filesystem = FileSystem()
@@ -710,7 +710,7 @@ def test_get_folder_path_definition_default():
     assert path_definition == [[('date', '%Y-%m-%b')], [('album', ''), ('location', '%city'), ('Unknown Location"', '')]], path_definition
 
 @mock.patch('elodie.config.config_file', '%s/config.ini-date-location' % gettempdir())
-def test_get_folder_path_definition_date_location():
+def test_get_path_definition_date_location():
     with open('%s/config.ini-date-location' % gettempdir(), 'w') as f:
         f.write("""
 [Directory]
@@ -732,7 +732,7 @@ full_path=%date/%location
     assert path_definition == expected, path_definition
 
 @mock.patch('elodie.config.config_file', '%s/config.ini-location-date' % gettempdir())
-def test_get_folder_path_definition_location_date():
+def test_get_path_definition_location_date():
     with open('%s/config.ini-location-date' % gettempdir(), 'w') as f:
         f.write("""
 [Directory]
@@ -754,7 +754,7 @@ full_path=%location/%date
     assert path_definition == expected, path_definition
 
 @mock.patch('elodie.config.config_file', '%s/config.ini-cached' % gettempdir())
-def test_get_folder_path_definition_cached():
+def test_get_path_definition_cached():
     with open('%s/config.ini-cached' % gettempdir(), 'w') as f:
         f.write("""
 [Directory]
@@ -791,7 +791,7 @@ full_path=%date/%location
         del load_config.config
 
 @mock.patch('elodie.config.config_file', '%s/config.ini-location-date' % gettempdir())
-def test_get_folder_path_definition_with_more_than_two_levels():
+def test_get_path_definition_with_more_than_two_levels():
     with open('%s/config.ini-location-date' % gettempdir(), 'w') as f:
         f.write("""
 [Directory]
@@ -814,7 +814,7 @@ full_path=%year/%month/%day
     assert path_definition == expected, path_definition
 
 @mock.patch('elodie.config.config_file', '%s/config.ini-location-date' % gettempdir())
-def test_get_folder_path_definition_with_only_one_level():
+def test_get_path_definition_with_only_one_level():
     with open('%s/config.ini-location-date' % gettempdir(), 'w') as f:
         f.write("""
 [Directory]
@@ -835,7 +835,7 @@ full_path=%year
     assert path_definition == expected, path_definition
 
 @mock.patch('elodie.config.config_file', '%s/config.ini-multi-level-custom' % gettempdir())
-def test_get_folder_path_definition_multi_level_custom():
+def test_get_path_definition_multi_level_custom():
     with open('%s/config.ini-multi-level-custom' % gettempdir(), 'w') as f:
         f.write("""
 [Directory]

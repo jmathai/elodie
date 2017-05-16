@@ -240,13 +240,13 @@ class FileSystem(object):
 
         return self.cached_path_definitions[kind]
 
-    def get_folder_path(self, metadata):
+    def get_path(self, kind, metadata):
         """Given a media's metadata this function returns the folder path as a string.
 
         :param metadata dict: Metadata dictionary.
         :returns: str
         """
-        path_parts = self.get_path_definition(self.kind['folder'])
+        path_parts = self.get_path_definition(kind)
         path = []
         for path_part in path_parts:
             # We support fallback values so that
@@ -361,7 +361,7 @@ class FileSystem(object):
         media.set_original_name()
         metadata = media.get_metadata()
 
-        directory_name = self.get_folder_path(metadata)
+        directory_name = self.get_path(self.kind['folder'], metadata)
 
         dest_directory = os.path.join(destination, directory_name)
         file_name = self.get_file_name(media)
