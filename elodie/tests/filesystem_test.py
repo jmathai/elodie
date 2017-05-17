@@ -205,21 +205,21 @@ def test_get_file_name_with_original_name_title_exif():
 
     assert file_name == helper.path_tz_fix('2015-12-05_00-59-26-foobar-foobar-title.jpg'), file_name
 
-def test_get_path():
+def test_get_path_plain():
     filesystem = FileSystem()
     media = Photo(helper.get_file('plain.jpg'))
     path = filesystem.get_path(filesystem.kind['folder'], media.get_metadata())
 
     assert path == os.path.join('2015-12-Dec','Unknown Location'), path
 
-def test_get_path():
+def test_get_path_with_title():
     filesystem = FileSystem()
     media = Photo(helper.get_file('with-title.jpg'))
     path = filesystem.get_path(filesystem.kind['folder'], media.get_metadata())
 
     assert path == os.path.join('2015-12-Dec','Unknown Location'), path
 
-def test_get_path():
+def test_get_path_with_location():
     filesystem = FileSystem()
     media = Photo(helper.get_file('with-location.jpg'))
     path = filesystem.get_path(filesystem.kind['folder'], media.get_metadata())
