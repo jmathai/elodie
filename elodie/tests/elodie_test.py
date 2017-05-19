@@ -439,9 +439,9 @@ def test_update_with_directory_passed_in():
 
     helper.reset_dbs()
     runner = CliRunner()
-    result = runner.invoke(elodie._import, ['--destination', folder_destination, folder])
+    result = runner.invoke(elodie._import, ['--debug', '--destination', folder_destination, folder])
     runner2 = CliRunner()
-    result = runner2.invoke(elodie._update, ['--album', 'test', folder_destination])
+    result = runner2.invoke(elodie._update, ['--debug', '--album', 'test', folder_destination])
     helper.restore_dbs()
 
     updated_file_path = "{}/2016-04-Apr/test/2016-04-07_11-15-26-valid-sample-title.txt".format(folder_destination)

@@ -23,16 +23,21 @@ class FileSystem(object):
     """A class for interacting with the file system."""
 
     def __init__(self):
-        # The default folder path is along the lines of 2015-01-Jan/Chicago
-        self.default_folder_path_definition = {
+        # The default directory path is along the lines of 2015-01-Jan/Chicago
+        self.default_directory_path_definition = {
             'date': '%Y-%m-%b',
             'location': '%city',
             'full_path': '%date/%album|%location|"{}"'.format(
                             geolocation.__DEFAULT_LOCATION__
                          ),
         }
-        self.cached_folder_path_definition = None
+        self.default_file_path_definition = {
+            'date': '%Y-%m-%d_%H-%M-%S',
+            'full_path': '%date-%basename-%title.%extension',
+        }
+        self.cached_path_definitions = {}
         self.default_parts = ['album', 'city', 'state', 'country']
+        self.kind = {'directory': 'directory', 'file': 'file'}
 
     def create_directory(self, directory_path):
         """Create a directory if it does not already exist.
@@ -98,7 +103,13 @@ class FileSystem(object):
         return os.getcwd()
 
     def get_file_name(self, media):
-        """Generate file name for a photo or video using its metadata.
+        return self.get_file_name_v1(media)
+
+
+    def get_file_name_v1(self, media):
+        """Original and depcrecated version of get_file_name.
+        This method acts as a fallback. See #107 for details.
+        Generate file name for a photo or video using its metadata.
 
         We use an ISO8601-like format for the file name prefix. Instead of
         colons as the separator for hours, minutes and seconds we use a hyphen.
@@ -135,6 +146,19 @@ class FileSystem(object):
             if(len(base_name) == 0):
                 base_name = metadata['base_name']
 
+        file_name = self.get_path(self.kind['file'], metadata).lower()
+        """
+        jmathai
+        TODO
+        .lower() shoud probably be elsewhere, maybe get_path
+        """
+        return file_name.lower()
+
+        """
+        jmathai
+        TODO
+        this is the old code which should be replaced with get_path
+        """
         if(
             'title' in metadata and
             metadata['title'] is not None and
@@ -153,14 +177,14 @@ class FileSystem(object):
             metadata['extension'])
         return file_name.lower()
 
-    def get_folder_path_definition(self):
-        """Returns a list of folder definitions.
+    def get_path_definition(self, kind=None):
+        """Returns a list of directory definitions.
 
-        Each element in the list represents a folder.
-        Fallback folders are supported and are nested lists.
+        Each element in the list represents a directory.
+        Fallback directories are supported and are nested lists.
         Return values take the following form.
         [
-            ('date', '%Y-%m-%d'),
+            [('date', '%Y-%m-%d')],
             [
                 ('location', '%city'),
                 ('album', ''),
@@ -172,38 +196,46 @@ class FileSystem(object):
         """
         # If we've done this already then return it immediately without
         # incurring any extra work
-        if self.cached_folder_path_definition is not None:
-            return self.cached_folder_path_definition
+        if kind in self.cached_path_definitions:
+            return self.cached_path_definitions[kind]
 
         config = load_config()
 
-        # If Directory is in the config we assume full_path and its
-        #  corresponding values (date, location) are also present
-        config_directory = self.default_folder_path_definition
-        if('Directory' in config):
-            config_directory = config['Directory']
+        if kind == self.kind['directory']:
+            # If Directory is in the config we assume full_path and its
+            #  corresponding values (date, location) are also present
+            config_def = self.default_directory_path_definition
+            if 'Directory' in config:
+                config_def = config['Directory']
+        elif kind == self.kind['file']:
+            config_def = self.default_file_path_definition
+            if 'File' in config:
+                config_def = config['File']
+        else:
+            pass
 
         # Find all subpatterns of full_path that map to directories.
         #  I.e. %foo/%bar => ['foo', 'bar']
         #  I.e. %foo/%bar|%example|"something" => ['foo', 'bar|example|"something"']
+        valid_characters = '[^/]' if kind == self.kind['directory'] else '[a-z]'
         path_parts = re.findall(
-                         '(\%[^/]+)',
-                         config_directory['full_path']
+                         '(\%{}+)'.format(valid_characters),
+                         config_def['full_path']
                      )
 
         if not path_parts or len(path_parts) == 0:
-            return self.default_folder_path_definition
+            return self.default_directory_path_definition
 
-        self.cached_folder_path_definition = []
+        self.cached_path_definitions[kind] = []
         for part in path_parts:
-            if part in config_directory:
+            if part in config_def:
                 part = part[1:]
-                self.cached_folder_path_definition.append(
-                    [(part, config_directory[part])]
+                self.cached_path_definitions[kind].append(
+                    [(part, config_def[part])]
                 )
             elif part in self.default_parts:
                 part = part[1:]
-                self.cached_folder_path_definition.append(
+                self.cached_path_definitions[kind].append(
                     [(part, '')]
                 )
             else:
@@ -211,20 +243,53 @@ class FileSystem(object):
                 for p in part.split('|'):
                     p = p[1:]
                     this_part.append(
-                        (p, config_directory[p] if p in config_directory else '')
+                        (p, config_def[p] if p in config_def else '')
                     )
-                self.cached_folder_path_definition.append(this_part)
+                self.cached_path_definitions[kind].append(this_part)
 
-        return self.cached_folder_path_definition
+        return self.cached_path_definitions[kind]
 
-    def get_folder_path(self, metadata):
-        """Given a media's metadata this function returns the folder path as a string.
+    def get_path(self, kind, metadata):
+        """Given a media's metadata this function returns the directory or file path as a string.
 
         :param metadata dict: Metadata dictionary.
         :returns: str
         """
-        path_parts = self.get_folder_path_definition()
-        path = []
+
+        """
+        jmathai
+        TODO REFACTOR THIS
+        This is the closest working code but there's an issue with trimming non template ccharacters.
+        reproduce by running this test
+        nosetests elodie/tests/filesystem_test.py:test_process_existing_file_without_changes
+        """
+        def build_path(path, part, value, kind):
+            if kind == self.kind['directory']:
+                path = list(os.path.split(path))
+                path.append(value)
+                return os.path.join(*path)
+            else:
+                if path == '':
+                    config = load_config()
+                    path = self.default_file_path_definition['full_path']
+                    if 'File' in config and 'full_path' in config['File']:
+                        path = config['File']['full_path']
+
+                regex = r'(\%({})([^%]*))'.format(part)
+                if not value or len(re.findall(regex, path)) == 0:
+                    path = re.sub(
+                        regex,
+                        '',
+                        path)
+                else:
+                    path = re.sub(
+                        regex,
+                        r'{}\3'.format(value),
+                        path)
+                return path
+
+        path_parts = self.get_path_definition(kind)
+        path = ''
         for path_part in path_parts:
             # We support fallback values so that
             #  'album|city|"Unknown Location"
@@ -235,9 +300,7 @@ class FileSystem(object):
             for this_part in path_part:
                 part, mask = this_part
                 if part in ('date', 'day', 'month', 'year'):
-                    path.append(
-                        time.strftime(mask, metadata['date_taken'])
-                    )
+                    path = build_path(path, part, time.strftime(mask, metadata['date_taken']), kind)
                     break
                 elif part in ('location', 'city', 'state', 'country'):
                     place_name = geolocation.place_name(
@@ -246,21 +309,29 @@ class FileSystem(object):
                     )
 
                     location_parts = re.findall('(%[^%]+)', mask)
-                    parsed_folder_name = self.parse_mask_for_location(
+                    parsed_directory_name = self.parse_mask_for_location(
                         mask,
                         location_parts,
                         place_name,
                     )
-                    path.append(parsed_folder_name)
+                    path = build_path(path, part, parsed_directory_name, kind)
                     break
-                elif part in ('album'):
-                    if metadata['album']:
-                        path.append(metadata['album'])
+                elif part in ('album', 'title', 'extension'):
+                    if part in metadata:
+                        path = build_path(path, part, metadata[part], kind)
+                        break
+                elif part in ('basename'):
+                    if 'base_name' in metadata:
+                        path = build_path(path, part, metadata['base_name'], kind)
+                        break
+                elif part in ('filename'):
+                    if 'original_name' in metadata:
+                        path = build_path(path, part, metadata['original_name'], kind)
                         break
                 elif part.startswith('"') and part.endswith('"'):
-                    path.append(part[1:-1])
+                    path = build_path(path, part, part[1:-1], kind)
 
-        return os.path.join(*path)
+        return path
 
     def parse_mask_for_location(self, mask, location_parts, place_name):
         """Takes a mask for a location and interpolates the actual place names.
@@ -291,7 +362,7 @@ class FileSystem(object):
         :returns: str
         """
         found = False
-        folder_name = mask
+        directory_name = mask
         for loc_part in location_parts:
             # We assume the search returns a tuple of length 2.
             # If not then it's a bad mask in config.ini.
@@ -312,15 +383,15 @@ class FileSystem(object):
                 replace_target = component_full
                 replace_with = ''
 
-            folder_name = folder_name.replace(
+            directory_name = directory_name.replace(
                 replace_target,
                 replace_with,
             )
 
-        if(not found and folder_name == ''):
-            folder_name = place_name['default']
+        if(not found and directory_name == ''):
+            directory_name = place_name['default']
 
-        return folder_name
+        return directory_name
 
     def process_file(self, _file, destination, media, **kwargs):
         move = False
@@ -338,7 +409,7 @@ class FileSystem(object):
         media.set_original_name()
         metadata = media.get_metadata()
 
-        directory_name = self.get_folder_path(metadata)
+        directory_name = self.get_path(self.kind['directory'], metadata)
 
         dest_directory = os.path.join(destination, directory_name)
         file_name = self.get_file_name(media)
@@ -395,7 +466,7 @@ class FileSystem(object):
         """
 
         # Initialize date taken to what's returned from the metadata function.
-        # If the folder and file name follow a time format of
+        # If the directory and file name follow a time format of
         #   YYYY-MM-DD_HH-MM-SS-IMG_0001.JPG then we override the date_taken
         file_path = media.get_file_path()
         metadata = media.get_metadata()
