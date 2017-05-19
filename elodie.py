@@ -253,7 +253,7 @@ def _update(album, location, time, title, paths, debug):
         # '/path/to/file/photo.jpg' -> '/path/to/file' ->
         #  ['path','to','file'] -> ['path','to'] -> '/path/to'
         current_directory = os.path.dirname(current_file)
-        destination_depth = -1 * len(FILESYSTEM.get_path_definition(FILESYSTEM.kind['folder']))
+        destination_depth = -1 * len(FILESYSTEM.get_path_definition(FILESYSTEM.kind['directory']))
         destination = os.sep.join(
                           os.path.normpath(
                               current_directory
