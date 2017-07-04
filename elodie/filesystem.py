@@ -23,6 +23,11 @@ class FileSystem(object):
     """A class for interacting with the file system."""
 
     def __init__(self):
+        # The default folder path is along the lines of 2017-06-17_01-04-14-dsc_1234-some-title.jpg
+        self.default_file_name_definition = {
+            'date': '%Y-%m-%d_%H-%M-%S',
+            'name': '%date-%original_name-%title.%extension',
+        }
         # The default folder path is along the lines of 2015-01-Jan/Chicago
         self.default_folder_path_definition = {
             'date': '%Y-%m-%b',
@@ -31,8 +36,9 @@ class FileSystem(object):
                             geolocation.__DEFAULT_LOCATION__
                          ),
         }
+        self.cached_file_name_definition = None
         self.cached_folder_path_definition = None
-        self.default_parts = ['album', 'city', 'state', 'country']
+        self.default_parts = ['album', 'city', 'country', 'extension', 'state']
 
     def create_directory(self, directory_path):
         """Create a directory if it does not already exist.
@@ -116,6 +122,55 @@ class FileSystem(object):
         if(metadata is None):
             return None
 
+        name_template, definition = self.get_file_name_definition()
+
+        name = name_template
+        for parts in definition:
+            this_value = None
+            for this_part in parts:
+                part, mask = this_part
+                if part in ('date', 'day', 'month', 'year'):
+                    this_value = time.strftime(mask, metadata['date_taken'])
+                    break
+                elif part in ('location', 'city', 'state', 'country'):
+                    place_name = geolocation.place_name(
+                        metadata['latitude'],
+                        metadata['longitude']
+                    )
+
+                    location_parts = re.findall('(%[^%]+)', mask)
+                    this_value = self.parse_mask_for_location(
+                        mask,
+                        location_parts,
+                        place_name,
+                    )
+                    break
+                elif part in ('album', 'base_name', 'extension', 'original_name', 'title'):
+                    if metadata[part]:
+                        this_value = metadata[part]
+                        break
+                elif part.startswith('"') and part.endswith('"'):
+                    this_value = part[1:-1]
+                    break
+
+            if this_value is None:
+                name = re.sub(
+                    '[^a-z_]+%{}'.format(part),
+                    '',
+                    name,
+                )
+            else:
+                name = re.sub(
+                    '%{}'.format(part),
+                    this_value,
+                    name,
+                )
+
+        return name
+
+
+        # DELETE ME ..
+
         # First we check if we have metadata['original_name'].
         # We have to do this for backwards compatibility because
         #   we original did not store this back into EXIF.
@@ -152,6 +207,73 @@ class FileSystem(object):
             base_name,
             metadata['extension'])
         return file_name.lower()
+        
+        # DELETE ME ^^
+
+    def get_file_name_definition(self):
+        """Returns a list of folder definitions.
+
+        Each element in the list represents a folder.
+        Fallback folders are supported and are nested lists.
+        Return values take the following form.
+        [
+            ('date', '%Y-%m-%d'),
+            [
+                ('location', '%city'),
+                ('album', ''),
+                ('"Unknown Location", '')
+            ]
+        ]
+
+        :returns: list
+        """
+        # If we've done this already then return it immediately without
+        # incurring any extra work
+        if self.cached_file_name_definition is not None:
+            return self.cached_file_name_definition
+
+        config = load_config()
+
+        # If Directory is in the config we assume full_path and its
+        #  corresponding values (date, location) are also present
+        config_directory = self.default_file_name_definition
+        if('File' in config):
+            config_directory = config['File']
+
+        # Find all subpatterns of full_path that map to directories.
+        #  I.e. %foo/%bar => ['foo', 'bar']
+        #  I.e. %foo/%bar|%example|"something" => ['foo', 'bar|example|"something"']
+        path_parts = re.findall(
+                         '(\%[a-z_]+)',
+                         config_directory['name']
+                     )
+
+        if not path_parts or len(path_parts) == 0:
+            return (config_directory['name'], self.default_file_name_definition)
+
+        self.cached_file_name_definition = []
+        for part in path_parts:
+            if part in config_directory:
+                part = part[1:]
+                self.cached_file_name_definition.append(
+                    [(part, config_directory[part])]
+                )
+            elif part in self.default_parts:
+                part = part[1:]
+                self.cached_file_name_definition.append(
+                    [(part, '')]
+                )
+            else:
+                this_part = []
+                for p in part.split('|'):
+                    p = p[1:]
+                    this_part.append(
+                        (p, config_directory[p] if p in config_directory else '')
+                    )
+                self.cached_file_name_definition.append(this_part)
+
+        self.cached_file_name_definition = (config_directory['name'], self.cached_file_name_definition)
+        return self.cached_file_name_definition
 
     def get_folder_path_definition(self):
         """Returns a list of folder definitions.
@@ -215,13 +337,14 @@ class FileSystem(object):
 
         return self.cached_folder_path_definition
 
-    def get_folder_path(self, metadata):
+    def get_folder_path(self, metadata, path_parts=None):
         """Given a media's metadata this function returns the folder path as a string.
 
         :param dict metadata: Metadata dictionary.
         :returns: str
         """
-        path_parts = self.get_folder_path_definition()
+        if path_parts is None:
+            path_parts = self.get_folder_path_definition()
         path = []
         for path_part in path_parts:
             # We support fallback values so that
@@ -294,7 +417,6 @@ class FileSystem(object):
             return part[1:-1]
 
         return ''
-
 
     def parse_mask_for_location(self, mask, location_parts, place_name):
         """Takes a mask for a location and interpolates the actual place names.
