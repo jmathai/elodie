@@ -136,7 +136,7 @@ class FileSystem(object):
                 base_name = metadata['base_name']
 
         # We replace contiguous whitespace characters with a single dash (-). gh-228
-        base_name = re.sub('\s+', '-', base_name)
+        base_name = re.sub('\s+', '-', base_name, re.UNICODE)
 
         if(
             'title' in metadata and
