@@ -184,6 +184,17 @@ def test_get_file_name_plain():
 
     assert file_name == helper.path_tz_fix('2015-12-05_00-59-26-plain.jpg'), file_name
 
+def test_get_file_name_with_space():
+    filesystem = FileSystem()
+    temporary_folder, folder = helper.create_working_folder()
+
+    origin = os.path.join(folder,'plain with space.jpg')
+    shutil.copyfile(helper.get_file('plain.jpg'), origin)
+    media = Photo(helper.get_file(origin))
+    file_name = filesystem.get_file_name(media)
+
+    assert file_name == helper.path_tz_fix('2015-12-05_00-59-26-plain-with-space.jpg'), file_name
+
 def test_get_file_name_with_title():
     filesystem = FileSystem()
     media = Photo(helper.get_file('with-title.jpg'))
