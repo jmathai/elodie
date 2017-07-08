@@ -107,7 +107,7 @@ def test_import_file_path_utf8_encoded_ascii():
     shutil.rmtree(folder)
     shutil.rmtree(folder_destination)
 
-    assert helper.path_tz_fix(os.path.join('2016-04-Apr','London',u'2016-04-07_11-15-26-unicode\xa0filename-sample-title.txt')) in dest_path, dest_path
+    assert helper.path_tz_fix(os.path.join('2016-04-Apr','London',u'2016-04-07_11-15-26-unicode-filename-sample-title.txt')) in dest_path, dest_path
 
 def test_import_file_path_unicode():
     temporary_folder, folder = helper.create_working_folder()
@@ -124,7 +124,7 @@ def test_import_file_path_unicode():
     shutil.rmtree(folder)
     shutil.rmtree(folder_destination)
 
-    assert helper.path_tz_fix(os.path.join('2016-04-Apr','London',u'2016-04-07_11-15-26-unicode\xa0filename-sample-title.txt')) in dest_path, dest_path
+    assert helper.path_tz_fix(os.path.join('2016-04-Apr','London',u'2016-04-07_11-15-26-unicode-filename-sample-title.txt')) in dest_path, dest_path
     
 def test_import_file_allow_duplicate_false():
     temporary_folder, folder = helper.create_working_folder()
