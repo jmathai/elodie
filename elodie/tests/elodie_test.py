@@ -181,6 +181,8 @@ def test_import_file_send_to_trash_false():
     assert dest_path1 is not None
 
 def test_import_file_send_to_trash_true():
+    raise SkipTest("Temporarily disable send2trash test gh-230")
+
     temporary_folder, folder = helper.create_working_folder()
     temporary_folder_destination, folder_destination = helper.create_working_folder()
 
