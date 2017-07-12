@@ -52,6 +52,8 @@ You'll notice that the photo was organized into an *Unknown Location* folder. Th
 
 Now you're ready to learn more about Elodie.
 
+<p align="center"><img src ="creative/logo@300x.png" /></p>
+
 ## Slowstart guide
 
 [Read a 3 part blog post on why I was created](https://medium.com/vantage/understanding-my-need-for-an-automated-photo-workflow-a2ff95b46f8f#.dmwyjlc57) and how [I can be used with Google Photos](https://medium.com/@jmathai/my-automated-photo-workflow-using-google-photos-and-elodie-afb753b8c724).
