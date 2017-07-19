@@ -196,20 +196,18 @@ class FileSystem(object):
 
         self.cached_folder_path_definition = []
         for part in path_parts:
+            part = part.replace('%', '')
             if part in config_directory:
-                part = part[1:]
                 self.cached_folder_path_definition.append(
                     [(part, config_directory[part])]
                 )
             elif part in self.default_parts:
-                part = part[1:]
                 self.cached_folder_path_definition.append(
                     [(part, '')]
                 )
             else:
                 this_part = []
                 for p in part.split('|'):
-                    p = p[1:]
                     this_part.append(
                         (p, config_directory[p] if p in config_directory else '')
                     )
