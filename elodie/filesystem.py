@@ -383,21 +383,22 @@ class FileSystem(object):
             os.utime(dest_path, (stat.st_atime, stat.st_mtime))
         else:
             compatability._copyfile(_file, dest_path)
-            self.set_utime(media)
+            self.set_utime(media, dest_path)
 
         db.add_hash(checksum, dest_path)
         db.update_hash_db()
 
         return dest_path
 
-    def set_utime(self, media):
+    def set_utime(self, media, file_path=None):
         """ Set the modification time on the file based on the file name.
         """
 
         # Initialize date taken to what's returned from the metadata function.
         # If the folder and file name follow a time format of
         #   YYYY-MM-DD_HH-MM-SS-IMG_0001.JPG then we override the date_taken
-        file_path = media.get_file_path()
+        if not file_path:
+            file_path = media.get_file_path()
         metadata = media.get_metadata()
         date_taken = metadata['date_taken']
         base_name = metadata['base_name']
