@@ -707,7 +707,7 @@ def test_get_folder_path_definition_default():
     if hasattr(load_config, 'config'):
         del load_config.config
 
-    assert path_definition == [[('date', '%Y-%m-%b')], [('album', ''), ('location', '%city'), ('Unknown Location"', '')]], path_definition
+    assert path_definition == [[('date', '%Y-%m-%b')], [('album', ''), ('location', '%city'), ('"Unknown Location"', '')]], path_definition
 
 @mock.patch('elodie.config.config_file', '%s/config.ini-date-location' % gettempdir())
 def test_get_folder_path_definition_date_location():
