@@ -565,7 +565,7 @@ def test_process_file_with_album_and_title_and_location():
     assert helper.path_tz_fix(os.path.join('2015-12-Dec','Test Album','2015-12-05_00-59-26-photo-some-title.jpg')) in destination, destination
 
 # gh-89 (setting album then title reverts album)
-def test_process_video_with_album_then_title():
+def test_process_file_video_with_album_then_title():
     filesystem = FileSystem()
     temporary_folder, folder = helper.create_working_folder()
 
@@ -589,7 +589,7 @@ def test_process_video_with_album_then_title():
     assert helper.path_tz_fix(os.path.join('2015-01-Jan','test_album','2015-01-19_12-45-11-movie-test_title.mov')) in destination, destination
 
 @mock.patch('elodie.config.config_file', '%s/config.ini-multiple-directories' % gettempdir())
-def test_process_twice_more_than_two_levels_of_directories():
+def test_process_file_twice_more_than_two_levels_of_directories():
     with open('%s/config.ini-multiple-directories' % gettempdir(), 'w') as f:
         f.write("""
 [Directory]
@@ -619,7 +619,7 @@ full_path=%year/%month/%day
     shutil.rmtree(folder)
     shutil.rmtree(os.path.dirname(os.path.dirname(destination)))
 
-def test_process_existing_file_without_changes():
+def test_process_file_existing_file_without_changes():
     # gh-210
     filesystem = FileSystem()
     temporary_folder, folder = helper.create_working_folder()
@@ -639,6 +639,28 @@ def test_process_existing_file_without_changes():
 
     shutil.rmtree(folder)
     shutil.rmtree(os.path.dirname(os.path.dirname(destination)))
+
+def test_process_file_modifies_destination_utime():
+    # gh-237 - make sure that the utime we're modifying is on the destination
+    # origin utime should be greater than destination since exif date is earlier
+    filesystem = FileSystem()
+    temporary_folder, folder = helper.create_working_folder()
+
+    origin = os.path.join(folder,'plain.jpg')
+    shutil.copyfile(helper.get_file('plain.jpg'), origin)
+
+    time.sleep(1)
+
+    media = Photo(origin)
+    destination = filesystem.process_file(origin, temporary_folder, media, allowDuplicate=True)
+
+    origin_utime = os.path.getmtime(origin)
+    destination_utime = os.path.getmtime(destination)
+
+    shutil.rmtree(folder)
+    shutil.rmtree(os.path.dirname(os.path.dirname(destination)))
+
+    assert origin_utime > destination_utime, "origin utime !> destination utime ({} !> {})".format(origin_utime, destination_utime)
 
 def test_set_utime_with_exif_date():
     filesystem = FileSystem()
