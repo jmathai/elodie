@@ -597,6 +597,8 @@ date=%Y-%m
 full_path=%date/%album|"fallback"
         """)
 
+    if hasattr(load_config, 'config'):
+        del load_config.config
     filesystem = FileSystem()
     temporary_folder, folder = helper.create_working_folder()
 
@@ -605,6 +607,8 @@ full_path=%date/%album|"fallback"
 
     media = Photo(origin)
     destination = filesystem.process_file(origin, temporary_folder, media, allowDuplicate=True)
+    if hasattr(load_config, 'config'):
+        del load_config.config
 
     assert helper.path_tz_fix(os.path.join('2015-12', 'fallback', '2015-12-05_00-59-26-plain.jpg')) in destination, destination
 
@@ -622,6 +626,8 @@ day=%d
 full_path=%year/%month/%day
         """)
 
+    if hasattr(load_config, 'config'):
+        del load_config.config
     filesystem = FileSystem()
     temporary_folder, folder = helper.create_working_folder()
 
@@ -630,12 +636,18 @@ full_path=%year/%month/%day
 
     media = Photo(origin)
     destination = filesystem.process_file(origin, temporary_folder, media, allowDuplicate=True)
+    if hasattr(load_config, 'config'):
+        del load_config.config
 
     assert helper.path_tz_fix(os.path.join('2015','12','05', '2015-12-05_00-59-26-plain.jpg')) in destination, destination
 
+    if hasattr(load_config, 'config'):
+        del load_config.config
     media_second = Photo(destination)
     media_second.set_title('foo')
     destination_second = filesystem.process_file(destination, temporary_folder, media_second, allowDuplicate=True)
+    if hasattr(load_config, 'config'):
+        del load_config.config
 
     assert destination.replace('.jpg', '-foo.jpg') == destination_second, destination_second
 
