@@ -588,6 +588,33 @@ def test_process_video_with_album_then_title():
     assert origin_checksum != destination_checksum, destination_checksum
     assert helper.path_tz_fix(os.path.join('2015-01-Jan','test_album','2015-01-19_12-45-11-movie-test_title.mov')) in destination, destination
 
+@mock.patch('elodie.config.config_file', '%s/config.ini-fallback-folder' % gettempdir())
+def test_process_file_fallback_folder():
+    with open('%s/config.ini-fallback-folder' % gettempdir(), 'w') as f:
+        f.write("""
+[Directory]
+date=%Y-%m
+full_path=%date/%album|"fallback"
+        """)
+
+    if hasattr(load_config, 'config'):
+        del load_config.config
+    filesystem = FileSystem()
+    temporary_folder, folder = helper.create_working_folder()
+
+    origin = os.path.join(folder,'plain.jpg')
+    shutil.copyfile(helper.get_file('plain.jpg'), origin)
+
+    media = Photo(origin)
+    destination = filesystem.process_file(origin, temporary_folder, media, allowDuplicate=True)
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    assert helper.path_tz_fix(os.path.join('2015-12', 'fallback', '2015-12-05_00-59-26-plain.jpg')) in destination, destination
+
+    shutil.rmtree(folder)
+    shutil.rmtree(os.path.dirname(os.path.dirname(destination)))
+
 @mock.patch('elodie.config.config_file', '%s/config.ini-multiple-directories' % gettempdir())
 def test_process_twice_more_than_two_levels_of_directories():
     with open('%s/config.ini-multiple-directories' % gettempdir(), 'w') as f:
@@ -599,6 +626,8 @@ day=%d
 full_path=%year/%month/%day
         """)
 
+    if hasattr(load_config, 'config'):
+        del load_config.config
     filesystem = FileSystem()
     temporary_folder, folder = helper.create_working_folder()
 
@@ -607,12 +636,18 @@ full_path=%year/%month/%day
 
     media = Photo(origin)
     destination = filesystem.process_file(origin, temporary_folder, media, allowDuplicate=True)
+    if hasattr(load_config, 'config'):
+        del load_config.config
 
     assert helper.path_tz_fix(os.path.join('2015','12','05', '2015-12-05_00-59-26-plain.jpg')) in destination, destination
 
+    if hasattr(load_config, 'config'):
+        del load_config.config
     media_second = Photo(destination)
     media_second.set_title('foo')
     destination_second = filesystem.process_file(destination, temporary_folder, media_second, allowDuplicate=True)
+    if hasattr(load_config, 'config'):
+        del load_config.config
 
     assert destination.replace('.jpg', '-foo.jpg') == destination_second, destination_second
 
@@ -707,7 +742,7 @@ def test_get_folder_path_definition_default():
     if hasattr(load_config, 'config'):
         del load_config.config
 
-    assert path_definition == [[('date', '%Y-%m-%b')], [('album', ''), ('location', '%city'), ('Unknown Location"', '')]], path_definition
+    assert path_definition == [[('date', '%Y-%m-%b')], [('album', ''), ('location', '%city'), ('"Unknown Location"', '')]], path_definition
 
 @mock.patch('elodie.config.config_file', '%s/config.ini-date-location' % gettempdir())
 def test_get_folder_path_definition_date_location():
