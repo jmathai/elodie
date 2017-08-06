@@ -691,7 +691,7 @@ def test_set_utime_with_exif_date():
 
     assert initial_time != time.mktime(metadata_initial['date_taken'])
 
-    filesystem.set_utime(media_initial)
+    filesystem.set_utime_from_metadata(media_initial.get_metadata(), media_initial.get_file_path())
     final_stat = os.stat(origin)
     final_checksum = helper.checksum(origin)
 
@@ -720,7 +720,7 @@ def test_set_utime_without_exif_date():
 
     assert initial_time == time.mktime(metadata_initial['date_taken'])
 
-    filesystem.set_utime(media_initial)
+    filesystem.set_utime_from_metadata(media_initial.get_metadata(), media_initial.get_file_path())
     final_stat = os.stat(origin)
     final_checksum = helper.checksum(origin)
 
