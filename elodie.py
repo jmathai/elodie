@@ -110,7 +110,7 @@ def _import(destination, source, file, album_from_folder, trash, allow_duplicate
         else:
             files.add(path)
 
-    for current_file in files:
+    for current_file in sorted(files):
         dest_path = import_file(current_file, destination, album_from_folder,
                     trash, allow_duplicates)
         result.append((current_file, dest_path))
