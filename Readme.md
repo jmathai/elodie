@@ -172,11 +172,11 @@ Usage: elodie.py verify
 
 OK, so what if you don't like the folders being named `2015-07-Jul/Mountain View`? No problem!
 
-You can add a custom folder structure by editing your `config.ini` file.
+You can add a custom folder structure by editing your `config.ini` file (which should be placed under `~/.elodie/config.ini`).
 
 #### Custom folder examples
 
-Sometimes examples are easier to understand than explainations so I'll start there. If you'd like to understand my magic I explain it in more detail below these examples. You customize your folder structure in the `Directory` section of your `config.ini`.
+Sometimes examples are easier to understand than explainations so I'll start there. If you'd like to understand my magic I explain it in more detail below these examples. You customize your folder structure in the `Directory` section of your `config.ini`. For details of the supported formats see [strftime.org](http://strftime.org/)
 
 ```
 location=%city, %state
