@@ -282,6 +282,32 @@ full_path=%year/%month/%album|%"No Album Fool"/%month
 
     assert path == os.path.join('2015','12','No Album Fool','12'), path
 
+@mock.patch('elodie.config.config_file', '%s/config.ini-fallback-multiple' % gettempdir())
+def test_get_folder_path_with_fallback_multiple_folder():
+    with open('%s/config.ini-fallback-multiple' % gettempdir(), 'w') as f:
+        f.write("""
+[MapQuest]
+key=czjNKTtFjLydLteUBwdgKAIC8OAbGLUx
+
+[Directory]
+year=%Y
+month=%m
+country=%country
+city=%city
+state=%state
+full_path=%year/%country|%month/%city|%state|"."
+        """)
+#full_path=%year/%album|"No Album"
+    if hasattr(load_config, 'config'):
+        del load_config.config
+    filesystem = FileSystem()
+    media = Photo(helper.get_file('plain.jpg'))
+    path = filesystem.get_folder_path(media.get_metadata())
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    assert path == os.path.join('2015','12','.'), path
+
 @mock.patch('elodie.config.config_file', '%s/config.ini-location-date' % gettempdir())
 def test_get_folder_path_with_with_more_than_two_levels():
     with open('%s/config.ini-location-date' % gettempdir(), 'w') as f:
