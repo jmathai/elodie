@@ -9,7 +9,6 @@ from mock import patch
 
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))))
 
-from elodie import constants
 from elodie.config import load_config
 
 BASE_PATH = os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))

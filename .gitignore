@@ -1,6 +1,7 @@
 **/.DS_Store
 **/*.pyc
 **/config.ini
+**/constants_override.py
 **/node_modules/**
 dist/**
 docs/_build
