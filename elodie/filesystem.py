@@ -251,9 +251,9 @@ class FileSystem(object):
                     )
                     path.append(parsed_folder_name)
                     break
-                elif part in ('album'):
-                    if metadata['album']:
-                        path.append(metadata['album'])
+                elif part in ('album', 'camera_make', 'camera_model'):
+                    if metadata[part]:
+                        path.append(metadata[part])
                         break
                 elif part.startswith('"') and part.endswith('"'):
                     path.append(part[1:-1])

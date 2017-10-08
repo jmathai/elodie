@@ -226,23 +226,44 @@ def test_get_folder_path_with_location():
 
     assert path == os.path.join('2015-12-Dec','Sunnyvale'), path
 
-def test_get_folder_path_with_int_in_source_path():
-    # gh-239
+@mock.patch('elodie.config.config_file', '%s/config.ini-original-with-camera-make-and-model' % gettempdir())
+def test_get_folder_path_with_camera_make_and_model():
+    with open('%s/config.ini-original-with-camera-make-and-model' % gettempdir(), 'w') as f:
+        f.write("""
+[Directory]
+full_path=%camera_make/%camera_model
+        """)
+    if hasattr(load_config, 'config'):
+        del load_config.config
     filesystem = FileSystem()
-    temporary_folder, folder = helper.create_working_folder('int')
-
-    origin = os.path.join(folder,'plain.jpg')
-    shutil.copyfile(helper.get_file('plain.jpg'), origin)
-
-    media = Photo(origin)
+    media = Photo(helper.get_file('plain.jpg'))
     path = filesystem.get_folder_path(media.get_metadata())
+    if hasattr(load_config, 'config'):
+        del load_config.config
 
-    assert path == os.path.join('2015-12-Dec','Unknown Location'), path
+    assert path == os.path.join('Canon', 'Canon EOS REBEL T2i'), path
 
-@mock.patch('elodie.config.config_file', '%s/config.ini-int-in-path' % gettempdir())
+@mock.patch('elodie.config.config_file', '%s/config.ini-original-with-camera-make-and-model-fallback' % gettempdir())
+def test_get_folder_path_with_camera_make_and_model_fallback():
+    with open('%s/config.ini-original-with-camera-make-and-model-fallback' % gettempdir(), 'w') as f:
+        f.write("""
+[Directory]
+full_path=%camera_make|"nomake"/%camera_model|"nomodel"
+        """)
+    if hasattr(load_config, 'config'):
+        del load_config.config
+    filesystem = FileSystem()
+    media = Photo(helper.get_file('no-exif.jpg'))
+    path = filesystem.get_folder_path(media.get_metadata())
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    assert path == os.path.join('nomake', 'nomodel'), path
+
+@mock.patch('elodie.config.config_file', '%s/config.ini-int-in-component-path' % gettempdir())
 def test_get_folder_path_with_int_in_config_component():
     # gh-239
-    with open('%s/config.ini-int-in-path' % gettempdir(), 'w') as f:
+    with open('%s/config.ini-int-in-component-path' % gettempdir(), 'w') as f:
         f.write("""
 [Directory]
 date=%Y
@@ -257,6 +278,19 @@ full_path=%date
         del load_config.config
 
     assert path == os.path.join('2015'), path
+
+def test_get_folder_path_with_int_in_source_path():
+    # gh-239
+    filesystem = FileSystem()
+    temporary_folder, folder = helper.create_working_folder('int')
+
+    origin = os.path.join(folder,'plain.jpg')
+    shutil.copyfile(helper.get_file('plain.jpg'), origin)
+
+    media = Photo(origin)
+    path = filesystem.get_folder_path(media.get_metadata())
+
+    assert path == os.path.join('2015-12-Dec','Unknown Location'), path
 
 @mock.patch('elodie.config.config_file', '%s/config.ini-original-default-unknown-location' % gettempdir())
 def test_get_folder_path_with_original_default_unknown_location():
