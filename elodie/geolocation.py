@@ -18,6 +18,7 @@ from elodie import constants
 from elodie import log
 from elodie.localstorage import Db
 
+
 __KEY__ = None
 __DEFAULT_LOCATION__ = 'Unknown Location'
 

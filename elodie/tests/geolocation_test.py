@@ -112,6 +112,7 @@ def test_lookup_with_valid_key():
     assert latLng['lat'] == 37.36883, latLng
     assert latLng['lng'] == -122.03635, latLng
 
+#@mock.patch('elodie.constants.location_db', '%s/location.json-cached' % gettempdir())
 @mock.patch('elodie.constants.location_db', '%s/location.json-cached' % gettempdir())
 def test_place_name_deprecated_string_cached():
     # See gh-160 for backwards compatability needed when a string is stored instead of a dict
