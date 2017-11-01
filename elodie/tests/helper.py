@@ -27,9 +27,9 @@ def checksum(file_path, blocksize=65536):
         return hasher.hexdigest()
     return None
 
-def create_working_folder():
+def create_working_folder(format=None):
     temporary_folder = tempfile.gettempdir()
-    folder = os.path.join(temporary_folder, random_string(10), random_string(10))
+    folder = os.path.join(temporary_folder, random_string(10, format), random_string(10, format))
     os.makedirs(folder)
 
     return (temporary_folder, folder)
@@ -81,8 +81,14 @@ def populate_folder(number_of_files, include_invalid=False):
 
     return folder
 
-def random_string(length):
-    return ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(length))
+def random_string(length, format=None):
+    format_choice = string.ascii_uppercase + string.digits
+    if format == 'int':
+        format_choice = string.digits
+    elif format == 'str':
+        format_choice = string.asci_uppercase
+
+    return ''.join(random.SystemRandom().choice(format_choice) for _ in range(length))
 
 def random_decimal():
     return random.random()
