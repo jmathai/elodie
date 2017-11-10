@@ -249,8 +249,9 @@ class FileSystem(object):
                         location_parts,
                         place_name,
                     )
-                    path.append(parsed_folder_name)
-                    break
+                    if parsed_folder_name:
+                        path.append(parsed_folder_name)
+                        break
                 elif part in ('album'):
                     if metadata['album']:
                         path.append(metadata['album'])
@@ -315,8 +316,8 @@ class FileSystem(object):
                 replace_with,
             )
 
-        if(not found and folder_name == ''):
-            folder_name = place_name['default']
+        """if(not found and folder_name == ''):
+            folder_name = place_name['default']"""
 
         return folder_name
 
