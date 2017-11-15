@@ -214,21 +214,26 @@ What this asks me to do is to name the last folder the same as the album I find 
 
 #### How folder customization works
 
-You can construct your folder structure using a combination of the location and dates. Under the `Directory` section of your `config.ini` file you can define placeholder names and assign each a value. For example, `date=%Y-%m` would create a date placeholder with a value of YYYY-MM which would be filled in with the date from the EXIF on the photo.
+You can construct your folder structure using a combination of the location, dates and camera make/model. Under the `Directory` section of your `config.ini` file you can define placeholder names and assign each a value. For example, `date=%Y-%m` would create a date placeholder with a value of YYYY-MM which would be filled in with the date from the EXIF on the photo.
 
-The placeholders can be used to define the folder structure you'd like to create. The example above happens to be the default structure and would look like `2015-07-Jul/Mountain View`.
+The placeholders can be used to define the folder structure you'd like to create. The default structure would look like `2015-07-Jul/Mountain View`.
 
-I have a few built-in location placeholders you can use. Use this to construct the `%location` you use in `full_path`.
-
-* `%city` the name of the city the photo was taken. Requires geolocation data in EXIF.
-* `%state` the name of the state the photo was taken. Requires geolocation data in EXIF.
-* `%country` the name of the country the photo was taken. Requires geolocation data in EXIF.
-
-I also have some date placeholders you can customize. You can use any of [the standard Python time directives](https://docs.python.org/2/library/datetime.html#strftime-and-strptime-behavior) to customize the date format to your liking.
+I have some date placeholders you can customize. You can use any of [the standard Python time directives](https://docs.python.org/2/library/datetime.html#strftime-and-strptime-behavior) to customize the date format to your liking.
 
 * `%day` the day the photo was taken.
 * `%month` the month the photo was taken.
 * `%year` the year the photo was taken.
+
+I have camera make and model placeholders which can be used to include the camera make and model into the folder path.
+
+* `%camera_make` the make of the camera which took the photo.
+* `%camera_model` the model of the camera which took the photo.
+
+I also have a few built-in location placeholders you can use. Use this to construct the `%location` you use in `full_path`.
+
+* `%city` the name of the city the photo was taken. Requires geolocation data in EXIF.
+* `%state` the name of the state the photo was taken. Requires geolocation data in EXIF.
+* `%country` the name of the country the photo was taken. Requires geolocation data in EXIF.
 
 In addition to my built-in and date placeholders you can combine them into a single folder name using my complex placeholders.
 
@@ -322,6 +327,8 @@ When I organize photos I look at the embedded metadata. Here are the details of 
 | Title (photo) | XMP:Title |   |
 | Title (video, audio) | XMP:DisplayName |   |
 | Album | XMP-xmpDM:Album, XMP:Album | XMP:Album is user defined in `configs/ExifTool_config` for backwards compatability |
+| Camera Make (photo, video) | EXIF:Make, QuickTime:Make |   |
+| Camera Model (photo, video) | EXIF:Model, QuickTime:Model |   |
 
 ## Using OpenStreetMap data from MapQuest
 
