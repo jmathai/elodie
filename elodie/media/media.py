@@ -42,8 +42,8 @@ class Media(Base):
                 'EXIF:ModifyDate'
             ]
         }
-        self.camera_make_key = 'EXIF:Make'
-        self.camera_model_key = 'EXIF:Model'
+        self.camera_make_keys = ['EXIF:Make', 'QuickTime:Make']
+        self.camera_model_keys = ['EXIF:Model', 'QuickTime:Model']
         self.album_keys = ['XMP-xmpDM:Album', 'XMP:Album']
         self.title_key = 'XMP:Title'
         self.latitude_keys = ['EXIF:GPSLatitude']
@@ -147,10 +147,11 @@ class Media(Base):
         if exiftool_attributes is None:
             return None
 
-        if(self.camera_make_key not in exiftool_attributes):
-            return None
+        for camera_make_key in self.camera_make_keys:
+            if camera_make_key in exiftool_attributes:
+                return exiftool_attributes[camera_make_key]
 
-        return exiftool_attributes[self.camera_make_key]
+        return None
 
     def get_camera_model(self):
         """Get the camera make stored in EXIF.
@@ -165,10 +166,11 @@ class Media(Base):
         if exiftool_attributes is None:
             return None
 
-        if(self.camera_model_key not in exiftool_attributes):
-            return None
+        for camera_model_key in self.camera_model_keys:
+            if camera_model_key in exiftool_attributes:
+                return exiftool_attributes[camera_model_key]
 
-        return exiftool_attributes[self.camera_model_key]
+        return None
 
     def get_original_name(self):
         """Get the original name stored in EXIF.
