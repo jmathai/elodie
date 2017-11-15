@@ -35,6 +35,19 @@ def test_empty_album():
     video = Video(helper.get_file('video.mov'))
     assert video.get_album() is None
 
+def test_get_camera_make():
+    video = Video(helper.get_file('video.mov'))
+    print(video.get_metadata())
+    make = video.get_camera_make()
+
+    assert make == 'Apple', make
+
+def test_get_camera_model():
+    video = Video(helper.get_file('video.mov'))
+    model = video.get_camera_model()
+
+    assert model == 'iPhone 5', model
+
 def test_get_coordinate():
     video = Video(helper.get_file('video.mov'))
     coordinate = video.get_coordinate()

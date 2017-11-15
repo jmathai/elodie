@@ -68,6 +68,12 @@ class Base(object):
         source = self.source
         return os.path.splitext(source)[1][1:].lower()
 
+    def get_camera_make(self):
+        return None
+
+    def get_camera_model(self):
+        return None
+
     def get_metadata(self, update_cache=False):
         """Get a dictionary of metadata for any file.
 
@@ -85,6 +91,8 @@ class Base(object):
 
         self.metadata = {
             'date_taken': self.get_date_taken(),
+            'camera_make': self.get_camera_make(),
+            'camera_model': self.get_camera_model(),
             'latitude': self.get_coordinate('latitude'),
             'longitude': self.get_coordinate('longitude'),
             'album': self.get_album(),
