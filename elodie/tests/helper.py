@@ -148,19 +148,32 @@ def isclose(a, b, rel_tol = 1e-8):
             diff <= abs(rel_tol * b))
 
 def reset_dbs():
-    hash_db = constants.hash_db
-    if os.path.isfile(hash_db):
-        os.rename(hash_db, '{}-test'.format(hash_db))
-
-    location_db = constants.location_db
-    if os.path.isfile(location_db):
-        os.rename(location_db, '{}-test'.format(location_db))
-
-def restore_dbs():
+    """ Back up hash_db and location_db """
     hash_db = '{}-test'.format(constants.hash_db)
-    if os.path.isfile(hash_db):
-        os.rename(hash_db, hash_db.replace('-test', ''))
+    if not os.path.isfile(hash_db):
+	    hash_db = constants.hash_db
+	    if os.path.isfile(hash_db):
+	        os.rename(hash_db, '{}-test'.format(hash_db))
+    #else restore_dbs wasn't called by a previous test, keep the
+    #existing hash_db backup
+	
 
     location_db = '{}-test'.format(constants.location_db)
     if os.path.isfile(location_db):
-        os.rename(location_db, location_db.replace('-test', ''))
+	    location_db = constants.location_db
+	    if os.path.isfile(location_db):
+	        os.rename(location_db, '{}-test'.format(location_db))
+    #else restore_dbs wasn't called by a previous test, keep the
+    #existing location_db backup
+
+def restore_dbs():
+    """ Restore back ups of hash_db and location_db """
+    hash_db = '{}-test'.format(constants.hash_db)
+    if os.path.isfile(hash_db):
+        # If you want cross-platform overwriting of the destination, 
+        # use os.replace() instead of rename().
+        os.replace(hash_db, hash_db.replace('-test', ''))
+
+    location_db = '{}-test'.format(constants.location_db)
+    if os.path.isfile(location_db):
+        os.replace(location_db, location_db.replace('-test', ''))
