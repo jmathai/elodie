@@ -63,3 +63,13 @@ def _copyfile(src, dst):
             os.close(fout)
         except:
             pass
+
+
+# If you want cross-platform overwriting of the destination, 
+# use os.replace() instead of rename().
+# https://docs.python.org/3/library/os.html#os.rename
+def _rename(src, dst):
+    if (constants.python_version == 3):
+        return os.replace(src, dst)
+    else:
+        return os.rename(src, dst)
