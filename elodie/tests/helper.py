@@ -160,7 +160,7 @@ def reset_dbs():
 	
 
     location_db = '{}-test'.format(constants.location_db)
-    if os.path.isfile(location_db):
+    if not os.path.isfile(location_db):
 	    location_db = constants.location_db
 	    if os.path.isfile(location_db):
 	        _rename(location_db, '{}-test'.format(location_db))
