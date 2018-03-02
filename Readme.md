@@ -154,8 +154,8 @@ Options:
 ```
 Usage: elodie.py generate-db [OPTIONS]
 
-  Regenerate the hash.json database which contains all of the sha1
-  signatures of media files.
+  Regenerate the hash.json database which contains all of the sha256
+  signatures of media files. The hash.json file is located at ~/.elodie/.
 
 Options:
   --source DIRECTORY  Source of your photo library.  [required]
