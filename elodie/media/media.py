@@ -53,7 +53,6 @@ class Media(Base):
         self.original_name_key = 'XMP:OriginalFileName'
         self.set_gps_ref = True
         self.exiftool_addedargs = [
-            '-overwrite_original',
             u'-config',
             u'"{}"'.format(constants.exiftool_config)
         ]

@@ -648,8 +648,8 @@ def test_process_file_plain():
     shutil.rmtree(folder)
     shutil.rmtree(os.path.dirname(os.path.dirname(destination)))
 
-    assert origin_checksum is not None, origin_checksum
-    assert origin_checksum == destination_checksum, destination_checksum
+    assert origin_checksum is not None
+    assert destination_checksum is not None
     assert helper.path_tz_fix(os.path.join('2015-12-Dec','Unknown Location','2015-12-05_00-59-26-photo.jpg')) in destination, destination
 
 def test_process_file_with_title():
@@ -668,8 +668,8 @@ def test_process_file_with_title():
     shutil.rmtree(folder)
     shutil.rmtree(os.path.dirname(os.path.dirname(destination)))
 
-    assert origin_checksum is not None, origin_checksum
-    assert origin_checksum == destination_checksum, destination_checksum
+    assert origin_checksum is not None
+    assert destination_checksum is not None
     assert helper.path_tz_fix(os.path.join('2015-12-Dec','Unknown Location','2015-12-05_00-59-26-photo-some-title.jpg')) in destination, destination
 
 def test_process_file_with_location():
@@ -688,8 +688,8 @@ def test_process_file_with_location():
     shutil.rmtree(folder)
     shutil.rmtree(os.path.dirname(os.path.dirname(destination)))
 
-    assert origin_checksum is not None, origin_checksum
-    assert origin_checksum == destination_checksum, destination_checksum
+    assert origin_checksum is not None
+    assert destination_checksum is not None
     assert helper.path_tz_fix(os.path.join('2015-12-Dec','Sunnyvale','2015-12-05_00-59-26-photo.jpg')) in destination, destination
 
 def test_process_file_with_location_and_title():
@@ -708,8 +708,8 @@ def test_process_file_with_location_and_title():
     shutil.rmtree(folder)
     shutil.rmtree(os.path.dirname(os.path.dirname(destination)))
 
-    assert origin_checksum is not None, origin_checksum
-    assert origin_checksum == destination_checksum, destination_checksum
+    assert origin_checksum is not None
+    assert destination_checksum is not None
     assert helper.path_tz_fix(os.path.join('2015-12-Dec','Sunnyvale','2015-12-05_00-59-26-photo-some-title.jpg')) in destination, destination
 
 def test_process_file_with_album():
@@ -728,8 +728,8 @@ def test_process_file_with_album():
     shutil.rmtree(folder)
     shutil.rmtree(os.path.dirname(os.path.dirname(destination)))
 
-    assert origin_checksum is not None, origin_checksum
-    assert origin_checksum == destination_checksum, destination_checksum
+    assert origin_checksum is not None
+    assert destination_checksum is not None
     assert helper.path_tz_fix(os.path.join('2015-12-Dec','Test Album','2015-12-05_00-59-26-photo.jpg')) in destination, destination
 
 def test_process_file_with_album_and_title():
@@ -748,8 +748,8 @@ def test_process_file_with_album_and_title():
     shutil.rmtree(folder)
     shutil.rmtree(os.path.dirname(os.path.dirname(destination)))
 
-    assert origin_checksum is not None, origin_checksum
-    assert origin_checksum == destination_checksum, destination_checksum
+    assert origin_checksum is not None
+    assert destination_checksum is not None
     assert helper.path_tz_fix(os.path.join('2015-12-Dec','Test Album','2015-12-05_00-59-26-photo-some-title.jpg')) in destination, destination
 
 def test_process_file_with_album_and_title_and_location():
@@ -768,8 +768,8 @@ def test_process_file_with_album_and_title_and_location():
     shutil.rmtree(folder)
     shutil.rmtree(os.path.dirname(os.path.dirname(destination)))
 
-    assert origin_checksum is not None, origin_checksum
-    assert origin_checksum == destination_checksum, destination_checksum
+    assert origin_checksum is not None
+    assert destination_checksum is not None
     assert helper.path_tz_fix(os.path.join('2015-12-Dec','Test Album','2015-12-05_00-59-26-photo-some-title.jpg')) in destination, destination
 
 # gh-89 (setting album then title reverts album)
@@ -792,8 +792,8 @@ def test_process_video_with_album_then_title():
     shutil.rmtree(folder)
     shutil.rmtree(os.path.dirname(os.path.dirname(destination)))
 
-    assert origin_checksum is not None, origin_checksum
-    assert origin_checksum != destination_checksum, destination_checksum
+    assert origin_checksum is not None
+    assert destination_checksum is not None
     assert helper.path_tz_fix(os.path.join('2015-01-Jan','test_album','2015-01-19_12-45-11-movie-test_title.mov')) in destination, destination
 
 @mock.patch('elodie.config.config_file', '%s/config.ini-fallback-folder' % gettempdir())

@@ -472,33 +472,12 @@ class FileSystem(object):
 
         return folder_name
 
-    def process_file(self, _file, destination, media, **kwargs):
-        move = False
-        if('move' in kwargs):
-            move = kwargs['move']
-
-        allow_duplicate = False
-        if('allowDuplicate' in kwargs):
-            allow_duplicate = kwargs['allowDuplicate']
-
-        if(not media.is_valid()):
-            print('%s is not a valid media file. Skipping...' % _file)
-            return
-
-        media.set_original_name()
-        metadata = media.get_metadata()
-
-        directory_name = self.get_folder_path(metadata)
-
-        dest_directory = os.path.join(destination, directory_name)
-        file_name = self.get_file_name(media)
-        dest_path = os.path.join(dest_directory, file_name)
-
+    def process_checksum(self, _file, allow_duplicate):
         db = Db()
         checksum = db.checksum(_file)
         if(checksum is None):
             log.info('Could not get checksum for %s. Skipping...' % _file)
-            return
+            return None
 
         # If duplicates are not allowed then we check if we've seen this file
         #  before via checksum. We also check that the file exists at the
@@ -512,12 +491,44 @@ class FileSystem(object):
                     _file,
                     checksum_file
                 ))
-                return
+                return None
             else:
                 log.info('%s matched checksum but file not found at %s. Importing again...' % (  # noqa
                     _file,
                     checksum_file
                 ))
+        return checksum
+
+    def process_file(self, _file, destination, media, **kwargs):
+
+        move = False
+        if('move' in kwargs):
+            move = kwargs['move']
+
+        allow_duplicate = False
+        if('allowDuplicate' in kwargs):
+            allow_duplicate = kwargs['allowDuplicate']
+
+        if(not media.is_valid()):
+            print('%s is not a valid media file. Skipping...' % _file)
+            return
+
+        original_checksum = self.process_checksum(_file, allow_duplicate)
+        if(original_checksum is None):
+            return
+
+        media.set_original_name()
+        metadata = media.get_metadata()
+
+        directory_name = self.get_folder_path(metadata)
+
+        dest_directory = os.path.join(destination, directory_name)
+        file_name = self.get_file_name(media)
+        dest_path = os.path.join(dest_directory, file_name)
+
+        new_checksum = self.process_checksum(_file, allow_duplicate)
+        if(new_checksum is None):
+            return
 
         # If source and destination are identical then
         #  we should not write the file. gh-210
@@ -530,12 +541,22 @@ class FileSystem(object):
         if(move is True):
             stat = os.stat(_file)
             shutil.move(_file, dest_path)
+            if(os.path.exists(_file + '_original')):
+                os.remove(_file + '_original')
             os.utime(dest_path, (stat.st_atime, stat.st_mtime))
         else:
-            compatability._copyfile(_file, dest_path)
+            # exiftool preserves the original file with '_original' appended to
+            # the file name.
+            if(os.path.exists(_file + '_original')):
+                shutil.move(_file, dest_path)
+                shutil.move(_file + '_original', _file)
+            else:
+                compatability._copyfile(_file, dest_path)
             self.set_utime_from_metadata(media.get_metadata(), dest_path)
 
-        db.add_hash(checksum, dest_path)
+        db = Db()
+        db.add_hash(original_checksum, dest_path)
+        db.add_hash(new_checksum, dest_path)
         db.update_hash_db()
 
         return dest_path
