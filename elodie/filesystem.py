@@ -476,7 +476,7 @@ class FileSystem(object):
         db = Db()
         checksum = db.checksum(_file)
         if(checksum is None):
-            log.info('Could not get checksum for %s. Skipping...' % _file)
+            log.info('Could not get checksum for %s.' % _file)
             return None
 
         # If duplicates are not allowed then we check if we've seen this file
@@ -487,13 +487,13 @@ class FileSystem(object):
         checksum_file = db.get_hash(checksum)
         if(allow_duplicate is False and checksum_file is not None):
             if(os.path.isfile(checksum_file)):
-                log.info('%s already exists at %s. Skipping...' % (
+                log.info('%s already at %s.' % (
                     _file,
                     checksum_file
                 ))
                 return None
             else:
-                log.info('%s matched checksum but file not found at %s. Importing again...' % (  # noqa
+                log.info('%s matched checksum but file not found at %s.' % (  # noqa
                     _file,
                     checksum_file
                 ))
@@ -515,6 +515,8 @@ class FileSystem(object):
 
         original_checksum = self.process_checksum(_file, allow_duplicate)
         if(original_checksum is None):
+            log.info('Original checksum returned None for %s. Skipping...' %
+                     _file)
             return
 
         media.set_original_name()
@@ -528,6 +530,7 @@ class FileSystem(object):
 
         new_checksum = self.process_checksum(_file, allow_duplicate)
         if(new_checksum is None):
+            log.info('New checksum returned None for %s. Skipping...' % _file)
             return
 
         # If source and destination are identical then
@@ -538,18 +541,33 @@ class FileSystem(object):
 
         self.create_directory(dest_directory)
 
+        # exiftool renames the original file by appending '_original' to the
+        # file name. A new file is written with new tags with the initial file
+        # name. See exiftool man page for more details.
+        exif_original_file = _file + '_original'
+
+        # Check if the source file was processed by exiftool and an _original
+        # file was created.
+        exif_original_file_exists = False
+        if(os.path.exists(exif_original_file)):
+            exif_original_file_exists = True
+
         if(move is True):
             stat = os.stat(_file)
+            # Move the processed file into the destination directory
             shutil.move(_file, dest_path)
-            if(os.path.exists(_file + '_original')):
-                os.remove(_file + '_original')
+
+            if(exif_original_file_exists):
+                # We can remove it as we don't need the initial file.
+                os.remove(exif_original_file)
             os.utime(dest_path, (stat.st_atime, stat.st_mtime))
         else:
-            # exiftool preserves the original file with '_original' appended to
-            # the file name.
-            if(os.path.exists(_file + '_original')):
+            if(exif_original_file_exists):
+                # Move the newly processed file with any updated tags to the
+                # destination directory
                 shutil.move(_file, dest_path)
-                shutil.move(_file + '_original', _file)
+                # Move the exif _original back to the initial source file
+                shutil.move(exif_original_file, _file)
             else:
                 compatability._copyfile(_file, dest_path)
             self.set_utime_from_metadata(media.get_metadata(), dest_path)
