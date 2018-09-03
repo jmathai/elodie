@@ -177,7 +177,7 @@ def lookup(**kwargs):
         path = '/geocoding/v1/address'
         if('lat' in kwargs and 'lon' in kwargs):
             path = '/nominatim/v1/reverse.php'
-        url = 'http://open.mapquestapi.com%s?%s' % (
+        url = 'https://open.mapquestapi.com%s?%s' % (
                     path,
                     urllib.parse.urlencode(params)
               )
