@@ -266,18 +266,43 @@ def test_get_folder_path_with_int_in_config_component():
     with open('%s/config.ini-int-in-component-path' % gettempdir(), 'w') as f:
         f.write("""
 [Directory]
-date=%Y
-full_path=%date
+date=%Y-%m-%d
+full_path=%date/%album|"No Album"
         """)
     if hasattr(load_config, 'config'):
         del load_config.config
     filesystem = FileSystem()
-    media = Photo(helper.get_file('plain.jpg'))
+    media = Photo(helper.get_file('with-album.jpg'))
+    print(media.get_metadata())
     path = filesystem.get_folder_path(media.get_metadata())
     if hasattr(load_config, 'config'):
         del load_config.config
 
     assert path == os.path.join('2015'), path
+
+@mock.patch('elodie.config.config_file', '%s/config.ini-int-in-component-path' % gettempdir())
+def test_gh_279():
+    # gh-239
+    with open('%s/config.ini-int-in-component-path' % gettempdir(), 'w') as f:
+        f.write("""
+[Directory]
+month=%m
+year=%Y
+date=%m-%Y
+custom=%date %city
+full_path=%custom
+        """)
+    if hasattr(load_config, 'config'):
+        del load_config.config
+    filesystem = FileSystem()
+    media = Photo(helper.get_file('with-location.jpg'))
+    print(media.get_metadata())
+    path = filesystem.get_folder_path(media.get_metadata())
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    print(path)
+    assert False and path == os.path.join('2015'), path
 
 def test_get_folder_path_with_int_in_source_path():
     # gh-239

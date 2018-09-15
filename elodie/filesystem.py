@@ -232,6 +232,8 @@ class FileSystem(object):
             #  Unknown Location - when neither an album nor location exist
             for this_part in path_part:
                 part, mask = this_part
+                path.append(self.dynamic_path_append(path, part, mask, metadata))
+                """
                 if part in ('date', 'day', 'month', 'year'):
                     path.append(
                         time.strftime(mask, metadata['date_taken'])
@@ -251,14 +253,67 @@ class FileSystem(object):
                     )
                     path.append(parsed_folder_name)
                     break
+                elif part in ('custom'):
+                    custom_parts = re.findall('(%[a-z_]+)', mask)
+                    folder = mask
+                    for i in custom_parts:
+                        folder = folder.replace(i, metadata[i[1:]])
+                    path.append(folder)
+                    break
                 elif part in ('album', 'camera_make', 'camera_model'):
                     if metadata[part]:
                         path.append(metadata[part])
                         break
                 elif part.startswith('"') and part.endswith('"'):
                     path.append(part[1:-1])
+                """
 
         return os.path.join(*path)
+
+    def dynamic_path_append(self, path, part, mask, metadata):
+        if part in ('custom'):
+            custom_parts = re.findall('(%[a-z_]+)', mask)
+            folder = mask
+            for i in custom_parts:
+                folder = folder.replace(
+                    i,
+                    self.dynamic_path_append([], i[1:], i, metadata)
+                )
+            return folder
+        elif part in ('date'):
+            config = load_config()
+            # If Directory is in the config we assume full_path and its
+            #  corresponding values (date, location) are also present
+            config_directory = self.default_folder_path_definition
+            if('Directory' in config):
+                config_directory = config['Directory']
+            date_mask = ''
+            if 'date' in config_directory:
+                date_mask = config_directory['date']
+            return time.strftime(date_mask, metadata['date_taken'])
+        elif part in ('day', 'month', 'year'):
+            return time.strftime(mask, metadata['date_taken'])
+        elif part in ('location', 'city', 'state', 'country'):
+            place_name = geolocation.place_name(
+                metadata['latitude'],
+                metadata['longitude']
+            )
+
+            location_parts = re.findall('(%[^%]+)', mask)
+            parsed_folder_name = self.parse_mask_for_location(
+                mask,
+                location_parts,
+                place_name,
+            )
+            return parsed_folder_name
+        elif part in ('album', 'camera_make', 'camera_model'):
+            if metadata[part]:
+                return metadata[part]
+        elif part.startswith('"') and part.endswith('"'):
+            return part[1:-1]
+
+        return ''
+
 
     def parse_mask_for_location(self, mask, location_parts, place_name):
         """Takes a mask for a location and interpolates the actual place names.
