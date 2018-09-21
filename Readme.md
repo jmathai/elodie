@@ -1,8 +1,6 @@
 # Hello, I'm Elodie
 ~~ *Your Personal EXIF-based Photo, Video and Audio Assistant* ~~
 
-*** [Get a sample chapter from my book, Photo Archiving for Nerds](https://photoarchivingfornerds.com/) ***
-
 [![Build Status](https://travis-ci.org/jmathai/elodie.svg?branch=master)](https://travis-ci.org/jmathai/elodie) [![Coverage Status](https://coveralls.io/repos/github/jmathai/elodie/badge.svg?branch=master)](https://coveralls.io/github/jmathai/elodie?branch=master) [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/jmathai/elodie/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/jmathai/elodie/?branch=master)
 
 ## Quickstart guide
@@ -154,8 +152,8 @@ Options:
 ```
 Usage: elodie.py generate-db [OPTIONS]
 
-  Regenerate the hash.json database which contains all of the sha1
-  signatures of media files.
+  Regenerate the hash.json database which contains all of the sha256
+  signatures of media files. The hash.json file is located at ~/.elodie/.
 
 Options:
   --source DIRECTORY  Source of your photo library.  [required]
@@ -214,21 +212,26 @@ What this asks me to do is to name the last folder the same as the album I find 
 
 #### How folder customization works
 
-You can construct your folder structure using a combination of the location and dates. Under the `Directory` section of your `config.ini` file you can define placeholder names and assign each a value. For example, `date=%Y-%m` would create a date placeholder with a value of YYYY-MM which would be filled in with the date from the EXIF on the photo.
+You can construct your folder structure using a combination of the location, dates and camera make/model. Under the `Directory` section of your `config.ini` file you can define placeholder names and assign each a value. For example, `date=%Y-%m` would create a date placeholder with a value of YYYY-MM which would be filled in with the date from the EXIF on the photo.
 
-The placeholders can be used to define the folder structure you'd like to create. The example above happens to be the default structure and would look like `2015-07-Jul/Mountain View`.
+The placeholders can be used to define the folder structure you'd like to create. The default structure would look like `2015-07-Jul/Mountain View`.
 
-I have a few built-in location placeholders you can use. Use this to construct the `%location` you use in `full_path`.
-
-* `%city` the name of the city the photo was taken. Requires geolocation data in EXIF.
-* `%state` the name of the state the photo was taken. Requires geolocation data in EXIF.
-* `%country` the name of the country the photo was taken. Requires geolocation data in EXIF.
-
-I also have some date placeholders you can customize. You can use any of [the standard Python time directives](https://docs.python.org/2/library/datetime.html#strftime-and-strptime-behavior) to customize the date format to your liking.
+I have some date placeholders you can customize. You can use any of [the standard Python time directives](https://docs.python.org/2/library/datetime.html#strftime-and-strptime-behavior) to customize the date format to your liking.
 
 * `%day` the day the photo was taken.
 * `%month` the month the photo was taken.
 * `%year` the year the photo was taken.
+
+I have camera make and model placeholders which can be used to include the camera make and model into the folder path.
+
+* `%camera_make` the make of the camera which took the photo.
+* `%camera_model` the model of the camera which took the photo.
+
+I also have a few built-in location placeholders you can use. Use this to construct the `%location` you use in `full_path`.
+
+* `%city` the name of the city the photo was taken. Requires geolocation data in EXIF.
+* `%state` the name of the state the photo was taken. Requires geolocation data in EXIF.
+* `%country` the name of the country the photo was taken. Requires geolocation data in EXIF.
 
 In addition to my built-in and date placeholders you can combine them into a single folder name using my complex placeholders.
 
@@ -322,6 +325,8 @@ When I organize photos I look at the embedded metadata. Here are the details of 
 | Title (photo) | XMP:Title |   |
 | Title (video, audio) | XMP:DisplayName |   |
 | Album | XMP-xmpDM:Album, XMP:Album | XMP:Album is user defined in `configs/ExifTool_config` for backwards compatability |
+| Camera Make (photo, video) | EXIF:Make, QuickTime:Make |   |
+| Camera Model (photo, video) | EXIF:Model, QuickTime:Model |   |
 
 ## Using OpenStreetMap data from MapQuest
 
@@ -337,4 +342,4 @@ cp config.ini-sample ~/.elodie/config.ini
 
 ## Questions, comments or concerns?
 
-The best ways to provide feedback is by reaching out on Twitter at [@getelodie](https://twitter.com/getelodie), opening a [GitHub issue](https://github.com/jmathai/elodie/issues) or emailing me at [jaisen@jmathai.com](mailto:jaisen@jmathai.com).
+The best ways to provide feedback is by opening a [GitHub issue](https://github.com/jmathai/elodie/issues) or emailing me at [jaisen@jmathai.com](mailto:jaisen@jmathai.com).

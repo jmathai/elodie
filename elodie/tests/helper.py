@@ -14,6 +14,7 @@ import urllib
 from datetime import datetime
 from datetime import timedelta
 
+from elodie.compatability import _rename
 from elodie import constants
 
 def checksum(file_path, blocksize=65536):
@@ -27,9 +28,9 @@ def checksum(file_path, blocksize=65536):
         return hasher.hexdigest()
     return None
 
-def create_working_folder():
+def create_working_folder(format=None):
     temporary_folder = tempfile.gettempdir()
-    folder = os.path.join(temporary_folder, random_string(10), random_string(10))
+    folder = os.path.join(temporary_folder, random_string(10, format), random_string(10, format))
     os.makedirs(folder)
 
     return (temporary_folder, folder)
@@ -81,8 +82,14 @@ def populate_folder(number_of_files, include_invalid=False):
 
     return folder
 
-def random_string(length):
-    return ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(length))
+def random_string(length, format=None):
+    format_choice = string.ascii_uppercase + string.digits
+    if format == 'int':
+        format_choice = string.digits
+    elif format == 'str':
+        format_choice = string.asci_uppercase
+
+    return ''.join(random.SystemRandom().choice(format_choice) for _ in range(length))
 
 def random_decimal():
     return random.random()
@@ -142,19 +149,30 @@ def isclose(a, b, rel_tol = 1e-8):
             diff <= abs(rel_tol * b))
 
 def reset_dbs():
-    hash_db = constants.hash_db
-    if os.path.isfile(hash_db):
-        os.rename(hash_db, '{}-test'.format(hash_db))
+    """ Back up hash_db and location_db """
+    hash_db = '{}-test'.format(constants.hash_db)
+    if not os.path.isfile(hash_db):
+	    hash_db = constants.hash_db
+	    if os.path.isfile(hash_db):
+	        _rename(hash_db, '{}-test'.format(hash_db))
+    #else restore_dbs wasn't called by a previous test, keep the
+    #existing hash_db backup
+	
 
-    location_db = constants.location_db
-    if os.path.isfile(location_db):
-        os.rename(location_db, '{}-test'.format(location_db))
+    location_db = '{}-test'.format(constants.location_db)
+    if not os.path.isfile(location_db):
+	    location_db = constants.location_db
+	    if os.path.isfile(location_db):
+	        _rename(location_db, '{}-test'.format(location_db))
+    #else restore_dbs wasn't called by a previous test, keep the
+    #existing location_db backup
 
 def restore_dbs():
+    """ Restore back ups of hash_db and location_db """
     hash_db = '{}-test'.format(constants.hash_db)
     if os.path.isfile(hash_db):
-        os.rename(hash_db, hash_db.replace('-test', ''))
+        _rename(hash_db, hash_db.replace('-test', ''))
 
     location_db = '{}-test'.format(constants.location_db)
     if os.path.isfile(location_db):
-        os.rename(location_db, location_db.replace('-test', ''))
+        _rename(location_db, location_db.replace('-test', ''))

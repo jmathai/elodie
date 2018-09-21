@@ -128,7 +128,7 @@ def _import(destination, source, file, album_from_folder, trash, allow_duplicate
 @click.option('--debug', default=False, is_flag=True,
               help='Override the value in constants.py with True.')
 def _generate_db(source, debug):
-    """Regenerate the hash.json database which contains all of the sha1 signatures of media files.
+    """Regenerate the hash.json database which contains all of the sha256 signatures of media files. The hash.json file is located at ~/.elodie/.
     """
     constants.debug = debug
     result = Result()

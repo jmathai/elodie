@@ -125,6 +125,30 @@ def test_get_date_taken_without_exif():
 
     assert date_taken == date_taken_from_file, date_taken
 
+def test_get_camera_make():
+    photo = Photo(helper.get_file('with-location.jpg'))
+    make = photo.get_camera_make()
+
+    assert make == 'Canon', make
+
+def test_get_camera_make_not_set():
+    photo = Photo(helper.get_file('no-exif.jpg'))
+    make = photo.get_camera_make()
+
+    assert make is None, make
+
+def test_get_camera_model():
+    photo = Photo(helper.get_file('with-location.jpg'))
+    model = photo.get_camera_model()
+
+    assert model == 'Canon EOS REBEL T2i', model
+
+def test_get_camera_model_not_set():
+    photo = Photo(helper.get_file('no-exif.jpg'))
+    model = photo.get_camera_model()
+
+    assert model is None, model
+
 def test_is_valid():
     photo = Photo(helper.get_file('with-location.jpg'))
 

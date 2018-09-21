@@ -35,6 +35,18 @@ def test_get_coordinate():
 
     assert helper.isclose(coordinate, 29.758938), coordinate
 
+def test_get_camera_make():
+    audio = Audio(helper.get_file('audio.m4a'))
+    coordinate = audio.get_camera_make()
+
+    assert coordinate is None, coordinate
+
+def test_get_camera_model():
+    audio = Audio(helper.get_file('audio.m4a'))
+    coordinate = audio.get_camera_model()
+
+    assert coordinate is None, coordinate
+
 def test_get_coordinate_latitude():
     audio = Audio(helper.get_file('audio.m4a'))
     coordinate = audio.get_coordinate('latitude')
