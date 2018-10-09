@@ -94,6 +94,23 @@ class Photo(Media):
         # gh-4 This checks if the source file is an image.
         # It doesn't validate against the list of supported types.
         if(imghdr.what(source) is None):
-            return False
+            # imghdr won't detect all variants of images (https://bugs.python.org/issue28591)
+            # see https://github.com/jmathai/elodie/issues/281
+            # before giving up, we use `pillow` imaging library to detect file type
+            #
+            # It is important to note that the library doesn’t decode or load the
+            # raster data unless it really has to. When you open a file,
+            # the file header is read to determine the file format and extract
+            # things like mode, size, and other properties required to decode the file,
+            # but the rest of the file is not processed until later.
+            try:
+                from PIL import Image
+            except ImportError:
+                log.info('Could not detect image type for %s. This could be fixed by installing pillow (https://pillow.readthedocs.io/). Skipping...' % source)
+                return False
+
+            im = Image.open(source)
+            if(im.format is None):
+                return False
 
         return os.path.splitext(source)[1][1:].lower() in self.extensions
