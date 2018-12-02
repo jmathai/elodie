@@ -177,6 +177,7 @@ You can add a custom folder structure by editing your `config.ini` file (which s
 Sometimes examples are easier to understand than explainations so I'll start there. If you'd like to understand my magic I explain it in more detail below these examples. You customize your folder structure in the `Directory` section of your `config.ini`. For details of the supported formats see [strftime.org](http://strftime.org/)
 
 ```
+[Directory]
 location=%city, %state
 year=%Y
 full_path=%year/%location
@@ -202,6 +203,7 @@ There are times when the EXIF needed to correctly name a folder doesn't exist on
 You can specify a series of folder names by separating them with a `|`. That's a pipe, not an L. Let's look at an example.
 
 ```
+[Directory]
 month=%m
 year=%Y
 location=%city
