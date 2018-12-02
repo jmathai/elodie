@@ -240,8 +240,8 @@ def test_import_destination_in_source():
     folder_destination = '{}/destination'.format(folder)
     os.mkdir(folder_destination)
 
-    origin = '%s/video.mov' % folder
-    shutil.copyfile(helper.get_file('video.mov'), origin)
+    origin = '%s/plain.jpg' % folder
+    shutil.copyfile(helper.get_file('plain.jpg'), origin)
 
     helper.reset_dbs()
     dest_path = elodie.import_file(origin, folder_destination, False, False, False)
