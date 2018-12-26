@@ -342,6 +342,8 @@ cp config.ini-sample ~/.elodie/config.ini
 # now you're ready to add your MapQuest key
 ```
 
+You may also prefer your locations to be named in English language, not the local language. Then just set the following key in `config.ini` like so: `prefer_english_names=True`.
+
 ## Questions, comments or concerns?
 
 The best ways to provide feedback is by opening a [GitHub issue](https://github.com/jmathai/elodie/issues) or emailing me at [jaisen@jmathai.com](mailto:jaisen@jmathai.com).

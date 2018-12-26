@@ -20,6 +20,7 @@ from elodie.localstorage import Db
 
 __KEY__ = None
 __DEFAULT_LOCATION__ = 'Unknown Location'
+__PREFER_ENGLISH_NAMES__ = None
 
 
 def coordinates_by_name(name):
@@ -114,6 +115,25 @@ def get_key():
     __KEY__ = config['MapQuest']['key']
     return __KEY__
 
+def get_prefer_english_names():
+    global __PREFER_ENGLISH_NAMES__
+    if __PREFER_ENGLISH_NAMES__ is not None:
+        return __PREFER_ENGLISH_NAMES__
+
+    config_file = '%s/config.ini' % constants.application_directory
+    if not path.exists(config_file):
+        return False
+
+    config = load_config()
+    if('MapQuest' not in config):
+        return False
+
+    if('prefer_english_names' not in config['MapQuest']):
+        return False
+
+    s = config['MapQuest']['prefer_english_names']
+    __PREFER_ENGLISH_NAMES__ = s in ['True', 'true', '1', 't', 'y', 'yes', 'Yes']
+    return __PREFER_ENGLISH_NAMES__
 
 def place_name(lat, lon):
     lookup_place_name_default = {'default': __DEFAULT_LOCATION__}
@@ -167,6 +187,7 @@ def lookup(**kwargs):
         return None
 
     key = get_key()
+    prefer_english_names = get_prefer_english_names()
 
     if(key is None):
         return None
@@ -181,7 +202,8 @@ def lookup(**kwargs):
                     path,
                     urllib.parse.urlencode(params)
               )
-        r = requests.get(url)
+        headers = {'Accept-Language':'en-EN,en;q=0.8'} if prefer_english_names else {}
+        r = requests.get(url, headers=headers)
         return parse_result(r.json())
     except requests.exceptions.RequestException as e:
         log.error(e)
