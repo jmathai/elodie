@@ -131,8 +131,7 @@ def get_prefer_english_names():
     if('prefer_english_names' not in config['MapQuest']):
         return False
 
-    s = config['MapQuest']['prefer_english_names']
-    __PREFER_ENGLISH_NAMES__ = s in ['True', 'true', '1', 't', 'y', 'yes', 'Yes']
+    __PREFER_ENGLISH_NAMES__ = bool(config['MapQuest']['prefer_english_names'])
     return __PREFER_ENGLISH_NAMES__
 
 def place_name(lat, lon):
@@ -202,7 +201,9 @@ def lookup(**kwargs):
                     path,
                     urllib.parse.urlencode(params)
               )
-        headers = {'Accept-Language':'en-EN,en;q=0.8'} if prefer_english_names else {}
+        headers = {}
+        if(prefer_english_names):
+            headers = {'Accept-Language':'en-EN,en;q=0.8'}
         r = requests.get(url, headers=headers)
         return parse_result(r.json())
     except requests.exceptions.RequestException as e:
