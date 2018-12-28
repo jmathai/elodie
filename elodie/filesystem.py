@@ -14,6 +14,7 @@ import time
 from elodie import compatability
 from elodie import geolocation
 from elodie import log
+from elodie import constants
 from elodie.config import load_config
 from elodie.localstorage import Db
 from elodie.media.base import Base, get_all_subclasses
@@ -215,7 +216,7 @@ class FileSystem(object):
 
         return self.cached_folder_path_definition
 
-    def get_folder_path(self, metadata):
+    def get_folder_path(self, metadata, media_name=None):
         """Given a media's metadata this function returns the folder path as a string.
 
         :param metadata dict: Metadata dictionary.
@@ -257,6 +258,9 @@ class FileSystem(object):
                         break
                 elif part.startswith('"') and part.endswith('"'):
                     path.append(part[1:-1])
+
+        if (constants.separate_media_folders and media_name):
+            path.append(media_name)
 
         return os.path.join(*path)
 
@@ -335,8 +339,9 @@ class FileSystem(object):
 
         media.set_original_name()
         metadata = media.get_metadata()
+        media_name = media.__name__
 
-        directory_name = self.get_folder_path(metadata)
+        directory_name = self.get_folder_path(metadata, media_name)
 
         dest_directory = os.path.join(destination, directory_name)
         file_name = self.get_file_name(media)

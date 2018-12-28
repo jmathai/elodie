@@ -28,3 +28,6 @@ accepted_language = 'en'
 
 # check python version, required in filesystem.py to trigger appropriate method
 python_version = version_info.major
+
+# Separate folders for audio and video at their final destination.
+separate_media_folders = False
