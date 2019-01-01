@@ -266,43 +266,71 @@ def test_get_folder_path_with_int_in_config_component():
     with open('%s/config.ini-int-in-component-path' % gettempdir(), 'w') as f:
         f.write("""
 [Directory]
-date=%Y-%m-%d
-full_path=%date/%album|"No Album"
+date=%Y
+full_path=%date
         """)
     if hasattr(load_config, 'config'):
         del load_config.config
     filesystem = FileSystem()
-    media = Photo(helper.get_file('with-album.jpg'))
-    print(media.get_metadata())
+    media = Photo(helper.get_file('plain.jpg'))
     path = filesystem.get_folder_path(media.get_metadata())
     if hasattr(load_config, 'config'):
         del load_config.config
 
     assert path == os.path.join('2015'), path
 
-@mock.patch('elodie.config.config_file', '%s/config.ini-int-in-component-path' % gettempdir())
-def test_gh_279():
+@mock.patch('elodie.config.config_file', '%s/config.ini-combined-date-and-album' % gettempdir())
+def test_get_folder_path_with_combined_date_and_album():
     # gh-239
-    with open('%s/config.ini-int-in-component-path' % gettempdir(), 'w') as f:
+    with open('%s/config.ini-combined-date-and-album' % gettempdir(), 'w') as f:
         f.write("""
 [Directory]
-month=%m
-year=%Y
-date=%m-%Y
-custom=%date %city
+date=%Y-%m-%b
+custom=%date %album
 full_path=%custom
         """)
     if hasattr(load_config, 'config'):
         del load_config.config
     filesystem = FileSystem()
-    media = Photo(helper.get_file('with-location.jpg'))
-    print(media.get_metadata())
+    media = Photo(helper.get_file('with-album.jpg'))
     path = filesystem.get_folder_path(media.get_metadata())
     if hasattr(load_config, 'config'):
         del load_config.config
 
-    print(path)
-    assert False and path == os.path.join('2015'), path
+    assert path == '2015-12-Dec Test Album', path
+
+@mock.patch('elodie.config.config_file', '%s/config.ini-combined-date-album-location-fallback' % gettempdir())
+def test_get_folder_path_with_combined_date_album_and_location_fallback():
+    # gh-279
+    with open('%s/config.ini-combined-date-album-location-fallback' % gettempdir(), 'w') as f:
+        f.write("""
+[Directory]
+date=%Y-%m-%b
+custom=%date %album|%city
+full_path=%custom
+        """)
+    if hasattr(load_config, 'config'):
+        del load_config.config
+    filesystem = FileSystem()
+
+    # Test with Album
+    media = Photo(helper.get_file('with-album.jpg'))
+    path = filesystem.get_folder_path(media.get_metadata())
+    assert path == '2015-12-Dec Test Album', path
+
+    # Test with City
+    media = Photo(helper.get_file('with-location.jpg'))
+    path = filesystem.get_folder_path(media.get_metadata())
+    assert path == '2015-12-Dec Sunnyvale', path
+
+    # Test Plain
+    media = Photo(helper.get_file('plain.jpg'))
+    path = filesystem.get_folder_path(media.get_metadata())
+    assert path == '2015-12-Dec', path
+
+    # Clean-up
+    if hasattr(load_config, 'config'):
+        del load_config.config
 
 def test_get_folder_path_with_int_in_source_path():
     # gh-239

@@ -223,6 +223,7 @@ class FileSystem(object):
         """
         path_parts = self.get_folder_path_definition()
         path = []
+        print('path_parts', path_parts)
         for path_part in path_parts:
             # We support fallback values so that
             #  'album|city|"Unknown Location"
@@ -231,8 +232,14 @@ class FileSystem(object):
             #  Sunnyvale - when no album exists but a city exists
             #  Unknown Location - when neither an album nor location exist
             for this_part in path_part:
+                print('this_part', this_part)
                 part, mask = this_part
-                path.append(self.dynamic_path_append(path, part, mask, metadata))
+                extra_path = self.dynamic_path_append(path, part, mask, metadata)
+                print('extra_path', extra_path)
+                if extra_path:
+                    path.append(extra_path)
+                    print('path', path)
+                    break
                 """
                 if part in ('date', 'day', 'month', 'year'):
                     path.append(
@@ -300,16 +307,19 @@ class FileSystem(object):
             )
 
             location_parts = re.findall('(%[^%]+)', mask)
+            print('location-part', mask, location_parts, place_name)
             parsed_folder_name = self.parse_mask_for_location(
                 mask,
                 location_parts,
                 place_name,
             )
+            print('location-part', parsed_folder_name)
             return parsed_folder_name
         elif part in ('album', 'camera_make', 'camera_model'):
             if metadata[part]:
                 return metadata[part]
         elif part.startswith('"') and part.endswith('"'):
+            # Fallback string
             return part[1:-1]
 
         return ''
