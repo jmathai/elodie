@@ -126,6 +126,7 @@ Options:
   --trash                  After copying files, move the old files to the
                            trash.
   --allow-duplicates       Import the file even if it's already been imported.
+  --separate-media-folders Put files in separate folders for photos, audio and video at their final destination.
   --help                   Show this message and exit.
 ```
 
