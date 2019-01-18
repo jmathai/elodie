@@ -323,8 +323,8 @@ full_path=%custom|%city
     if hasattr(load_config, 'config'):
         del load_config.config
 
-    assert path_plain == 'Unknown Location', path
-    assert path_city == 'Sunnyvale', path
+    assert path_plain == 'Unknown Location', path_plain
+    assert path_city == 'Sunnyvale', path_city
 
 
 def test_get_folder_path_with_int_in_source_path():
