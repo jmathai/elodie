@@ -282,8 +282,6 @@ You can, of course, ask me to change the location and time. I'll happily update 
 ./elodie.py update --location="Las Vegas, NV" --time="2015-04-15" /where/i/want/my/photos/to/go/2015-09-Sep/Unknown\ Location/2015-09-27_01-41-38-_dsc8705.dng /where/i/want/my/photos/to/go/2015-09-Sep/Unknown\ Location/2015-09-27_01-41-38-_dsc8705.nef
 ```
 
-To put media according to it's type to a folder like 'Audio', 'Video' or 'Photo' at it's final destination add `--separate-media-folders`.
-
 ## What about photos I take in the future?
 
 Organizing your existing photos is great. But I'd be lying if I said I was the only one who could help you with that. Unlike other programs I put the same effort into keeping your library organized into the future as I have in getting it organized in the first place.
