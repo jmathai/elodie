@@ -315,16 +315,16 @@ full_path=%custom|%city
 
     # Test with no location
     media = Photo(helper.get_file('plain.jpg'))
-    path = filesystem.get_folder_path(media.get_metadata())
-    assert path == 'Unknown Location', path
+    path_plain = filesystem.get_folder_path(media.get_metadata())
 
     # Test with City
     media = Photo(helper.get_file('with-location.jpg'))
-    path = filesystem.get_folder_path(media.get_metadata())
+    path_city = filesystem.get_folder_path(media.get_metadata())
     if hasattr(load_config, 'config'):
         del load_config.config
 
-    assert path == 'Sunnyvale', path
+    assert path_plain == 'Unknown Location', path
+    assert path_city == 'Sunnyvale', path
 
 
 def test_get_folder_path_with_int_in_source_path():
