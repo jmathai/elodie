@@ -218,12 +218,11 @@ class FileSystem(object):
     def get_folder_path(self, metadata):
         """Given a media's metadata this function returns the folder path as a string.
 
-        :param metadata dict: Metadata dictionary.
+        :param dict metadata: Metadata dictionary.
         :returns: str
         """
         path_parts = self.get_folder_path_definition()
         path = []
-        print('path_parts', path_parts)
         for path_part in path_parts:
             # We support fallback values so that
             #  'album|city|"Unknown Location"
@@ -232,13 +231,12 @@ class FileSystem(object):
             #  Sunnyvale - when no album exists but a city exists
             #  Unknown Location - when neither an album nor location exist
             for this_part in path_part:
-                print('this_part', this_part)
                 part, mask = this_part
-                extra_path = self.dynamic_path_append(path, part, mask, metadata)
-                print('extra_path', extra_path)
-                if extra_path:
-                    path.append(extra_path)
-                    print('path', path)
+                this_path = self.dynamic_path(part, mask, metadata)
+                if this_path:
+                    path.append(this_path.strip())
+                    # We break as soon as we have a value to append
+                    # Else we continue for fallbacks
                     break
                 """
                 if part in ('date', 'day', 'month', 'year'):
@@ -277,14 +275,24 @@ class FileSystem(object):
 
         return os.path.join(*path)
 
-    def dynamic_path_append(self, path, part, mask, metadata):
+    def dynamic_path(self, part, mask, metadata):
+        """Parse a specific folder's name given a mask and metadata.
+
+        :param part: Name of the part as defined in the path (i.e. date from %date)
+        :param mask: Mask representing the template for the path (i.e. %city %state
+        :param metadata: Metadata dictionary.
+        :returns: str
+        """
+
+        # Each part has its own custom logic and we evaluate a single part and return
+        #  the evaluated string.
         if part in ('custom'):
             custom_parts = re.findall('(%[a-z_]+)', mask)
             folder = mask
             for i in custom_parts:
                 folder = folder.replace(
                     i,
-                    self.dynamic_path_append([], i[1:], i, metadata)
+                    self.dynamic_path(i[1:], i, metadata)
                 )
             return folder
         elif part in ('date'):
@@ -307,13 +315,11 @@ class FileSystem(object):
             )
 
             location_parts = re.findall('(%[^%]+)', mask)
-            print('location-part', mask, location_parts, place_name)
             parsed_folder_name = self.parse_mask_for_location(
                 mask,
                 location_parts,
                 place_name,
             )
-            print('location-part', parsed_folder_name)
             return parsed_folder_name
         elif part in ('album', 'camera_make', 'camera_model'):
             if metadata[part]:

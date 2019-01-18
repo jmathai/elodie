@@ -195,6 +195,12 @@ month=%m
 year=%Y
 full_path=%year-%month/%location
 # -> 2015-12/Sunnyvale, California
+
+date=%Y
+location=%city, %state
+custom=%date %album
+full_path=%location/%custom
+# -> Sunnyvale, California/2015 Birthday Party
 ```
 
 #### Using fallback folders
@@ -239,6 +245,7 @@ In addition to my built-in and date placeholders you can combine them into a sin
 
 * `%location` can be used to combine multiple values of `%city`, `%state` and `%country`. For example, `location=%city, %state` would result in folder names like `Sunnyvale, California`.
 * `%date` can be used to combine multiple values from [the standard Python time directives](https://docs.python.org/2/library/datetime.html#strftime-and-strptime-behavior). For example, `date=%Y-%m` would result in folder names like `2015-12`.
+* `%custom` can be used to combine multiple values from anything else. Think of it as a catch-all when `%location` and `%date` don't meet your needs.
 
 ### Reorganize by changing location and dates
 
