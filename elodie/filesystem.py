@@ -232,50 +232,15 @@ class FileSystem(object):
             #  Unknown Location - when neither an album nor location exist
             for this_part in path_part:
                 part, mask = this_part
-                this_path = self.dynamic_path(part, mask, metadata)
+                this_path = self.get_dynamic_path(part, mask, metadata)
                 if this_path:
                     path.append(this_path.strip())
                     # We break as soon as we have a value to append
                     # Else we continue for fallbacks
                     break
-                """
-                if part in ('date', 'day', 'month', 'year'):
-                    path.append(
-                        time.strftime(mask, metadata['date_taken'])
-                    )
-                    break
-                elif part in ('location', 'city', 'state', 'country'):
-                    place_name = geolocation.place_name(
-                        metadata['latitude'],
-                        metadata['longitude']
-                    )
-
-                    location_parts = re.findall('(%[^%]+)', mask)
-                    parsed_folder_name = self.parse_mask_for_location(
-                        mask,
-                        location_parts,
-                        place_name,
-                    )
-                    path.append(parsed_folder_name)
-                    break
-                elif part in ('custom'):
-                    custom_parts = re.findall('(%[a-z_]+)', mask)
-                    folder = mask
-                    for i in custom_parts:
-                        folder = folder.replace(i, metadata[i[1:]])
-                    path.append(folder)
-                    break
-                elif part in ('album', 'camera_make', 'camera_model'):
-                    if metadata[part]:
-                        path.append(metadata[part])
-                        break
-                elif part.startswith('"') and part.endswith('"'):
-                    path.append(part[1:-1])
-                """
-
         return os.path.join(*path)
 
-    def dynamic_path(self, part, mask, metadata):
+    def get_dynamic_path(self, part, mask, metadata):
         """Parse a specific folder's name given a mask and metadata.
 
         :param part: Name of the part as defined in the path (i.e. date from %date)
@@ -292,7 +257,7 @@ class FileSystem(object):
             for i in custom_parts:
                 folder = folder.replace(
                     i,
-                    self.dynamic_path(i[1:], i, metadata)
+                    self.get_dynamic_path(i[1:], i, metadata)
                 )
             return folder
         elif part in ('date'):
