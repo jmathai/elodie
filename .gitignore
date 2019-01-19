@@ -9,3 +9,4 @@ build/**
 **/*.dng
 **/*.nef
 **/*.rw2
+env/**
