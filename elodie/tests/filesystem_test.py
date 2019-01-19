@@ -302,7 +302,7 @@ full_path=%custom
 @mock.patch('elodie.config.config_file', '%s/config.ini-combined-date-album-location-fallback' % gettempdir())
 def test_get_folder_path_with_album_and_location_fallback():
     # gh-279
-    with open('%s/config.ini-album-fallback' % gettempdir(), 'w') as f:
+    with open('%s/config.ini-combined-date-album-location-fallback' % gettempdir(), 'w') as f:
         f.write("""
 [Directory]
 date=%Y-%m-%b
