@@ -279,6 +279,54 @@ full_path=%date
 
     assert path == os.path.join('2015'), path
 
+@mock.patch('elodie.config.config_file', '%s/config.ini-combined-date-and-album' % gettempdir())
+def test_get_folder_path_with_combined_date_and_album():
+    # gh-239
+    with open('%s/config.ini-combined-date-and-album' % gettempdir(), 'w') as f:
+        f.write("""
+[Directory]
+date=%Y-%m-%b
+custom=%date %album
+full_path=%custom
+        """)
+    if hasattr(load_config, 'config'):
+        del load_config.config
+    filesystem = FileSystem()
+    media = Photo(helper.get_file('with-album.jpg'))
+    path = filesystem.get_folder_path(media.get_metadata())
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    assert path == '2015-12-Dec Test Album', path
+
+@mock.patch('elodie.config.config_file', '%s/config.ini-combined-date-album-location-fallback' % gettempdir())
+def test_get_folder_path_with_album_and_location_fallback():
+    # gh-279
+    with open('%s/config.ini-combined-date-album-location-fallback' % gettempdir(), 'w') as f:
+        f.write("""
+[Directory]
+date=%Y-%m-%b
+custom=%album
+full_path=%custom|%city
+        """)
+    if hasattr(load_config, 'config'):
+        del load_config.config
+    filesystem = FileSystem()
+
+    # Test with no location
+    media = Photo(helper.get_file('plain.jpg'))
+    path_plain = filesystem.get_folder_path(media.get_metadata())
+
+    # Test with City
+    media = Photo(helper.get_file('with-location.jpg'))
+    path_city = filesystem.get_folder_path(media.get_metadata())
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    assert path_plain == 'Unknown Location', path_plain
+    assert path_city == 'Sunnyvale', path_city
+
+
 def test_get_folder_path_with_int_in_source_path():
     # gh-239
     filesystem = FileSystem()
