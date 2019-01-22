@@ -42,7 +42,7 @@ class FileSystem(object):
         # It captures some additional characters like the unicode checkmark \u2713.
         # See build failures in Python3 here.
         #  https://travis-ci.org/jmathai/elodie/builds/483012902
-        self.whitespace_regex = '[ \t\n\r\f\v]'
+        self.whitespace_regex = '[ \t\n\r\f\v]+'
 
     def create_directory(self, directory_path):
         """Create a directory if it does not already exist.
