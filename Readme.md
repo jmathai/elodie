@@ -349,6 +349,8 @@ cp config.ini-sample ~/.elodie/config.ini
 # now you're ready to add your MapQuest key
 ```
 
+If you're an english speaker then you will probably want to add `prefer_english_names=True` to the `[MapQuest]` section else you'll have cities named using the local language.
+
 ## Questions, comments or concerns?
 
 The best ways to provide feedback is by opening a [GitHub issue](https://github.com/jmathai/elodie/issues) or emailing me at [jaisen@jmathai.com](mailto:jaisen@jmathai.com).

@@ -1,2 +1,3 @@
 [MapQuest]
 key=your-api-key-goes-here
+prefer_english_names=False
