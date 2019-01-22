@@ -234,7 +234,7 @@ def test_get_file_name_with_original_name_title_exif():
 
 def test_get_file_name_with_uppercase_and_spaces():
     filesystem = FileSystem()
-    media = Photo(helper.get_file(r'Plain With Spaces And Uppercase 123.jpg'))
+    media = Photo(helper.get_file('Plain With Spaces And Uppercase 123.jpg'))
     file_name = filesystem.get_file_name(media)
 
     assert file_name == helper.path_tz_fix('2015-12-05_00-59-26-plain-with-spaces-and-uppercase-123.jpg'), file_name
