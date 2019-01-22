@@ -38,6 +38,11 @@ class FileSystem(object):
         }
         self.cached_file_name_definition = None
         self.cached_folder_path_definition = None
+        # Python3 treats the regex \s differently than Python2.
+        # It captures some additional characters like the unicode checkmark \u2713.
+        # See build failures in Python3 here.
+        #  https://travis-ci.org/jmathai/elodie/builds/483012902
+        self.whitespace_regex = '[ \t\n\r\f\v]'
 
     def create_directory(self, directory_path):
         """Create a directory if it does not already exist.
@@ -158,7 +163,7 @@ class FileSystem(object):
                     break
                 elif part in ('album', 'extension', 'title'):
                     if metadata[part]:
-                        this_value = re.sub('\s+', '-', metadata[part].strip())
+                        this_value = re.sub(self.whitespace_regex, '-', metadata[part].strip())
                         break
                 elif part in ('original_name'):
                     # First we check if we have metadata['original_name'].
@@ -182,7 +187,7 @@ class FileSystem(object):
                             this_value = metadata['base_name']
 
                     # Lastly we want to sanitize the name
-                    this_value = re.sub('\s+', '-', this_value.strip())
+                    this_value = re.sub(self.whitespace_regex, '-', this_value.strip())
                 elif part.startswith('"') and part.endswith('"'):
                     this_value = part[1:-1]
                     break
