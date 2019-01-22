@@ -38,7 +38,6 @@ class FileSystem(object):
         }
         self.cached_file_name_definition = None
         self.cached_folder_path_definition = None
-        self.default_parts = ['album', 'city', 'country', 'extension', 'state']
 
     def create_directory(self, directory_path):
         """Create a directory if it does not already exist.
@@ -257,11 +256,6 @@ class FileSystem(object):
                 self.cached_file_name_definition.append(
                     [(part, config_file[part])]
                 )
-            elif part in self.default_parts:
-                part = part[1:]
-                self.cached_file_name_definition.append(
-                    [(part, '')]
-                )
             else:
                 this_part = []
                 for p in part.split('|'):
@@ -321,10 +315,6 @@ class FileSystem(object):
             if part in config_directory:
                 self.cached_folder_path_definition.append(
                     [(part, config_directory[part])]
-                )
-            elif part in self.default_parts:
-                self.cached_folder_path_definition.append(
-                    [(part, '')]
                 )
             else:
                 this_part = []

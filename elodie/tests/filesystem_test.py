@@ -234,7 +234,7 @@ def test_get_file_name_with_original_name_title_exif():
 
 def test_get_file_name_with_uppercase_and_spaces():
     filesystem = FileSystem()
-    media = Photo(helper.get_file('Plain With Spaces And Uppercase 123.jpg'))
+    media = Photo(helper.get_file(r'Plain With Spaces And Uppercase 123.jpg'))
     file_name = filesystem.get_file_name(media)
 
     assert file_name == helper.path_tz_fix('2015-12-05_00-59-26-plain-with-spaces-and-uppercase-123.jpg'), file_name
@@ -258,6 +258,26 @@ name=%date-%original_name.%extension
         del load_config.config
 
     assert file_name == helper.path_tz_fix('2015-12-dec-plain.jpg'), file_name
+
+@mock.patch('elodie.config.config_file', '%s/config.ini-filename-custom-with-title' % gettempdir())
+def test_get_file_name_custom_with_title():
+    with open('%s/config.ini-filename-custom-with-title' % gettempdir(), 'w') as f:
+        f.write("""
+[File]
+date=%Y-%m-%d
+name=%date-%original_name-%title.%extension
+        """)
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    filesystem = FileSystem()
+    media = Photo(helper.get_file('with-title.jpg'))
+    file_name = filesystem.get_file_name(media)
+
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    assert file_name == helper.path_tz_fix('2015-12-05-with-title-some-title.jpg'), file_name
 
 @mock.patch('elodie.config.config_file', '%s/config.ini-filename-custom-with-empty-value' % gettempdir())
 def test_get_file_name_custom_with_empty_value():
