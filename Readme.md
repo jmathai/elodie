@@ -247,6 +247,28 @@ In addition to my built-in and date placeholders you can combine them into a sin
 * `%date` can be used to combine multiple values from [the standard Python time directives](https://docs.python.org/2/library/datetime.html#strftime-and-strptime-behavior). For example, `date=%Y-%m` would result in folder names like `2015-12`.
 * `%custom` can be used to combine multiple values from anything else. Think of it as a catch-all when `%location` and `%date` don't meet your needs.
 
+#### How file customization works
+
+You can configure how Elodie names your files using placeholders. This works similarly to how folder customization works. The default naming format is what's referred to elsewhere in this document and has many thought through benefits. Using the default will gives you files named like `2015-09-27_01-41-38-_dsc8705.jpg`.
+
+
+* Minimizes the likelihood of naming conflicts.
+* Encodes important EXIF information into the file name.
+* Optimizes for sort order when listing in most file and photo viewers.
+
+If you'd like to specify your own naming convention it's recommended you include something that's mostly unique like the time including seconds. You'll need to include a `[File]` section in your `config.ini` file with a name attribute. If a placeholder doesn't have a value then it plus any preceding characters which are not alphabetic are removed.
+
+```
+[File]
+date=%Y-%m-%b-%H-%M-%S
+name=%date-%original_name-%title.jpg
+# -> 2012-05-Mar-12-59-30-dsc_1234-my-title.jpg
+
+date=%Y-%m-%b-%H-%M-%S
+name=%date-%original_name-%album.jpg
+# -> 2012-05-Mar-12-59-30-dsc_1234-my-album.jpg
+```
+
 ### Reorganize by changing location and dates
 
 If you notice some photos were incorrectly organized you should definitely let me know. In the example above I put two photos into an *Unknown Location* folder because I didn't find GPS information in their EXIF. To fix this I'll help you add GPS information into the photos' EXIF and then I'll reorganize them.
