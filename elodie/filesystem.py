@@ -106,9 +106,13 @@ class FileSystem(object):
     def get_file_name(self, media):
         """Generate file name for a photo or video using its metadata.
 
+        Originally we hardcoded the file name to include an ISO date format.
         We use an ISO8601-like format for the file name prefix. Instead of
         colons as the separator for hours, minutes and seconds we use a hyphen.
         https://en.wikipedia.org/wiki/ISO_8601#General_principles
+
+        PR #225 made the file name customizable and fixed issues #107 #110 #111.
+        https://github.com/jmathai/elodie/pull/225
 
         :param media: A Photo or Video instance
         :type media: :class:`~elodie.media.photo.Photo` or
@@ -122,6 +126,14 @@ class FileSystem(object):
         if(metadata is None):
             return None
 
+        # Get the name template and definition.
+        # Name template is in the form %date-%original_name-%title.%extension
+        # Definition is in the form
+        #  [
+        #    [('date', '%Y-%m-%d_%H-%M-%S')],
+        #    [('original_name', '')], [('title', '')], // contains a fallback
+        #    [('extension', '')]
+        #  ]
         name_template, definition = self.get_file_name_definition()
 
         name = name_template
@@ -221,29 +233,29 @@ class FileSystem(object):
 
         config = load_config()
 
-        # If Directory is in the config we assume full_path and its
-        #  corresponding values (date, location) are also present
-        config_directory = self.default_file_name_definition
+        # If File is in the config we assume name and its
+        #  corresponding values are also present
+        config_file = self.default_file_name_definition
         if('File' in config):
-            config_directory = config['File']
+            config_file = config['File']
 
-        # Find all subpatterns of full_path that map to directories.
-        #  I.e. %foo/%bar => ['foo', 'bar']
-        #  I.e. %foo/%bar|%example|"something" => ['foo', 'bar|example|"something"']
+        # Find all subpatterns of name that map to the components of the file's
+        #  name.
+        #  I.e. %date-%original_name-%title.%extension => ['date', 'original_name', 'title', 'extension'] #noqa
         path_parts = re.findall(
                          '(\%[a-z_]+)',
-                         config_directory['name']
+                         config_file['name']
                      )
 
         if not path_parts or len(path_parts) == 0:
-            return (config_directory['name'], self.default_file_name_definition)
+            return (config_file['name'], self.default_file_name_definition)
 
         self.cached_file_name_definition = []
         for part in path_parts:
-            if part in config_directory:
+            if part in config_file:
                 part = part[1:]
                 self.cached_file_name_definition.append(
-                    [(part, config_directory[part])]
+                    [(part, config_file[part])]
                 )
             elif part in self.default_parts:
                 part = part[1:]
@@ -255,11 +267,11 @@ class FileSystem(object):
                 for p in part.split('|'):
                     p = p[1:]
                     this_part.append(
-                        (p, config_directory[p] if p in config_directory else '')
+                        (p, config_file[p] if p in config_file else '')
                     )
                 self.cached_file_name_definition.append(this_part)
 
-        self.cached_file_name_definition = (config_directory['name'], self.cached_file_name_definition)
+        self.cached_file_name_definition = (config_file['name'], self.cached_file_name_definition)
         return self.cached_file_name_definition
 
     def get_folder_path_definition(self):
