@@ -145,17 +145,46 @@ class FileSystem(object):
                         place_name,
                     )
                     break
-                elif part in ('album', 'base_name', 'extension', 'original_name', 'title'):
+                elif part in ('album', 'extension', 'title'):
                     if metadata[part]:
-                        this_value = metadata[part]
+                        this_value = re.sub('\s+', '-', metadata[part].strip())
                         break
+                elif part in ('original_name'):
+                    # First we check if we have metadata['original_name'].
+                    # We have to do this for backwards compatibility because
+                    #   we original did not store this back into EXIF.
+                    if metadata[part]:
+                        this_value = os.path.splitext(metadata['original_name'])[0]
+                    else:
+                        # We didn't always store original_name so this is 
+                        #  for backwards compatability.
+                        # We want to remove the hardcoded date prefix we used 
+                        #  to add to the name.
+                        # This helps when re-running the program on file 
+                        #  which were already processed.
+                        this_value = re.sub(
+                            '^\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}-',
+                            '',
+                            metadata['base_name']
+                        )
+                        if(len(this_value) == 0):
+                            this_value = metadata['base_name']
+
+                    # Lastly we want to sanitize the name
+                    this_value = re.sub('\s+', '-', this_value.strip())
                 elif part.startswith('"') and part.endswith('"'):
                     this_value = part[1:-1]
                     break
 
+            # Here we replace the placeholder with it's corresponding value.
+            # Check if this_value was not set so that the placeholder
+            #  can be removed completely.
+            # For example, %title- will be replaced with ''
+            # Else replace the placeholder (i.e. %title) with the value.
             if this_value is None:
                 name = re.sub(
-                    '[^a-z_]+%{}'.format(part),
+                    #'[^a-z_]+%{}'.format(part),
+                    '[^a-zA-Z0-9_]+%{}'.format(part),
                     '',
                     name,
                 )
@@ -166,49 +195,7 @@ class FileSystem(object):
                     name,
                 )
 
-        return name
-
-
-        # DELETE ME ..
-
-        # First we check if we have metadata['original_name'].
-        # We have to do this for backwards compatibility because
-        #   we original did not store this back into EXIF.
-        if('original_name' in metadata and metadata['original_name']):
-            base_name = os.path.splitext(metadata['original_name'])[0]
-        else:
-            # If the file has EXIF title we use that in the file name
-            #   (i.e. my-favorite-photo-img_1234.jpg)
-            # We want to remove the date prefix we add to the name.
-            # This helps when re-running the program on file which were already
-            #   processed.
-            base_name = re.sub(
-                '^\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}-',
-                '',
-                metadata['base_name']
-            )
-            if(len(base_name) == 0):
-                base_name = metadata['base_name']
-
-        if(
-            'title' in metadata and
-            metadata['title'] is not None and
-            len(metadata['title']) > 0
-        ):
-            title_sanitized = re.sub('\W+', '-', metadata['title'].strip())
-            base_name = base_name.replace('-%s' % title_sanitized, '')
-            base_name = '%s-%s' % (base_name, title_sanitized)
-
-        file_name = '%s-%s.%s' % (
-            time.strftime(
-                '%Y-%m-%d_%H-%M-%S',
-                metadata['date_taken']
-            ),
-            base_name,
-            metadata['extension'])
-        return file_name.lower()
-        
-        # DELETE ME ^^
+        return name.lower()
 
     def get_file_name_definition(self):
         """Returns a list of folder definitions.
