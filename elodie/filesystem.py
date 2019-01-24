@@ -23,6 +23,11 @@ class FileSystem(object):
     """A class for interacting with the file system."""
 
     def __init__(self):
+        # The default folder path is along the lines of 2017-06-17_01-04-14-dsc_1234-some-title.jpg
+        self.default_file_name_definition = {
+            'date': '%Y-%m-%d_%H-%M-%S',
+            'name': '%date-%original_name-%title.%extension',
+        }
         # The default folder path is along the lines of 2015-01-Jan/Chicago
         self.default_folder_path_definition = {
             'date': '%Y-%m-%b',
@@ -31,8 +36,13 @@ class FileSystem(object):
                             geolocation.__DEFAULT_LOCATION__
                          ),
         }
+        self.cached_file_name_definition = None
         self.cached_folder_path_definition = None
-        self.default_parts = ['album', 'city', 'state', 'country']
+        # Python3 treats the regex \s differently than Python2.
+        # It captures some additional characters like the unicode checkmark \u2713.
+        # See build failures in Python3 here.
+        #  https://travis-ci.org/jmathai/elodie/builds/483012902
+        self.whitespace_regex = '[ \t\n\r\f\v]+'
 
     def create_directory(self, directory_path):
         """Create a directory if it does not already exist.
@@ -100,9 +110,13 @@ class FileSystem(object):
     def get_file_name(self, media):
         """Generate file name for a photo or video using its metadata.
 
+        Originally we hardcoded the file name to include an ISO date format.
         We use an ISO8601-like format for the file name prefix. Instead of
         colons as the separator for hours, minutes and seconds we use a hyphen.
         https://en.wikipedia.org/wiki/ISO_8601#General_principles
+
+        PR #225 made the file name customizable and fixed issues #107 #110 #111.
+        https://github.com/jmathai/elodie/pull/225
 
         :param media: A Photo or Video instance
         :type media: :class:`~elodie.media.photo.Photo` or
@@ -116,42 +130,148 @@ class FileSystem(object):
         if(metadata is None):
             return None
 
-        # First we check if we have metadata['original_name'].
-        # We have to do this for backwards compatibility because
-        #   we original did not store this back into EXIF.
-        if('original_name' in metadata and metadata['original_name']):
-            base_name = os.path.splitext(metadata['original_name'])[0]
-        else:
-            # If the file has EXIF title we use that in the file name
-            #   (i.e. my-favorite-photo-img_1234.jpg)
-            # We want to remove the date prefix we add to the name.
-            # This helps when re-running the program on file which were already
-            #   processed.
-            base_name = re.sub(
-                '^\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}-',
-                '',
-                metadata['base_name']
-            )
-            if(len(base_name) == 0):
-                base_name = metadata['base_name']
+        # Get the name template and definition.
+        # Name template is in the form %date-%original_name-%title.%extension
+        # Definition is in the form
+        #  [
+        #    [('date', '%Y-%m-%d_%H-%M-%S')],
+        #    [('original_name', '')], [('title', '')], // contains a fallback
+        #    [('extension', '')]
+        #  ]
+        name_template, definition = self.get_file_name_definition()
 
-        if(
-            'title' in metadata and
-            metadata['title'] is not None and
-            len(metadata['title']) > 0
-        ):
-            title_sanitized = re.sub('\W+', '-', metadata['title'].strip())
-            base_name = base_name.replace('-%s' % title_sanitized, '')
-            base_name = '%s-%s' % (base_name, title_sanitized)
+        name = name_template
+        for parts in definition:
+            this_value = None
+            for this_part in parts:
+                part, mask = this_part
+                if part in ('date', 'day', 'month', 'year'):
+                    this_value = time.strftime(mask, metadata['date_taken'])
+                    break
+                elif part in ('location', 'city', 'state', 'country'):
+                    place_name = geolocation.place_name(
+                        metadata['latitude'],
+                        metadata['longitude']
+                    )
 
-        file_name = '%s-%s.%s' % (
-            time.strftime(
-                '%Y-%m-%d_%H-%M-%S',
-                metadata['date_taken']
-            ),
-            base_name,
-            metadata['extension'])
-        return file_name.lower()
+                    location_parts = re.findall('(%[^%]+)', mask)
+                    this_value = self.parse_mask_for_location(
+                        mask,
+                        location_parts,
+                        place_name,
+                    )
+                    break
+                elif part in ('album', 'extension', 'title'):
+                    if metadata[part]:
+                        this_value = re.sub(self.whitespace_regex, '-', metadata[part].strip())
+                        break
+                elif part in ('original_name'):
+                    # First we check if we have metadata['original_name'].
+                    # We have to do this for backwards compatibility because
+                    #   we original did not store this back into EXIF.
+                    if metadata[part]:
+                        this_value = os.path.splitext(metadata['original_name'])[0]
+                    else:
+                        # We didn't always store original_name so this is 
+                        #  for backwards compatability.
+                        # We want to remove the hardcoded date prefix we used 
+                        #  to add to the name.
+                        # This helps when re-running the program on file 
+                        #  which were already processed.
+                        this_value = re.sub(
+                            '^\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}-',
+                            '',
+                            metadata['base_name']
+                        )
+                        if(len(this_value) == 0):
+                            this_value = metadata['base_name']
+
+                    # Lastly we want to sanitize the name
+                    this_value = re.sub(self.whitespace_regex, '-', this_value.strip())
+                elif part.startswith('"') and part.endswith('"'):
+                    this_value = part[1:-1]
+                    break
+
+            # Here we replace the placeholder with it's corresponding value.
+            # Check if this_value was not set so that the placeholder
+            #  can be removed completely.
+            # For example, %title- will be replaced with ''
+            # Else replace the placeholder (i.e. %title) with the value.
+            if this_value is None:
+                name = re.sub(
+                    #'[^a-z_]+%{}'.format(part),
+                    '[^a-zA-Z0-9_]+%{}'.format(part),
+                    '',
+                    name,
+                )
+            else:
+                name = re.sub(
+                    '%{}'.format(part),
+                    this_value,
+                    name,
+                )
+
+        return name.lower()
+
+    def get_file_name_definition(self):
+        """Returns a list of folder definitions.
+
+        Each element in the list represents a folder.
+        Fallback folders are supported and are nested lists.
+        Return values take the following form.
+        [
+            ('date', '%Y-%m-%d'),
+            [
+                ('location', '%city'),
+                ('album', ''),
+                ('"Unknown Location", '')
+            ]
+        ]
+
+        :returns: list
+        """
+        # If we've done this already then return it immediately without
+        # incurring any extra work
+        if self.cached_file_name_definition is not None:
+            return self.cached_file_name_definition
+
+        config = load_config()
+
+        # If File is in the config we assume name and its
+        #  corresponding values are also present
+        config_file = self.default_file_name_definition
+        if('File' in config):
+            config_file = config['File']
+
+        # Find all subpatterns of name that map to the components of the file's
+        #  name.
+        #  I.e. %date-%original_name-%title.%extension => ['date', 'original_name', 'title', 'extension'] #noqa
+        path_parts = re.findall(
+                         '(\%[a-z_]+)',
+                         config_file['name']
+                     )
+
+        if not path_parts or len(path_parts) == 0:
+            return (config_file['name'], self.default_file_name_definition)
+
+        self.cached_file_name_definition = []
+        for part in path_parts:
+            if part in config_file:
+                part = part[1:]
+                self.cached_file_name_definition.append(
+                    [(part, config_file[part])]
+                )
+            else:
+                this_part = []
+                for p in part.split('|'):
+                    p = p[1:]
+                    this_part.append(
+                        (p, config_file[p] if p in config_file else '')
+                    )
+                self.cached_file_name_definition.append(this_part)
+
+        self.cached_file_name_definition = (config_file['name'], self.cached_file_name_definition)
+        return self.cached_file_name_definition
 
     def get_folder_path_definition(self):
         """Returns a list of folder definitions.
@@ -201,10 +321,6 @@ class FileSystem(object):
                 self.cached_folder_path_definition.append(
                     [(part, config_directory[part])]
                 )
-            elif part in self.default_parts:
-                self.cached_folder_path_definition.append(
-                    [(part, '')]
-                )
             else:
                 this_part = []
                 for p in part.split('|'):
@@ -215,13 +331,14 @@ class FileSystem(object):
 
         return self.cached_folder_path_definition
 
-    def get_folder_path(self, metadata):
+    def get_folder_path(self, metadata, path_parts=None):
         """Given a media's metadata this function returns the folder path as a string.
 
-        :param metadata dict: Metadata dictionary.
+        :param dict metadata: Metadata dictionary.
         :returns: str
         """
-        path_parts = self.get_folder_path_definition()
+        if path_parts is None:
+            path_parts = self.get_folder_path_definition()
         path = []
         for path_part in path_parts:
             # We support fallback values so that
@@ -232,33 +349,68 @@ class FileSystem(object):
             #  Unknown Location - when neither an album nor location exist
             for this_part in path_part:
                 part, mask = this_part
-                if part in ('date', 'day', 'month', 'year'):
-                    path.append(
-                        time.strftime(mask, metadata['date_taken'])
-                    )
+                this_path = self.get_dynamic_path(part, mask, metadata)
+                if this_path:
+                    path.append(this_path.strip())
+                    # We break as soon as we have a value to append
+                    # Else we continue for fallbacks
                     break
-                elif part in ('location', 'city', 'state', 'country'):
-                    place_name = geolocation.place_name(
-                        metadata['latitude'],
-                        metadata['longitude']
-                    )
-
-                    location_parts = re.findall('(%[^%]+)', mask)
-                    parsed_folder_name = self.parse_mask_for_location(
-                        mask,
-                        location_parts,
-                        place_name,
-                    )
-                    path.append(parsed_folder_name)
-                    break
-                elif part in ('album', 'camera_make', 'camera_model'):
-                    if metadata[part]:
-                        path.append(metadata[part])
-                        break
-                elif part.startswith('"') and part.endswith('"'):
-                    path.append(part[1:-1])
-
         return os.path.join(*path)
+
+    def get_dynamic_path(self, part, mask, metadata):
+        """Parse a specific folder's name given a mask and metadata.
+
+        :param part: Name of the part as defined in the path (i.e. date from %date)
+        :param mask: Mask representing the template for the path (i.e. %city %state
+        :param metadata: Metadata dictionary.
+        :returns: str
+        """
+
+        # Each part has its own custom logic and we evaluate a single part and return
+        #  the evaluated string.
+        if part in ('custom'):
+            custom_parts = re.findall('(%[a-z_]+)', mask)
+            folder = mask
+            for i in custom_parts:
+                folder = folder.replace(
+                    i,
+                    self.get_dynamic_path(i[1:], i, metadata)
+                )
+            return folder
+        elif part in ('date'):
+            config = load_config()
+            # If Directory is in the config we assume full_path and its
+            #  corresponding values (date, location) are also present
+            config_directory = self.default_folder_path_definition
+            if('Directory' in config):
+                config_directory = config['Directory']
+            date_mask = ''
+            if 'date' in config_directory:
+                date_mask = config_directory['date']
+            return time.strftime(date_mask, metadata['date_taken'])
+        elif part in ('day', 'month', 'year'):
+            return time.strftime(mask, metadata['date_taken'])
+        elif part in ('location', 'city', 'state', 'country'):
+            place_name = geolocation.place_name(
+                metadata['latitude'],
+                metadata['longitude']
+            )
+
+            location_parts = re.findall('(%[^%]+)', mask)
+            parsed_folder_name = self.parse_mask_for_location(
+                mask,
+                location_parts,
+                place_name,
+            )
+            return parsed_folder_name
+        elif part in ('album', 'camera_make', 'camera_model'):
+            if metadata[part]:
+                return metadata[part]
+        elif part.startswith('"') and part.endswith('"'):
+            # Fallback string
+            return part[1:-1]
+
+        return ''
 
     def parse_mask_for_location(self, mask, location_parts, place_name):
         """Takes a mask for a location and interpolates the actual place names.

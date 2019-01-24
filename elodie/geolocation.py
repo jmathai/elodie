@@ -20,6 +20,7 @@ from elodie.localstorage import Db
 
 __KEY__ = None
 __DEFAULT_LOCATION__ = 'Unknown Location'
+__PREFER_ENGLISH_NAMES__ = None
 
 
 def coordinates_by_name(name):
@@ -114,6 +115,24 @@ def get_key():
     __KEY__ = config['MapQuest']['key']
     return __KEY__
 
+def get_prefer_english_names():
+    global __PREFER_ENGLISH_NAMES__
+    if __PREFER_ENGLISH_NAMES__ is not None:
+        return __PREFER_ENGLISH_NAMES__
+
+    config_file = '%s/config.ini' % constants.application_directory
+    if not path.exists(config_file):
+        return False
+
+    config = load_config()
+    if('MapQuest' not in config):
+        return False
+
+    if('prefer_english_names' not in config['MapQuest']):
+        return False
+
+    __PREFER_ENGLISH_NAMES__ = bool(config['MapQuest']['prefer_english_names'])
+    return __PREFER_ENGLISH_NAMES__
 
 def place_name(lat, lon):
     lookup_place_name_default = {'default': __DEFAULT_LOCATION__}
@@ -167,6 +186,7 @@ def lookup(**kwargs):
         return None
 
     key = get_key()
+    prefer_english_names = get_prefer_english_names()
 
     if(key is None):
         return None
@@ -177,11 +197,14 @@ def lookup(**kwargs):
         path = '/geocoding/v1/address'
         if('lat' in kwargs and 'lon' in kwargs):
             path = '/nominatim/v1/reverse.php'
-        url = 'http://open.mapquestapi.com%s?%s' % (
+        url = 'https://open.mapquestapi.com%s?%s' % (
                     path,
                     urllib.parse.urlencode(params)
               )
-        r = requests.get(url)
+        headers = {}
+        if(prefer_english_names):
+            headers = {'Accept-Language':'en-EN,en;q=0.8'}
+        r = requests.get(url, headers=headers)
         return parse_result(r.json())
     except requests.exceptions.RequestException as e:
         log.error(e)

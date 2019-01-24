@@ -240,6 +240,22 @@ def test_import_destination_in_source():
     folder_destination = '{}/destination'.format(folder)
     os.mkdir(folder_destination)
 
+    origin = '%s/plain.jpg' % folder
+    shutil.copyfile(helper.get_file('plain.jpg'), origin)
+
+    helper.reset_dbs()
+    dest_path = elodie.import_file(origin, folder_destination, False, False, False)
+    helper.restore_dbs()
+
+    shutil.rmtree(folder)
+
+    assert dest_path is None, dest_path
+
+def test_import_destination_in_source_gh_287():
+    temporary_folder, folder = helper.create_working_folder()
+    folder_destination = '{}-destination'.format(folder)
+    os.mkdir(folder_destination)
+
     origin = '%s/video.mov' % folder
     shutil.copyfile(helper.get_file('video.mov'), origin)
 
@@ -249,7 +265,7 @@ def test_import_destination_in_source():
 
     shutil.rmtree(folder)
 
-    assert dest_path is None, dest_path
+    assert dest_path is not None, dest_path
 
 def test_import_invalid_file_exit_code():
     temporary_folder, folder = helper.create_working_folder()

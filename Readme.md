@@ -1,8 +1,6 @@
 # Hello, I'm Elodie
 ~~ *Your Personal EXIF-based Photo, Video and Audio Assistant* ~~
 
-*** [Get a sample chapter from my book, Photo Archiving for Nerds](https://photoarchivingfornerds.com/) ***
-
 [![Build Status](https://travis-ci.org/jmathai/elodie.svg?branch=master)](https://travis-ci.org/jmathai/elodie) [![Coverage Status](https://coveralls.io/repos/github/jmathai/elodie/badge.svg?branch=master)](https://coveralls.io/github/jmathai/elodie?branch=master) [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/jmathai/elodie/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/jmathai/elodie/?branch=master)
 
 ## Quickstart guide
@@ -179,6 +177,7 @@ You can add a custom folder structure by editing your `config.ini` file (which s
 Sometimes examples are easier to understand than explainations so I'll start there. If you'd like to understand my magic I explain it in more detail below these examples. You customize your folder structure in the `Directory` section of your `config.ini`. For details of the supported formats see [strftime.org](http://strftime.org/)
 
 ```
+[Directory]
 location=%city, %state
 year=%Y
 full_path=%year/%location
@@ -195,6 +194,12 @@ month=%m
 year=%Y
 full_path=%year-%month/%location
 # -> 2015-12/Sunnyvale, California
+
+date=%Y
+location=%city, %state
+custom=%date %album
+full_path=%location/%custom
+# -> Sunnyvale, California/2015 Birthday Party
 ```
 
 #### Using fallback folders
@@ -204,6 +209,7 @@ There are times when the EXIF needed to correctly name a folder doesn't exist on
 You can specify a series of folder names by separating them with a `|`. That's a pipe, not an L. Let's look at an example.
 
 ```
+[Directory]
 month=%m
 year=%Y
 location=%city
@@ -239,6 +245,29 @@ In addition to my built-in and date placeholders you can combine them into a sin
 
 * `%location` can be used to combine multiple values of `%city`, `%state` and `%country`. For example, `location=%city, %state` would result in folder names like `Sunnyvale, California`.
 * `%date` can be used to combine multiple values from [the standard Python time directives](https://docs.python.org/2/library/datetime.html#strftime-and-strptime-behavior). For example, `date=%Y-%m` would result in folder names like `2015-12`.
+* `%custom` can be used to combine multiple values from anything else. Think of it as a catch-all when `%location` and `%date` don't meet your needs.
+
+#### How file customization works
+
+You can configure how Elodie names your files using placeholders. This works similarly to how folder customization works. The default naming format is what's referred to elsewhere in this document and has many thought through benefits. Using the default will gives you files named like `2015-09-27_01-41-38-_dsc8705.jpg`.
+
+
+* Minimizes the likelihood of naming conflicts.
+* Encodes important EXIF information into the file name.
+* Optimizes for sort order when listing in most file and photo viewers.
+
+If you'd like to specify your own naming convention it's recommended you include something that's mostly unique like the time including seconds. You'll need to include a `[File]` section in your `config.ini` file with a name attribute. If a placeholder doesn't have a value then it plus any preceding characters which are not alphabetic are removed.
+
+```
+[File]
+date=%Y-%m-%b-%H-%M-%S
+name=%date-%original_name-%title.jpg
+# -> 2012-05-Mar-12-59-30-dsc_1234-my-title.jpg
+
+date=%Y-%m-%b-%H-%M-%S
+name=%date-%original_name-%album.jpg
+# -> 2012-05-Mar-12-59-30-dsc_1234-my-album.jpg
+```
 
 ### Reorganize by changing location and dates
 
@@ -342,6 +371,8 @@ cp config.ini-sample ~/.elodie/config.ini
 # now you're ready to add your MapQuest key
 ```
 
+If you're an english speaker then you will probably want to add `prefer_english_names=True` to the `[MapQuest]` section else you'll have cities named using the local language.
+
 ## Questions, comments or concerns?
 
-The best ways to provide feedback is by reaching out on Twitter at [@getelodie](https://twitter.com/getelodie), opening a [GitHub issue](https://github.com/jmathai/elodie/issues) or emailing me at [jaisen@jmathai.com](mailto:jaisen@jmathai.com).
+The best ways to provide feedback is by opening a [GitHub issue](https://github.com/jmathai/elodie/issues) or emailing me at [jaisen@jmathai.com](mailto:jaisen@jmathai.com).
