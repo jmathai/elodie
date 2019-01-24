@@ -509,12 +509,16 @@ class FileSystem(object):
         if('allowDuplicate' in kwargs):
             allow_duplicate = kwargs['allowDuplicate']
 
+        stinfo = os.stat(_file)
+        # log.info('orig access time: ' % stinfo.st_atime)
+        # log.info('orig modified time: ' % stinfo.st_mtime)
+
         if(not media.is_valid()):
             print('%s is not a valid media file. Skipping...' % _file)
             return
 
-        original_checksum = self.process_checksum(_file, allow_duplicate)
-        if(original_checksum is None):
+        checksum = self.process_checksum(_file, allow_duplicate)
+        if(checksum is None):
             log.info('Original checksum returned None for %s. Skipping...' %
                      _file)
             return
@@ -527,11 +531,6 @@ class FileSystem(object):
         dest_directory = os.path.join(destination, directory_name)
         file_name = self.get_file_name(media)
         dest_path = os.path.join(dest_directory, file_name)
-
-        new_checksum = self.process_checksum(_file, allow_duplicate)
-        if(new_checksum is None):
-            log.info('New checksum returned None for %s. Skipping...' % _file)
-            return
 
         # If source and destination are identical then
         #  we should not write the file. gh-210
@@ -568,13 +567,13 @@ class FileSystem(object):
                 shutil.move(_file, dest_path)
                 # Move the exif _original back to the initial source file
                 shutil.move(exif_original_file, _file)
+                os.utime(_file, (stinfo.st_atime, stinfo.st_mtime))
             else:
                 compatability._copyfile(_file, dest_path)
             self.set_utime_from_metadata(media.get_metadata(), dest_path)
 
         db = Db()
-        db.add_hash(original_checksum, dest_path)
-        db.add_hash(new_checksum, dest_path)
+        db.add_hash(checksum, dest_path)
         db.update_hash_db()
 
         return dest_path
