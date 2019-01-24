@@ -554,12 +554,12 @@ class FileSystem(object):
             # Move the processed file into the destination directory
             shutil.move(_file, dest_path)
 
-            if(exif_original_file_exists):
+            if(exif_original_file_exists is True):
                 # We can remove it as we don't need the initial file.
                 os.remove(exif_original_file)
             os.utime(dest_path, (stat.st_atime, stat.st_mtime))
         else:
-            if(exif_original_file_exists):
+            if(exif_original_file_exists is True):
                 # Move the newly processed file with any updated tags to the
                 # destination directory
                 shutil.move(_file, dest_path)
