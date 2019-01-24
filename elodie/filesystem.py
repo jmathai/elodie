@@ -509,9 +509,7 @@ class FileSystem(object):
         if('allowDuplicate' in kwargs):
             allow_duplicate = kwargs['allowDuplicate']
 
-        stinfo = os.stat(_file)
-        # log.info('orig access time: ' % stinfo.st_atime)
-        # log.info('orig modified time: ' % stinfo.st_mtime)
+        stat_info = os.stat(_file)
 
         if(not media.is_valid()):
             print('%s is not a valid media file. Skipping...' % _file)
@@ -567,9 +565,9 @@ class FileSystem(object):
                 shutil.move(_file, dest_path)
                 # Move the exif _original back to the initial source file
                 shutil.move(exif_original_file, _file)
-                os.utime(_file, (stinfo.st_atime, stinfo.st_mtime))
             else:
                 compatability._copyfile(_file, dest_path)
+            os.utime(_file, (stat_info.st_atime, stat_info.st_mtime))
             self.set_utime_from_metadata(media.get_metadata(), dest_path)
 
         db = Db()
