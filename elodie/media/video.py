@@ -28,14 +28,15 @@ class Video(Media):
     __name__ = 'Video'
 
     #: Valid extensions for video files.
-    extensions = ('avi', 'm4v', 'mov', 'mp4', 'mpg', 'mpeg', '3gp')
+    extensions = ('avi', 'm4v', 'mov', 'mp4', 'mpg', 'mpeg', '3gp', 'mts')
 
     def __init__(self, source=None):
         super(Video, self).__init__(source)
         self.exif_map['date_taken'] = [
             'QuickTime:CreationDate',
             'QuickTime:CreationDate-und-US',
-            'QuickTime:MediaCreateDate'
+            'QuickTime:MediaCreateDate',
+            'H264:DateTimeOriginal'
         ]
         self.title_key = 'XMP:DisplayName'
         self.latitude_keys = [
