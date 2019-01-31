@@ -177,6 +177,33 @@ def test_get_current_directory():
     filesystem = FileSystem()
     assert os.getcwd() == filesystem.get_current_directory()
 
+def test_get_file_name_definition_default():
+    filesystem = FileSystem()
+    name_template, definition = filesystem.get_file_name_definition()
+
+    assert name_template == '%date-%original_name-%title.%extension', name_template
+    assert definition == [[('date', '%Y-%m-%d_%H-%M-%S')], [('original_name', '')], [('title', '')], [('extension', '')]], definition #noqa
+
+@mock.patch('elodie.config.config_file', '%s/config.ini-custom-filename' % gettempdir())
+def test_get_file_name_definition_custom():
+    with open('%s/config.ini-custom-filename' % gettempdir(), 'w') as f:
+        f.write("""
+[File]
+date=%Y-%m-%b
+name=%date-%original_name.%extension
+        """)
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    filesystem = FileSystem()
+    name_template, definition = filesystem.get_file_name_definition()
+
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    assert name_template == '%date-%original_name.%extension', name_template
+    assert definition == [[('date', '%Y-%m-%b')], [('original_name', '')], [('extension', '')]], definition #noqa
+
 def test_get_file_name_plain():
     filesystem = FileSystem()
     media = Photo(helper.get_file('plain.jpg'))
@@ -204,6 +231,73 @@ def test_get_file_name_with_original_name_title_exif():
     file_name = filesystem.get_file_name(media)
 
     assert file_name == helper.path_tz_fix('2015-12-05_00-59-26-foobar-foobar-title.jpg'), file_name
+
+def test_get_file_name_with_uppercase_and_spaces():
+    filesystem = FileSystem()
+    media = Photo(helper.get_file('Plain With Spaces And Uppercase 123.jpg'))
+    file_name = filesystem.get_file_name(media)
+
+    assert file_name == helper.path_tz_fix('2015-12-05_00-59-26-plain-with-spaces-and-uppercase-123.jpg'), file_name
+
+@mock.patch('elodie.config.config_file', '%s/config.ini-filename-custom' % gettempdir())
+def test_get_file_name_custom():
+    with open('%s/config.ini-filename-custom' % gettempdir(), 'w') as f:
+        f.write("""
+[File]
+date=%Y-%m-%b
+name=%date-%original_name.%extension
+        """)
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    filesystem = FileSystem()
+    media = Photo(helper.get_file('plain.jpg'))
+    file_name = filesystem.get_file_name(media)
+
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    assert file_name == helper.path_tz_fix('2015-12-dec-plain.jpg'), file_name
+
+@mock.patch('elodie.config.config_file', '%s/config.ini-filename-custom-with-title' % gettempdir())
+def test_get_file_name_custom_with_title():
+    with open('%s/config.ini-filename-custom-with-title' % gettempdir(), 'w') as f:
+        f.write("""
+[File]
+date=%Y-%m-%d
+name=%date-%original_name-%title.%extension
+        """)
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    filesystem = FileSystem()
+    media = Photo(helper.get_file('with-title.jpg'))
+    file_name = filesystem.get_file_name(media)
+
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    assert file_name == helper.path_tz_fix('2015-12-05-with-title-some-title.jpg'), file_name
+
+@mock.patch('elodie.config.config_file', '%s/config.ini-filename-custom-with-empty-value' % gettempdir())
+def test_get_file_name_custom_with_empty_value():
+    with open('%s/config.ini-filename-custom-with-empty-value' % gettempdir(), 'w') as f:
+        f.write("""
+[File]
+date=%Y-%m-%d
+name=%date-%original_name-%title.%extension
+        """)
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    filesystem = FileSystem()
+    media = Photo(helper.get_file('plain.jpg'))
+    file_name = filesystem.get_file_name(media)
+
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    assert file_name == helper.path_tz_fix('2015-12-05-plain.jpg'), file_name
 
 def test_get_folder_path_plain():
     filesystem = FileSystem()
