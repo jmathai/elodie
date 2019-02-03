@@ -7,8 +7,7 @@ are tracked by Elodie.
 
 from json import dumps, loads
 import os
-from shutil import copyfileobj
-from shutil import copy2
+from shutil import copy2, copyfileobj
 import time
 
 # load modules
