@@ -7,7 +7,7 @@ are tracked by Elodie.
 
 from json import dumps, loads
 import os
-from shutil import copyfileobj
+from shutil import copy2, copyfileobj
 import time
 
 # load modules
@@ -176,6 +176,11 @@ class Text(Base):
             metadata_line[name] = kwargs[name]
 
         metadata_as_json = dumps(metadata_line)
+        
+        # Create an _original copy just as we do with exiftool
+        # This is to keep all file processing logic in line with exiftool
+        copy2(source, source + '_original')
+
         if has_metadata:
             # Update the first line of this file in place
             # http://stackoverflow.com/a/14947384
