@@ -33,7 +33,7 @@ from elodie.result import Result
 FILESYSTEM = FileSystem()
 
 
-def import_file(_file, destination, album_from_folder, trash, allow_duplicates):
+def import_file(_file, destination, album_from_folder, trash, allow_duplicates, move_source=False):
 
     _file = _decode(_file)
     destination = _decode(destination)
@@ -61,7 +61,7 @@ def import_file(_file, destination, album_from_folder, trash, allow_duplicates):
         media.set_album_from_folder()
 
     dest_path = FILESYSTEM.process_file(_file, destination,
-        media, allowDuplicate=allow_duplicates, move=False)
+        media, allowDuplicate=allow_duplicates, move=move_source)
     if dest_path:
         print('%s -> %s' % (_file, dest_path))
     if trash:
@@ -85,8 +85,10 @@ def import_file(_file, destination, album_from_folder, trash, allow_duplicates):
               help='Import the file even if it\'s already been imported.')
 @click.option('--debug', default=False, is_flag=True,
               help='Override the value in constants.py with True.')
+@click.option('--move-source', default=False, is_flag=True,
+              help='Move source instead of copy it.')
 @click.argument('paths', nargs=-1, type=click.Path())
-def _import(destination, source, file, album_from_folder, trash, allow_duplicates, debug, paths):
+def _import(destination, source, file, album_from_folder, trash, allow_duplicates, debug, move_source, paths):
     """Import files or directories by reading their EXIF and organizing them accordingly.
     """
     constants.debug = debug
@@ -112,7 +114,7 @@ def _import(destination, source, file, album_from_folder, trash, allow_duplicate
 
     for current_file in files:
         dest_path = import_file(current_file, destination, album_from_folder,
-                    trash, allow_duplicates)
+                    trash, allow_duplicates, move_source)
         result.append((current_file, dest_path))
         has_errors = has_errors is True or not dest_path
 
