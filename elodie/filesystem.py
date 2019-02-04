@@ -472,7 +472,35 @@ class FileSystem(object):
 
         return folder_name
 
+    def process_checksum(self, _file, allow_duplicate):
+        db = Db()
+        checksum = db.checksum(_file)
+        if(checksum is None):
+            log.info('Could not get checksum for %s.' % _file)
+            return None
+
+        # If duplicates are not allowed then we check if we've seen this file
+        #  before via checksum. We also check that the file exists at the
+        #   location we believe it to be.
+        # If we find a checksum match but the file doesn't exist where we
+        #  believe it to be then we write a debug log and proceed to import.
+        checksum_file = db.get_hash(checksum)
+        if(allow_duplicate is False and checksum_file is not None):
+            if(os.path.isfile(checksum_file)):
+                log.info('%s already at %s.' % (
+                    _file,
+                    checksum_file
+                ))
+                return None
+            else:
+                log.info('%s matched checksum but file not found at %s.' % (  # noqa
+                    _file,
+                    checksum_file
+                ))
+        return checksum
+
     def process_file(self, _file, destination, media, **kwargs):
+
         move = False
         if('move' in kwargs):
             move = kwargs['move']
@@ -481,8 +509,16 @@ class FileSystem(object):
         if('allowDuplicate' in kwargs):
             allow_duplicate = kwargs['allowDuplicate']
 
+        stat_info_original = os.stat(_file)
+
         if(not media.is_valid()):
             print('%s is not a valid media file. Skipping...' % _file)
+            return
+
+        checksum = self.process_checksum(_file, allow_duplicate)
+        if(checksum is None):
+            log.info('Original checksum returned None for %s. Skipping...' %
+                     _file)
             return
 
         media.set_original_name()
@@ -494,31 +530,6 @@ class FileSystem(object):
         file_name = self.get_file_name(media)
         dest_path = os.path.join(dest_directory, file_name)
 
-        db = Db()
-        checksum = db.checksum(_file)
-        if(checksum is None):
-            log.info('Could not get checksum for %s. Skipping...' % _file)
-            return
-
-        # If duplicates are not allowed then we check if we've seen this file
-        #  before via checksum. We also check that the file exists at the
-        #   location we believe it to be.
-        # If we find a checksum match but the file doesn't exist where we
-        #  believe it to be then we write a debug log and proceed to import.
-        checksum_file = db.get_hash(checksum)
-        if(allow_duplicate is False and checksum_file is not None):
-            if(os.path.isfile(checksum_file)):
-                log.info('%s already exists at %s. Skipping...' % (
-                    _file,
-                    checksum_file
-                ))
-                return
-            else:
-                log.info('%s matched checksum but file not found at %s. Importing again...' % (  # noqa
-                    _file,
-                    checksum_file
-                ))
-
         # If source and destination are identical then
         #  we should not write the file. gh-210
         if(_file == dest_path):
@@ -527,14 +538,43 @@ class FileSystem(object):
 
         self.create_directory(dest_directory)
 
+        # exiftool renames the original file by appending '_original' to the
+        # file name. A new file is written with new tags with the initial file
+        # name. See exiftool man page for more details.
+        exif_original_file = _file + '_original'
+
+        # Check if the source file was processed by exiftool and an _original
+        # file was created.
+        exif_original_file_exists = False
+        if(os.path.exists(exif_original_file)):
+            exif_original_file_exists = True
+
         if(move is True):
             stat = os.stat(_file)
+            # Move the processed file into the destination directory
             shutil.move(_file, dest_path)
+
+            if(exif_original_file_exists is True):
+                # We can remove it as we don't need the initial file.
+                os.remove(exif_original_file)
             os.utime(dest_path, (stat.st_atime, stat.st_mtime))
         else:
-            compatability._copyfile(_file, dest_path)
+            if(exif_original_file_exists is True):
+                # Move the newly processed file with any updated tags to the
+                # destination directory
+                shutil.move(_file, dest_path)
+                # Move the exif _original back to the initial source file
+                shutil.move(exif_original_file, _file)
+            else:
+                compatability._copyfile(_file, dest_path)
+
+            # Set the utime based on what the original file contained 
+            #  before we made any changes.
+            # Then set the utime on the destination file based on metadata.
+            os.utime(_file, (stat_info_original.st_atime, stat_info_original.st_mtime))
             self.set_utime_from_metadata(media.get_metadata(), dest_path)
 
+        db = Db()
         db.add_hash(checksum, dest_path)
         db.update_hash_db()
 
