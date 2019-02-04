@@ -509,7 +509,7 @@ class FileSystem(object):
         if('allowDuplicate' in kwargs):
             allow_duplicate = kwargs['allowDuplicate']
 
-        stat_info = os.stat(_file)
+        stat_info_original = os.stat(_file)
 
         if(not media.is_valid()):
             print('%s is not a valid media file. Skipping...' % _file)
@@ -567,7 +567,11 @@ class FileSystem(object):
                 shutil.move(exif_original_file, _file)
             else:
                 compatability._copyfile(_file, dest_path)
-            os.utime(_file, (stat_info.st_atime, stat_info.st_mtime))
+
+            # Set the utime based on what the original file contained 
+            #  before we made any changes.
+            # Then set the utime on the destination file based on metadata.
+            os.utime(_file, (stat_info_original.st_atime, stat_info_original.st_mtime))
             self.set_utime_from_metadata(media.get_metadata(), dest_path)
 
         db = Db()

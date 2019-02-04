@@ -701,6 +701,29 @@ def test_process_file_with_location():
     assert origin_checksum_preprocess == origin_checksum
     assert helper.path_tz_fix(os.path.join('2015-12-Dec','Sunnyvale','2015-12-05_00-59-26-photo.jpg')) in destination, destination
 
+def test_process_file_validate_original_checksum():
+    filesystem = FileSystem()
+    temporary_folder, folder = helper.create_working_folder()
+
+    origin = os.path.join(folder,'photo.jpg')
+    shutil.copyfile(helper.get_file('plain.jpg'), origin)
+
+    origin_checksum_preprocess = helper.checksum(origin)
+    media = Photo(origin)
+    destination = filesystem.process_file(origin, temporary_folder, media, allowDuplicate=True)
+
+    origin_checksum = helper.checksum(origin)
+    destination_checksum = helper.checksum(destination)
+
+    shutil.rmtree(folder)
+    shutil.rmtree(os.path.dirname(os.path.dirname(destination)))
+
+    assert origin_checksum_preprocess is not None, origin_checksum_preprocess
+    assert origin_checksum is not None, origin_checksum
+    assert destination_checksum is not None, destination_checksum
+    assert origin_checksum_preprocess == origin_checksum, (origin_checksum_preprocess, origin_checksum)
+
+
 def test_process_file_with_location_and_title():
     filesystem = FileSystem()
     temporary_folder, folder = helper.create_working_folder()
