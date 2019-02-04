@@ -8,6 +8,9 @@ from sys import version_info
 #: If True, debug messages will be printed.
 debug = False
 
+#: If True, duplicate files will get deleted on import.
+delete_duplicates = False
+
 #: Directory in which to store Elodie settings.
 application_directory = '{}/.elodie'.format(path.expanduser('~'))
 
