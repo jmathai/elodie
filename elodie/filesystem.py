@@ -80,6 +80,20 @@ class FileSystem(object):
 
         return False
 
+    def delete_file(self, file_path):
+        """Delete a file safely but permanently.
+        """
+        try:
+            if os.path.exists(file_path):
+                os.remove(file_path)
+                return True
+            else:
+                print("The file does not exist.") 
+        except OSError:
+            pass
+
+        return False
+
     def get_all_files(self, path, extensions=None):
         """Recursively get all files which match a path and extension.
 
@@ -508,10 +522,17 @@ class FileSystem(object):
         checksum_file = db.get_hash(checksum)
         if(allow_duplicate is False and checksum_file is not None):
             if(os.path.isfile(checksum_file)):
-                log.info('%s already exists at %s. Skipping...' % (
-                    _file,
-                    checksum_file
-                ))
+                if constants.delete_duplicates:
+                    log.info('%s already exists at %s. Deleting...' % (
+                        _file,
+                        checksum_file
+                    ))
+                    self.delete_file(_file)
+                else:
+                    log.info('%s already exists at %s. Skipping...' % (
+                        _file,
+                        checksum_file
+                    ))
                 return
             else:
                 log.info('%s matched checksum but file not found at %s. Importing again...' % (  # noqa
