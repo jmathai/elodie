@@ -3,7 +3,7 @@
 block_cipher = None
 
 
-a = Analysis(['elodie.py'],
+a = Analysis(['elodie/elodie.py'],
              pathex=['/Users/jaisenmathai/dev/tools/elodie'],
              binaries=None,
              datas=[('configs/ExifTool_config', 'configs')],
