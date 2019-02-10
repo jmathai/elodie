@@ -29,12 +29,10 @@ dnf install perl-Image-ExifTool
 
 ### Clone the Elodie repository
 
-You can clone Elodie from GitHub. You'll need `git` installed ([instructions](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)).
+You can clone Elodie from GitHub. You'll need `pip` and `git` installed ([instructions](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)).
 
 ```
-git clone https://github.com/jmathai/elodie.git
-cd elodie
-pip install -r requirements.txt
+pip install git+https://github.com/jmathai/elodie.git
 ```
 
 ### Give Elodie a test drive
