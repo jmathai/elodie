@@ -11,6 +11,11 @@ build/**
 **/*.rw2
 env/**
 
+# Electron App builds
+Elodie-darwin-*/
+Elodie-Windows-*/
+Elodie-linux-*/
+
 # PYTHON gitignore below
 # Byte-compiled / optimized / DLL files
 __pycache__/
