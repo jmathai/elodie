@@ -16,6 +16,9 @@ Elodie-darwin-*/
 Elodie-Windows-*/
 Elodie-linux-*/
 
+# NPM
+package-lock.json
+
 # PYTHON gitignore below
 # Byte-compiled / optimized / DLL files
 __pycache__/
