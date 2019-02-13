@@ -9,13 +9,16 @@ from json import dumps
 
 from elodie import constants
 
+def all(message):
+    _print(message)
+    
 
 def info(message):
-    _print(message)
+    _print_debug(message)
 
 
 def info_json(payload):
-    _print(dumps(payload))
+    _print_debug(dumps(payload))
 
 
 def progress(message='.', new_line=False):
@@ -26,21 +29,31 @@ def progress(message='.', new_line=False):
 
 
 def warn(message):
-    _print(message)
+    _print_debug(message)
 
 
 def warn_json(payload):
-    _print(dumps(payload))
+    _print_debug(dumps(payload))
 
 
 def error(message):
-    _print(message)
+    _print_debug(message)
 
 
 def error_json(payload):
-    _print(dumps(payload))
+    _print_debug(dumps(payload))
 
 
-def _print(string):
+def _print_debug(string):
     if(constants.debug is True):
-        print(string)
+        _print(string)
+
+def _print(s):
+    try:
+        print(s)
+    except UnicodeEncodeError:
+        for c in s:
+            try:
+                print(c, end='')
+            except UnicodeEncodeError:
+                print('?', end='')
