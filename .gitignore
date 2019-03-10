@@ -11,6 +11,8 @@ build/**
 **/*.rw2
 env/**
 
+elodie/tests/files/photo.cr2
+
 # Electron App builds
 Elodie-darwin-*/
 Elodie-Windows-*/
