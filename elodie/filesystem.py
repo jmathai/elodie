@@ -11,12 +11,12 @@ import re
 import shutil
 import time
 
-from elodie import compatability
-from elodie import geolocation
-from elodie import log
-from elodie.config import load_config
-from elodie.localstorage import Db
-from elodie.media.base import Base, get_all_subclasses
+from . import compatability
+from . import geolocation
+from . import log
+from .config import load_config
+from .localstorage import Db
+from .media.base import Base, get_all_subclasses
 
 
 class FileSystem(object):
