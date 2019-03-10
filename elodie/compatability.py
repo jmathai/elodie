@@ -2,7 +2,7 @@ import os
 import shutil
 import sys
 
-from elodie import constants
+from . import constants
 
 
 def _decode(string, encoding=sys.getfilesystemencoding()):
