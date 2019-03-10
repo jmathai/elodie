@@ -126,7 +126,7 @@ class Media(Base):
         if(exiftool is None):
             return False
 
-        with ExifTool(addedargs=self.exiftool_addedargs) as et:
+        with ExifTool(executable_=exiftool, addedargs=self.exiftool_addedargs) as et:
             metadata = et.get_metadata(source)
             if not metadata:
                 return False
@@ -318,9 +318,13 @@ class Media(Base):
             return None
 
         source = self.source
+        exiftool = get_exiftool()
+        if(exiftool is None):
+            return False
+
 
         status = ''
-        with ExifTool(addedargs=self.exiftool_addedargs) as et:
+        with ExifTool(executable_=exiftool, addedargs=self.exiftool_addedargs) as et:
             status = et.set_tags(tags, source)
 
         return status != ''
