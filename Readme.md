@@ -41,7 +41,7 @@ Now that you've got the minimum dependencies installed you can start using Elodi
 
 ```
 # Run these commands from the root of the repository you just cloned.
-./elodie.py import --debug --destination="/where/i/want/my/photos/to/go" /where/my/photo/is.jpg
+elodie import --debug --destination="/where/i/want/my/photos/to/go" /where/my/photo/is.jpg
 ```
 
 You'll notice that the photo was organized into an *Unknown Location* folder. That's because you haven't set up your MapQuest API ([instructions](#using-openstreetmap-data-from-mapquest)).
@@ -73,7 +73,7 @@ My guess is you've got quite a few photos scattered around. The first thing I'll
 Fire up your terminal and run this command which *__copies__* your photos into something a bit more structured.
 
 ```
-./elodie.py import --destination="/where/i/want/my/photos/to/go" /where/my/photos/are
+elodie import --destination="/where/i/want/my/photos/to/go" /where/my/photos/are
 ```
 
 I'm pretty fast but depending on how many photos you have you might want to grab a snack. When you run this command I'll `print` out my work as I go along. If you're bored you can open `/where/i/want/my/photos/to/go` in *Finder* and watch as I effortlessly copy your photos there.
@@ -105,7 +105,7 @@ Not too bad, eh? Wait a second, what's *Unknown Location*? If I'm not able to fi
 
 ### Usage Instructions
 
-You can view these instructions on the command line by typing `./elodie.py import --help`, `./elodie.py update --help` or `./elodie.py generate-db --help`.
+You can view these instructions on the command line by typing `elodie import --help`, `elodie update --help` or `elodie generate-db --help`.
 
 #### Import photos
 
@@ -272,10 +272,10 @@ name=%date-%original_name-%album.jpg
 If you notice some photos were incorrectly organized you should definitely let me know. In the example above I put two photos into an *Unknown Location* folder because I didn't find GPS information in their EXIF. To fix this I'll help you add GPS information into the photos' EXIF and then I'll reorganize them.
 
 #### Tell me where your photos were taken
-Run the command below if you want to tell me the photos were taken in Las Vegas. You don't have to type all that in though. It's easier to just type `./elodie.py update --location="Las Vegas, NV" ` and select and drag the files from *OS X Finder* into the terminal.
+Run the command below if you want to tell me the photos were taken in Las Vegas. You don't have to type all that in though. It's easier to just type `elodie update --location="Las Vegas, NV" ` and select and drag the files from *OS X Finder* into the terminal.
 
 ```
-./elodie.py update --location="Las Vegas, NV" /where/i/want/my/photos/to/go/2015-09-Sep/Unknown\ Location/2015-09-27_01-41-38-_dsc8705.dng /where/i/want/my/photos/to/go/2015-09-Sep/Unknown\ Location/2015-09-27_01-41-38-_dsc8705.nef
+elodie update --location="Las Vegas, NV" /where/i/want/my/photos/to/go/2015-09-Sep/Unknown\ Location/2015-09-27_01-41-38-_dsc8705.dng /where/i/want/my/photos/to/go/2015-09-Sep/Unknown\ Location/2015-09-27_01-41-38-_dsc8705.nef
 ```
 
 You should see this after running that command.
@@ -291,7 +291,7 @@ You should see this after running that command.
 Run the command below if I got the date wrong when organizing your photos. Similarly to the above command you can drag files from *Finder* into your terminal.
 
 ```
-./elodie.py update --time="2015-04-15" /where/i/want/my/photos/to/go/2015-09-Sep/Unknown\ Location/2015-09-27_01-41-38-_dsc8705.dng /where/i/want/my/photos/to/go/2015-09-Sep/Unknown\ Location/2015-09-27_01-41-38-_dsc8705.nef
+elodie update --time="2015-04-15" /where/i/want/my/photos/to/go/2015-09-Sep/Unknown\ Location/2015-09-27_01-41-38-_dsc8705.dng /where/i/want/my/photos/to/go/2015-09-Sep/Unknown\ Location/2015-09-27_01-41-38-_dsc8705.nef
 ```
 
 That will change the date folder like so.
@@ -306,7 +306,7 @@ That will change the date folder like so.
 You can, of course, ask me to change the location and time. I'll happily update the photos and move them around accordingly.
 
 ```
-./elodie.py update --location="Las Vegas, NV" --time="2015-04-15" /where/i/want/my/photos/to/go/2015-09-Sep/Unknown\ Location/2015-09-27_01-41-38-_dsc8705.dng /where/i/want/my/photos/to/go/2015-09-Sep/Unknown\ Location/2015-09-27_01-41-38-_dsc8705.nef
+elodie update --location="Las Vegas, NV" --time="2015-04-15" /where/i/want/my/photos/to/go/2015-09-Sep/Unknown\ Location/2015-09-27_01-41-38-_dsc8705.dng /where/i/want/my/photos/to/go/2015-09-Sep/Unknown\ Location/2015-09-27_01-41-38-_dsc8705.nef
 ```
 
 ## What about photos I take in the future?
@@ -321,10 +321,10 @@ If you'd like to let me know of a specific photo or group of photos to add to yo
 
 ```
 # I can import a single file into your library.
-./elodie.py import --destination="/where/i/want/my/photo/to/go" /full/path/to/file.jpg
+elodie import --destination="/where/i/want/my/photo/to/go" /full/path/to/file.jpg
 
 # I can also import all the photos from a directory into your library.
-./elodie.py import --destination="/where/i/want/my/photo/to/go" /where/my/photos/are
+elodie import --destination="/where/i/want/my/photo/to/go" /where/my/photos/are
 ```
 
 ## Why not use a database?
