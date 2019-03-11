@@ -13,7 +13,7 @@ from math import radians, cos, sqrt
 from shutil import copyfile
 from time import strftime
 
-from elodie import constants
+from . import constants
 
 
 class Db(object):

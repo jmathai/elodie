@@ -2,7 +2,7 @@
 from configparser import RawConfigParser
 from os import path
 
-from elodie import constants
+from . import constants
 
 config_file = '%s/config.ini' % constants.application_directory
 

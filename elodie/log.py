@@ -7,7 +7,7 @@ from __future__ import print_function
 
 from json import dumps
 
-from elodie import constants
+from . import constants
 
 def all(message):
     _print(message)

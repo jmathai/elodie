@@ -48,7 +48,7 @@ I'm going to assume you've got *Node.js* installed. I've successfully built the 
 
 ```
 # use --platform=win32 for Windows or --platform=linux for linux
-electron-packager . Elodie --platform=darwin --arch=x64 --version=0.34.2 --overwrite
+electron-packager . Elodie --platform=darwin --arch=x64 --electron-version=0.34.2 --overwrite
 ```
 
 This will create a folder named `Elodie-darwin-x64` which contains the executable. Running the executable should add my face to your taskbar which you can click on or drag photos over.
