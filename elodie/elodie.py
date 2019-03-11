@@ -34,7 +34,7 @@ FILESYSTEM = FileSystem()
 
 
 def import_file(_file, destination, album_from_folder, trash, allow_duplicates):
-
+    
     _file = _decode(_file)
     destination = _decode(destination)
 
@@ -42,19 +42,20 @@ def import_file(_file, destination, album_from_folder, trash, allow_duplicates):
     """
     if not os.path.exists(_file):
         log.warn('Could not find %s' % _file)
-        print('{"source":"%s", "error_msg":"Could not find %s"}' % \
-            (_file, _file))
+        log.all('{"source":"%s", "error_msg":"Could not find %s"}' %
+                  (_file, _file))
         return
     # Check if the source, _file, is a child folder within destination
     elif destination.startswith(os.path.abspath(os.path.dirname(_file))+os.sep):
-        print('{"source": "%s", "destination": "%s", "error_msg": "Source cannot be in destination"}' % (_file, destination))
+        log.all('{"source": "%s", "destination": "%s", "error_msg": "Source cannot be in destination"}' % (
+            _file, destination))
         return
 
 
     media = Media.get_class_by_file(_file, get_all_subclasses())
     if not media:
         log.warn('Not a supported file (%s)' % _file)
-        print('{"source":"%s", "error_msg":"Not a supported file"}' % _file)
+        log.all('{"source":"%s", "error_msg":"Not a supported file"}' % _file)
         return
 
     if album_from_folder:
@@ -63,7 +64,7 @@ def import_file(_file, destination, album_from_folder, trash, allow_duplicates):
     dest_path = FILESYSTEM.process_file(_file, destination,
         media, allowDuplicate=allow_duplicates, move=False)
     if dest_path:
-        print('%s -> %s' % (_file, dest_path))
+        log.all('%s -> %s' % (_file, dest_path))
     if trash:
         send2trash(_file)
 
@@ -187,8 +188,8 @@ def update_location(media, file_path, location_name):
             'latitude'], location_coords['longitude'])
         if not location_status:
             log.error('Failed to update location')
-            print(('{"source":"%s",' % file_path,
-                '"error_msg":"Failed to update location"}'))
+            log.all(('{"source":"%s",' % file_path,
+                       '"error_msg":"Failed to update location"}'))
             sys.exit(1)
     return True
 
@@ -202,7 +203,7 @@ def update_time(media, file_path, time_string):
     elif re.match(r'^\d{4}-\d{2}-\d{2} \d{2}:\d{2}\d{2}$', time_string):
         msg = ('Invalid time format. Use YYYY-mm-dd hh:ii:ss or YYYY-mm-dd')
         log.error(msg)
-        print('{"source":"%s", "error_msg":"%s"}' % (file_path, msg))
+        log.all('{"source":"%s", "error_msg":"%s"}' % (file_path, msg))
         sys.exit(1)
 
     time = datetime.strptime(time_string, time_format)
@@ -242,8 +243,8 @@ def _update(album, location, time, title, paths, debug):
             has_errors = True
             result.append((current_file, False))
             log.warn('Could not find %s' % current_file)
-            print('{"source":"%s", "error_msg":"Could not find %s"}' % \
-                (current_file, current_file))
+            log.all('{"source":"%s", "error_msg":"Could not find %s"}' %
+                      (current_file, current_file))
             continue
 
         current_file = os.path.expanduser(current_file)
@@ -310,8 +311,8 @@ def _update(album, location, time, title, paths, debug):
             dest_path = FILESYSTEM.process_file(current_file, destination,
                 updated_media, move=True, allowDuplicate=True)
             log.info(u'%s -> %s' % (current_file, dest_path))
-            print('{"source":"%s", "destination":"%s"}' % (current_file,
-                dest_path))
+            log.all('{"source":"%s", "destination":"%s"}' % (current_file,
+                                                               dest_path))
             # If the folder we moved the file out of or its parent are empty
             # we delete it.
             FILESYSTEM.delete_directory_if_empty(os.path.dirname(current_file))
