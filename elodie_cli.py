@@ -6,7 +6,6 @@ import re
 import sys
 from datetime import datetime
 
-import click
 from send2trash import send2trash
 
 # Verify that external dependencies are present first, so the user gets a
@@ -100,14 +99,9 @@ def _import(destination, source, file, album_from_folder, trash, allow_duplicate
     for current_file in files:
         dest_path = import_file(current_file, destination, album_from_folder,
                     trash, allow_duplicates)
-        yield dest_path
+        yield {"destination": dest_path, "source": current_file}
 
 
-@click.command('generate-db')
-@click.option('--source', type=click.Path(file_okay=False),
-              required=True, help='Source of your photo library.')
-@click.option('--debug', default=False, is_flag=True,
-              help='Override the value in constants.py with True.')
 def _generate_db(source, debug):
     """Regenerate the hash.json database which contains all of the sha256 signatures of media files. The hash.json file is located at ~/.elodie/.
     """
@@ -132,9 +126,6 @@ def _generate_db(source, debug):
     log.progress('', True)
     result.write()
 
-@click.command('verify')
-@click.option('--debug', default=False, is_flag=True,
-              help='Override the value in constants.py with True.')
 def _verify(debug):
     constants.debug = debug
     result = Result()
@@ -191,18 +182,6 @@ def update_time(media, file_path, time_string):
     return True
 
 
-@click.command('update')
-@click.option('--album', help='Update the image album.')
-@click.option('--location', help=('Update the image location. Location '
-                                  'should be the name of a place, like "Las '
-                                  'Vegas, NV".'))
-@click.option('--time', help=('Update the image time. Time should be in '
-                              'YYYY-mm-dd hh:ii:ss or YYYY-mm-dd format.'))
-@click.option('--title', help='Update the image title.')
-@click.option('--debug', default=False, is_flag=True,
-              help='Override the value in constants.py with True.')
-@click.argument('paths', nargs=-1,
-                required=True)
 def _update(album, location, time, title, paths, debug):
     """Update a file's EXIF. Automatically modifies the file's location and file name accordingly.
     """
@@ -311,7 +290,6 @@ def _update(album, location, time, title, paths, debug):
         sys.exit(1)
 
 
-@click.group()
 def main():
     pass
 
