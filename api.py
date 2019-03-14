@@ -3,10 +3,13 @@ from __future__ import print_function
 
 import os
 import sys
+import time
 
 import zerorpc
 
 import elodie_cli
+from elodie.config import load_config
+from elodie.filesystem import FileSystem
 
 class ElodieApi(object):
     @zerorpc.stream
@@ -23,6 +26,12 @@ class ElodieApi(object):
             True,
             []
         )
+
+    def preview_file_name(self, fmt, metadata=None):
+        filesystem = FileSystem()
+        filesystem.default_folder_path_definition['full_path'] = '%date/%state'
+        metadata = {'date_taken': time.localtime(), 'directory_path': '/Users/jaisen/dev/tmp/source', 'album': None, 'camera_make': u'Google', 'extension': 'jpg', 'title': None, 'base_name': 'IMG_20180830_110056', 'original_name': None, 'longitude': None, 'camera_model': u'Pixel', 'latitude': None, 'mime_type': 'image/jpeg'}
+        return filesystem.get_folder_path(metadata)
 
 
 def parse_port():

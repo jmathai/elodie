@@ -96,6 +96,8 @@ def _import(destination, source, file, album_from_folder, trash, allow_duplicate
         else:
             files.add(path)
 
+    yield {"total_files": len(files)}
+
     for current_file in files:
         dest_path = import_file(current_file, destination, album_from_folder,
                     trash, allow_duplicates)
