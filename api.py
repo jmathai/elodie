@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 
+import json
 import os
 import sys
 import time
@@ -12,20 +13,25 @@ from elodie.config import load_config
 from elodie.filesystem import FileSystem
 
 class ElodieApi(object):
-    @zerorpc.stream
-    def import_files(self, destination, source):
+    def get_files(self, destination, source):
         """about any text"""
         # def _import(destination, source, file, album_from_folder, trash, allow_duplicates, debug, paths):
-        return elodie_cli._import(
+        files = elodie_cli.get_files(
             destination,
             source, 
-            False,
-            False,
-            False,
-            True,
-            True,
-            []
+            False,  # file
+            False,  # album_from_fiolder
+            False,  # trash
+            False,  # allow_duplicates
+            True,   # debug
+            []      # paths
         )
+
+        print(json.dumps(files))
+
+    def import_file(self, destination, _file):
+        dest = elodie_cli.import_file(_file, destination, False, False, True)
+        print(dest)
 
     def preview_file_name(self, fmt, metadata=None):
         filesystem = FileSystem()
@@ -43,11 +49,17 @@ def parse_port():
     return '{}'.format(port)
 
 def main():
-    addr = 'tcp://127.0.0.1:' + parse_port()
-    s = zerorpc.Server(ElodieApi())
-    s.bind(addr)
-    print('start running on {}'.format(addr))
-    s.run()
+    elodie_api = ElodieApi()
+    command = sys.argv[1]
+    if command == 'get_files':
+        destination = sys.argv[2]
+        source = sys.argv[3]
+        elodie_api.get_files(destination, source)
+    elif command == 'import_file':
+        destination = sys.argv[2]
+        file = sys.argv[3]
+        elodie_api.import_file(destination, file)
+
 
 if __name__ == '__main__':
     main()

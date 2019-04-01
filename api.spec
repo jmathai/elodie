@@ -4,7 +4,7 @@ block_cipher = None
 
 
 a = Analysis(['api.py'],
-             pathex=['/Users/jaisen/dev/elodie-ui'],
+             pathex=[],
              binaries=[],
              datas=[],
              hiddenimports=[],

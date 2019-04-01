@@ -65,14 +65,14 @@ def import_file(_file, destination, album_from_folder, trash, allow_duplicates):
     dest_path = FILESYSTEM.process_file(_file, destination,
         media, allowDuplicate=allow_duplicates, move=False)
     if dest_path:
-        log.all('%s -> %s' % (_file, dest_path))
+        log.info('%s -> %s' % (_file, dest_path))
     if trash:
         send2trash(_file)
 
-    return dest_path or None
+    return dest_path
 
 
-def _import(destination, source, file, album_from_folder, trash, allow_duplicates, debug, paths):
+def get_files(destination, source, file, album_from_folder, trash, allow_duplicates, debug, paths):
     """Import files or directories by reading their EXIF and organizing them accordingly.
     """
     constants.debug = debug
@@ -82,26 +82,23 @@ def _import(destination, source, file, album_from_folder, trash, allow_duplicate
     destination = _decode(destination)
     destination = os.path.abspath(os.path.expanduser(destination))
 
-    files = set()
+    files = []
     paths = set(paths)
     if source:
         source = _decode(source)
         paths.add(source)
     if file:
         paths.add(file)
+
     for path in paths:
         path = os.path.expanduser(path)
         if os.path.isdir(path):
-            files.update(FILESYSTEM.get_all_files(path, None))
+            for f in FILESYSTEM.get_all_files(path, None):
+                files.append(f)
         else:
-            files.add(path)
+            files.append(path)
 
-    yield {"total_files": len(files)}
-
-    for current_file in files:
-        dest_path = import_file(current_file, destination, album_from_folder,
-                    trash, allow_duplicates)
-        yield {"destination": dest_path, "source": current_file}
+    return files
 
 
 def _generate_db(source, debug):
