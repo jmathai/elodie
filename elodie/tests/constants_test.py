@@ -36,8 +36,32 @@ def test_application_directory_override_invalid():
     assert constants.application_directory == expected_path, constants.application_directory
 
 def test_application_directory_override_valid():
-    os.environ['ELODIE_APPLICATION_DIRECTORY'] = os.getcwd()
+    cwd = os.getcwd()
+    os.environ['ELODIE_APPLICATION_DIRECTORY'] = cwd
     reload(constants)
-    expected_path = os.getcwd()
-    print expected_path
-    assert constants.application_directory == expected_path, constants.application_directory
+
+    assert constants.application_directory == cwd, constants.application_directory
+    assert cwd in constants.hash_db, constants.hash_db
+
+# must come after test_application_directory_override_valid due to env var reset
+def test_hash_db():
+    os.environ['ELODIE_APPLICATION_DIRECTORY'] = ''
+    reload(constants)
+    assert constants.hash_db == '{}/hash.json'.format(constants.application_directory), constants.hash_db
+
+def test_location_db():
+    assert constants.location_db == '{}/location.json'.format(constants.application_directory), constants.location_db
+
+def test_script_directory():
+    path = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+    assert path == constants.script_directory, constants.script_directory
+
+def test_exiftool_config():
+    path = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+    assert '{}/configs/ExifTool_config'.format(path) == constants.exiftool_config, constants.exiftool_config
+
+def test_accepted_language():
+    assert constants.accepted_language == 'en', constants.accepted_language
+
+def test_python_version():
+    assert constants.python_version == sys.version_info.major, constants.python_version
