@@ -104,6 +104,10 @@ def get_key():
     if __KEY__ is not None:
         return __KEY__
 
+    if constants.mapquest_key is not None:
+        __KEY__ = constants.mapquest_key
+        return __KEY__
+
     config_file = '%s/config.ini' % constants.application_directory
     if not path.exists(config_file):
         return None
@@ -197,7 +201,8 @@ def lookup(**kwargs):
         path = '/geocoding/v1/address'
         if('lat' in kwargs and 'lon' in kwargs):
             path = '/nominatim/v1/reverse.php'
-        url = 'https://open.mapquestapi.com%s?%s' % (
+        url = '%s%s?%s' % (
+                    constants.mapquest_base_url,
                     path,
                     urllib.parse.urlencode(params)
               )
