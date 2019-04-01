@@ -61,6 +61,22 @@ def test_exiftool_config():
     path = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
     assert '{}/configs/ExifTool_config'.format(path) == constants.exiftool_config, constants.exiftool_config
 
+def test_mapquest_base_url_default():
+    assert constants.mapquest_base_url == 'https://open.mapquestapi.com', constants.mapquest_base_url
+
+def test_mapquest_base_url_override():
+    os.environ['ELODIE_MAPQUEST_BASE_URL'] = 'foobar'
+    reload(constants)
+    assert constants.mapquest_base_url == 'foobar', constants.mapquest_base_url
+
+def test_mapquest_Key():
+    assert constants.mapquest_key == None, constants.mapquest_key
+
+def test_mapquest_key_override():
+    os.environ['ELODIE_MAPQUEST_KEY'] = 'foobar'
+    reload(constants)
+    assert constants.mapquest_key == 'foobar', constants.mapquest_key
+
 def test_accepted_language():
     assert constants.accepted_language == 'en', constants.accepted_language
 
