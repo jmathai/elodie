@@ -9,7 +9,6 @@ from sys import version_info
 debug = False
 
 #: Directory in which to store Elodie settings.
-print environ
 if (
         'ELODIE_APPLICATION_DIRECTORY' in environ and
         path.isdir(environ['ELODIE_APPLICATION_DIRECTORY'])
