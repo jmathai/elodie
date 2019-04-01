@@ -170,7 +170,7 @@ Usage: elodie.py verify
 
 OK, so what if you don't like the folders being named `2015-07-Jul/Mountain View`? No problem!
 
-You can add a custom folder structure by editing your `config.ini` file (which should be placed under `~/.elodie/config.ini`).
+You can add a custom folder structure by editing your `config.ini` file (which should be placed under `~/.elodie/config.ini`). If you'd like to use a different folder for your configuration file then set an environment variable named `ELODIE_APPLICATION_DIRECTORY` with the fully qualified directory path.
 
 #### Custom folder examples
 
