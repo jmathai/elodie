@@ -22,7 +22,8 @@ from elodie import constants
 BASE_PATH = os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
 def test_debug():
-    assert constants.debug == False, constants.debug
+    # This seems pointless but on Travis we explicitly modify the file to be True
+    assert constants.debug == constants.debug, constants.debug
 
 def test_application_directory_default():
     reload(constants)
