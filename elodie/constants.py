@@ -30,12 +30,18 @@ exiftool_config = path.join(script_directory, 'configs', 'ExifTool_config')
 
 #: Path to MapQuest base URL
 mapquest_base_url = 'https://open.mapquestapi.com'
-if 'ELODIE_MAPQUEST_BASE_URL' in environ:
+if (
+        'ELODIE_MAPQUEST_BASE_URL' in environ and
+        environ['ELODIE_MAPQUEST_BASE_URL'] != ''
+    ):
     mapquest_base_url = environ['ELODIE_MAPQUEST_BASE_URL']
 
 #: MapQuest key from environment
 mapquest_key = None
-if 'ELODIE_MAPQUEST_KEY' in environ:
+if (
+        'ELODIE_MAPQUEST_KEY' in environ and
+        environ['ELODIE_MAPQUEST_KEY'] != ''
+   ):
     mapquest_key = environ['ELODIE_MAPQUEST_KEY']
 
 #: Accepted language in responses from MapQuest
