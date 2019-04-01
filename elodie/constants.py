@@ -2,14 +2,21 @@
 Settings used by Elodie.
 """
 
-from os import path
+from os import environ, path
 from sys import version_info
 
 #: If True, debug messages will be printed.
 debug = False
 
 #: Directory in which to store Elodie settings.
-application_directory = '{}/.elodie'.format(path.expanduser('~'))
+print environ
+if (
+        'ELODIE_APPLICATION_DIRECTORY' in environ and
+        path.isdir(environ['ELODIE_APPLICATION_DIRECTORY'])
+   ):
+    application_directory = environ['ELODIE_APPLICATION_DIRECTORY']
+else:
+    application_directory = '{}/.elodie'.format(path.expanduser('~'))
 
 #: File in which to store details about media Elodie has seen.
 hash_db = '{}/hash.json'.format(application_directory)
