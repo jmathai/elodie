@@ -1,20 +1,22 @@
 # -*- coding: utf-8
 # Project imports
 from __future__ import unicode_literals
+import mock
 import os
 import sys
 
 from datetime import datetime
 import shutil
-import tempfile
 import time
 
 from nose.plugins.skip import SkipTest
+from tempfile import gettempdir
 
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))))
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
 
 import helper
+from elodie.config import load_config
 from elodie.media.media import Media
 from elodie.media.photo import Photo
 
@@ -56,6 +58,82 @@ def test_is_not_valid():
     photo = Photo(helper.get_file('text.txt'))
 
     assert not photo.is_valid()
+
+@mock.patch('elodie.config.config_file', '%s/config.ini-no-config' % gettempdir())
+def test_get_adjusted_date_taken_no_config():
+    with open('%s/config.ini-no-config' % gettempdir(), 'w') as f:
+        f.write("""
+        """)
+    
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    photo = Photo(helper.get_file('plain.jpg'))
+    date_taken = photo.get_adjusted_date_taken()
+
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+@mock.patch('elodie.config.config_file', '%s/config.ini-do-not-use-location' % gettempdir())
+def test_get_adjusted_date_taken_do_not_use_location():
+    with open('%s/config.ini-do-not-use-location' % gettempdir(), 'w') as f:
+        f.write("""
+[Timezone]
+use_location=False
+        """)
+    
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    photo = Photo(helper.get_file('plain.jpg'))
+    date_taken = photo.get_adjusted_date_taken()
+
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    assert date_taken == helper.time_convert((2015, 12, 5, 0, 59, 26, 5, 339, 0)), date_taken
+
+@mock.patch('elodie.config.config_file', '%s/config.ini-without-exif-location' % gettempdir())
+def test_get_adjusted_date_taken_without_exif_location():
+    with open('%s/config.ini-without-exif-location' % gettempdir(), 'w') as f:
+        f.write("""
+[Timezone]
+use_location=True
+        """)
+    
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    photo = Photo(helper.get_file('plain.jpg'))
+    date_taken = photo.get_adjusted_date_taken()
+    print(photo.get_metadata())
+    print(date_taken)
+
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    assert date_taken == helper.time_convert((2015, 12, 5, 0, 59, 26, 5, 339, 0)), date_taken
+
+@mock.patch('elodie.config.config_file', '%s/config.ini-use-location' % gettempdir())
+def test_get_adjusted_date_taken_use_location():
+    with open('%s/config.ini-use-location' % gettempdir(), 'w') as f:
+        f.write("""
+[Timezone]
+use_location=True
+        """)
+    
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    photo = Photo(helper.get_file('with-location.jpg'))
+    date_taken = photo.get_adjusted_date_taken()
+    print(photo.get_metadata())
+    print(date_taken)
+
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    assert date_taken == helper.time_convert((2015, 12, 5, 0, 59, 26, 5, 339, 1)), date_taken
 
 def test_get_metadata_of_invalid_photo():
     photo = Photo(helper.get_file('invalid.jpg'))

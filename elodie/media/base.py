@@ -10,8 +10,13 @@ are used to represent the actual files.
 .. moduleauthor:: Jaisen Mathai <jaisen@jmathai.com>
 """
 
+import datetime
 import mimetypes
 import os
+import pytz
+from tzwhere.tzwhere import tzwhere
+
+from elodie.config import load_config
 
 try:        # Py3k compatibility
     basestring
@@ -39,6 +44,28 @@ class Base(object):
 
         :returns: dict
         """
+    def get_adjusted_date_taken(self):
+        """Returns date taken and adjust based on time zone if needed.
+        Time zone conversion is based on a configurable value from config.ini.
+
+        :returns: int
+        """
+        config = load_config()
+        metadata = self.get_metadata()
+        if(
+            'Timezone' in config and
+            'use_location' in config['Timezone'] and
+            config['Timezone'].getboolean('use_location') is True and
+            metadata['latitude'] is not None and
+            metadata['longitude'] is not None
+        ):
+            timezone_string = tzwhere().tzNameAt(
+                                metadata['latitude'],
+                                metadata['longitude']
+                            )
+            return timezone_string
+        return metadata['date_taken']
+
 
     def get_album(self):
         """Base method for getting an album
