@@ -69,13 +69,14 @@ def test_get_adjusted_date_taken_no_config():
         del load_config.config
 
     photo = Photo(helper.get_file('plain.jpg'))
-    date_taken = photo.get_adjusted_date_taken()
+    metadata = photo.get_metadata()
+    date_taken_adj = photo.get_date_taken_adjusted(metadata['date_taken'], metadata['latitude'], metadata['longitude'])
 
     if hasattr(load_config, 'config'):
         del load_config.config
 
 @mock.patch('elodie.config.config_file', '%s/config.ini-do-not-use-location' % gettempdir())
-def test_get_adjusted_date_taken_do_not_use_location():
+def test_get_date_taken_adjusted_do_not_use_location():
     with open('%s/config.ini-do-not-use-location' % gettempdir(), 'w') as f:
         f.write("""
 [Timezone]
@@ -86,15 +87,16 @@ use_location=False
         del load_config.config
 
     photo = Photo(helper.get_file('plain.jpg'))
-    date_taken = photo.get_adjusted_date_taken()
+    metadata = photo.get_metadata()
+    date_taken_adj = photo.get_date_taken_adjusted(metadata['date_taken'], metadata['latitude'], metadata['longitude'])
 
     if hasattr(load_config, 'config'):
         del load_config.config
 
-    assert date_taken == helper.time_convert((2015, 12, 5, 0, 59, 26, 5, 339, 0)), date_taken
+    assert date_taken_adj == helper.time_convert((2015, 12, 5, 0, 59, 26, 5, 339, 0)), date_taken_adj
 
 @mock.patch('elodie.config.config_file', '%s/config.ini-without-exif-location' % gettempdir())
-def test_get_adjusted_date_taken_without_exif_location():
+def test_get_date_taken_adjusted_without_exif_location():
     with open('%s/config.ini-without-exif-location' % gettempdir(), 'w') as f:
         f.write("""
 [Timezone]
@@ -105,17 +107,16 @@ use_location=True
         del load_config.config
 
     photo = Photo(helper.get_file('plain.jpg'))
-    date_taken = photo.get_adjusted_date_taken()
-    print(photo.get_metadata())
-    print(date_taken)
+    metadata = photo.get_metadata()
+    date_taken_adj = photo.get_date_taken_adjusted(metadata['date_taken'], metadata['latitude'], metadata['longitude'])
 
     if hasattr(load_config, 'config'):
         del load_config.config
 
-    assert date_taken == helper.time_convert((2015, 12, 5, 0, 59, 26, 5, 339, 0)), date_taken
+    assert date_taken_adj == helper.time_convert((2015, 12, 5, 0, 59, 26, 5, 339, 0)), date_taken_adj
 
 @mock.patch('elodie.config.config_file', '%s/config.ini-use-location' % gettempdir())
-def test_get_adjusted_date_taken_use_location():
+def test_get_date_taken_adjusted_use_location():
     with open('%s/config.ini-use-location' % gettempdir(), 'w') as f:
         f.write("""
 [Timezone]
@@ -126,14 +127,16 @@ use_location=True
         del load_config.config
 
     photo = Photo(helper.get_file('with-location.jpg'))
-    date_taken = photo.get_adjusted_date_taken()
-    print(photo.get_metadata())
-    print(date_taken)
+    metadata = photo.get_metadata()
+    date_taken_adj = photo.get_date_taken_adjusted(metadata['date_taken'], metadata['latitude'], metadata['longitude'])
+    date_taken_adj_from_metadata = photo.get_metadata()['date_taken_adjusted']
+    is_dst = date_taken_adj.tm_isdst
 
     if hasattr(load_config, 'config'):
         del load_config.config
 
-    assert date_taken == helper.time_convert((2015, 12, 5, 0, 59, 26, 5, 339, 1)), date_taken
+    assert date_taken_adj == date_taken_adj_from_metadata, (date_taken_adj, date_taken_adj_from_metadata)
+    assert date_taken_adj == helper.time_convert((2015, 12, 5, 7, 59, 26, 5, 339, is_dst)), date_taken_adj
 
 def test_get_metadata_of_invalid_photo():
     photo = Photo(helper.get_file('invalid.jpg'))

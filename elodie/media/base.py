@@ -10,10 +10,11 @@ are used to represent the actual files.
 .. moduleauthor:: Jaisen Mathai <jaisen@jmathai.com>
 """
 
-import datetime
 import mimetypes
 import os
-import pytz
+from datetime import datetime, timedelta
+from pytz import timezone
+from time import mktime
 from tzwhere.tzwhere import tzwhere
 
 from elodie.config import load_config
@@ -44,28 +45,6 @@ class Base(object):
 
         :returns: dict
         """
-    def get_adjusted_date_taken(self):
-        """Returns date taken and adjust based on time zone if needed.
-        Time zone conversion is based on a configurable value from config.ini.
-
-        :returns: int
-        """
-        config = load_config()
-        metadata = self.get_metadata()
-        if(
-            'Timezone' in config and
-            'use_location' in config['Timezone'] and
-            config['Timezone'].getboolean('use_location') is True and
-            metadata['latitude'] is not None and
-            metadata['longitude'] is not None
-        ):
-            timezone_string = tzwhere().tzNameAt(
-                                metadata['latitude'],
-                                metadata['longitude']
-                            )
-            return timezone_string
-        return metadata['date_taken']
-
 
     def get_album(self):
         """Base method for getting an album
@@ -74,12 +53,40 @@ class Base(object):
         """
         return None
 
-    def get_file_path(self):
-        """Get the full path to the video.
+    def get_camera_make(self):
+        return None
 
-        :returns: string
+    def get_camera_model(self):
+        return None
+
+    def get_date_taken_adjusted(self, date_taken, latitude, longitude):
+        """Returns date taken and adjust based on time zone if needed.
+        Time zone conversion is based on a configurable value from config.ini.
+
+        :returns: int
         """
-        return self.source
+        config = load_config()
+
+        # Check if use_location config is true and file has lat/lon
+        # Else default to returning date_taken directly from file
+        if(
+            'Timezone' in config and
+            'use_location' in config['Timezone'] and
+            config['Timezone'].getboolean('use_location') is True and
+            latitude is not None and
+            longitude is not None
+        ):
+            timezone_string = tzwhere().tzNameAt(
+                                latitude,
+                                longitude
+                              )
+            date_taken_as_time = datetime.fromtimestamp(mktime(date_taken))
+            now_in_timezone = datetime.now(timezone(timezone_string))
+            seconds_offset = now_in_timezone.utcoffset().total_seconds()
+            adjusted_date_taken = date_taken_as_time - timedelta(seconds = seconds_offset)
+            return adjusted_date_taken.timetuple()
+
+        return date_taken
 
     def get_coordinate(self, type):
         return None
@@ -95,11 +102,12 @@ class Base(object):
         source = self.source
         return os.path.splitext(source)[1][1:].lower()
 
-    def get_camera_make(self):
-        return None
+    def get_file_path(self):
+        """Get the full path to the video.
 
-    def get_camera_model(self):
-        return None
+        :returns: string
+        """
+        return self.source
 
     def get_metadata(self, update_cache=False):
         """Get a dictionary of metadata for any file.
@@ -130,7 +138,11 @@ class Base(object):
             'extension': self.get_extension(),
             'directory_path': os.path.dirname(source)
         }
-
+        self.metadata['date_taken_adjusted'] = self.get_date_taken_adjusted(
+                                                self.metadata['date_taken'],
+                                                self.metadata['latitude'],
+                                                self.metadata['longitude']
+                                               )
         return self.metadata
 
     def get_mimetype(self):
