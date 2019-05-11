@@ -354,6 +354,32 @@ full_path=%camera_make|"nomake"/%camera_model|"nomodel"
 
     assert path == os.path.join('nomake', 'nomodel'), path
 
+@mock.patch('elodie.config.config_file', '%s/config.ini-fallback-complex' % gettempdir())
+def test_get_folder_path_with_complex_fallback():
+    # gh-239
+    with open('%s/config.ini-fallback-complex' % gettempdir(), 'w') as f:
+        f.write("""
+[Directory]
+date=%Y-%m
+custom=%date %album %country
+full_path=%custom
+        """)
+    if hasattr(load_config, 'config'):
+        del load_config.config
+    filesystem = FileSystem()
+    media_album = Photo(helper.get_file('with-album.jpg'))
+    path_album = filesystem.get_folder_path(media_album.get_metadata())
+    media_location = Photo(helper.get_file('with-location.jpg'))
+    path_location = filesystem.get_folder_path(media_location.get_metadata())
+    media_plain = Photo(helper.get_file('plain.jpg'))
+    path_plain = filesystem.get_folder_path(media_plain.get_metadata())
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    assert path_album == '2015-12 Test Album Unknown Location', path_album
+    assert path_location == '2015-12  United States of America', path_location
+    assert path_plain == '2015-12-Dec  Unknown Location', path_plain
+
 @mock.patch('elodie.config.config_file', '%s/config.ini-int-in-component-path' % gettempdir())
 def test_get_folder_path_with_int_in_config_component():
     # gh-239
