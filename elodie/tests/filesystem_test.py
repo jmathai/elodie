@@ -378,7 +378,7 @@ full_path=%custom
 
     assert path_album == '2015-12 Test Album Unknown Location', path_album
     assert path_location == '2015-12  United States of America', path_location
-    assert path_plain == '2015-12-Dec  Unknown Location', path_plain
+    assert path_plain == '2015-12  Unknown Location', path_plain
 
 @mock.patch('elodie.config.config_file', '%s/config.ini-int-in-component-path' % gettempdir())
 def test_get_folder_path_with_int_in_config_component():
