@@ -59,9 +59,9 @@ def test_is_not_valid():
 
     assert not photo.is_valid()
 
-@mock.patch('elodie.config.config_file', '%s/config.ini-no-config' % gettempdir())
-def test_get_adjusted_date_taken_no_config():
-    with open('%s/config.ini-no-config' % gettempdir(), 'w') as f:
+@mock.patch('elodie.config.config_file', '%s/config.ini-date-taken-adjusted-no-config' % gettempdir())
+def test_get_date_taken_adjusted_no_config():
+    with open('%s/config.ini-date-taken-adjusted-no-config' % gettempdir(), 'w') as f:
         f.write("""
         """)
     
@@ -75,9 +75,9 @@ def test_get_adjusted_date_taken_no_config():
     if hasattr(load_config, 'config'):
         del load_config.config
 
-@mock.patch('elodie.config.config_file', '%s/config.ini-do-not-use-location' % gettempdir())
+@mock.patch('elodie.config.config_file', '%s/config.ini-date-taken-adjusted-do-not-use-location' % gettempdir())
 def test_get_date_taken_adjusted_do_not_use_location():
-    with open('%s/config.ini-do-not-use-location' % gettempdir(), 'w') as f:
+    with open('%s/config.ini-date-taken-adjusted-do-not-use-location' % gettempdir(), 'w') as f:
         f.write("""
 [Timezone]
 use_location=False
@@ -95,9 +95,9 @@ use_location=False
 
     assert date_taken_adj == helper.time_convert((2015, 12, 5, 0, 59, 26, 5, 339, 0)), date_taken_adj
 
-@mock.patch('elodie.config.config_file', '%s/config.ini-without-exif-location' % gettempdir())
+@mock.patch('elodie.config.config_file', '%s/config.ini-date-taken-adjusted-without-exif-location' % gettempdir())
 def test_get_date_taken_adjusted_without_exif_location():
-    with open('%s/config.ini-without-exif-location' % gettempdir(), 'w') as f:
+    with open('%s/config.ini-date-taken-adjusted-without-exif-location' % gettempdir(), 'w') as f:
         f.write("""
 [Timezone]
 use_location=True
@@ -115,9 +115,9 @@ use_location=True
 
     assert date_taken_adj == helper.time_convert((2015, 12, 5, 0, 59, 26, 5, 339, 0)), date_taken_adj
 
-@mock.patch('elodie.config.config_file', '%s/config.ini-use-location' % gettempdir())
-def test_get_date_taken_adjusted_use_location():
-    with open('%s/config.ini-use-location' % gettempdir(), 'w') as f:
+@mock.patch('elodie.config.config_file', '%s/config.ini-date-taken-adjusted-for-timestamp-use-location' % gettempdir())
+def test_get_date_taken_adjusted_for_timestamp_use_location():
+    with open('%s/config.ini-date-taken-adjusted-for-timestamp-use-location' % gettempdir(), 'w') as f:
         f.write("""
 [Timezone]
 use_location=True
