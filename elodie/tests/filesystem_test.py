@@ -299,6 +299,69 @@ name=%date-%original_name-%title.%extension
 
     assert file_name == helper.path_tz_fix('2015-12-05-plain.jpg'), file_name
 
+@mock.patch('elodie.config.config_file', '%s/config.ini-filename-custom-with-lowercase' % gettempdir())
+def test_get_file_name_custom_with_lower_capitalization():
+    with open('%s/config.ini-filename-custom-with-lowercase' % gettempdir(), 'w') as f:
+        f.write("""
+[File]
+date=%Y-%m-%d
+name=%date-%original_name-%title.%extension
+capitalization=lower
+        """)
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    filesystem = FileSystem()
+    media = Photo(helper.get_file('plain.jpg'))
+    file_name = filesystem.get_file_name(media)
+
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    assert file_name == helper.path_tz_fix('2015-12-05-plain.jpg'), file_name
+
+@mock.patch('elodie.config.config_file', '%s/config.ini-filename-custom-with-invalidcase' % gettempdir())
+def test_get_file_name_custom_with_invalid_capitalization():
+    with open('%s/config.ini-filename-custom-with-invalidcase' % gettempdir(), 'w') as f:
+        f.write("""
+[File]
+date=%Y-%m-%d
+name=%date-%original_name-%title.%extension
+capitalization=garabage
+        """)
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    filesystem = FileSystem()
+    media = Photo(helper.get_file('plain.jpg'))
+    file_name = filesystem.get_file_name(media)
+
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    assert file_name == helper.path_tz_fix('2015-12-05-plain.jpg'), file_name
+
+@mock.patch('elodie.config.config_file', '%s/config.ini-filename-custom-with-uppercase' % gettempdir())
+def test_get_file_name_custom_with_upper_capitalization():
+    with open('%s/config.ini-filename-custom-with-uppercase' % gettempdir(), 'w') as f:
+        f.write("""
+[File]
+date=%Y-%m-%d
+name=%date-%original_name-%title.%extension
+capitalization=upper
+        """)
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    filesystem = FileSystem()
+    media = Photo(helper.get_file('plain.jpg'))
+    file_name = filesystem.get_file_name(media)
+
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    assert file_name == helper.path_tz_fix('2015-12-05-PLAIN.JPG'), file_name
+
 def test_get_folder_path_plain():
     filesystem = FileSystem()
     media = Photo(helper.get_file('plain.jpg'))

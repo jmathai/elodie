@@ -211,7 +211,12 @@ class FileSystem(object):
                     name,
                 )
 
-        return name.lower()
+        config = load_config()
+
+        if('File' in config and 'capitalization' in config['File'] and config['File']['capitalization'] == 'upper'):
+            return name.upper()
+        else:
+            return name.lower()
 
     def get_file_name_definition(self):
         """Returns a list of folder definitions.
