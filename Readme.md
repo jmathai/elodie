@@ -260,7 +260,7 @@ You can configure how Elodie names your files using placeholders. This works sim
 
 If you'd like to specify your own naming convention it's recommended you include something that's mostly unique like the time including seconds. You'll need to include a `[File]` section in your `config.ini` file with a name attribute. If a placeholder doesn't have a value then it plus any preceding characters which are not alphabetic are removed.
 
-By default the resulting filename is all lowercased. To change this behavior to upppercasing add capitalization=upper.
+By default the resulting filename is all lowercased. To change this behavior to uppercasing add capitalization=upper.
 
 ```
 [File]
@@ -270,7 +270,7 @@ name=%date-%original_name-%title.jpg
 
 date=%Y-%m-%b-%H-%M-%S
 name=%date-%original_name-%album.jpg
-capitalization=uppper
+capitalization=upper
 # -> 2012-05-MAR-12-59-30-DSC_1234-MY-ALBUM.JPG
 ```
 
