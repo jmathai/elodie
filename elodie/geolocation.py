@@ -13,10 +13,10 @@ import urllib.request
 import urllib.parse
 import urllib.error
 
-from elodie.config import load_config
-from elodie import constants
-from elodie import log
-from elodie.localstorage import Db
+from .config import load_config
+from . import constants
+from . import log
+from .localstorage import Db
 
 __KEY__ = None
 __DEFAULT_LOCATION__ = 'Unknown Location'

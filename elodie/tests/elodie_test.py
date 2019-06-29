@@ -15,7 +15,7 @@ sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirna
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))))
 
 import helper
-elodie = load_source('elodie', os.path.abspath('{}/../../elodie.py'.format(os.path.dirname(os.path.realpath(__file__)))))
+elodie = load_source('elodie.elodie', os.path.abspath('{}/../elodie.py'.format(os.path.dirname(os.path.realpath(__file__)))))
 
 from elodie.config import load_config
 from elodie.localstorage import Db
