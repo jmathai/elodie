@@ -69,9 +69,17 @@ class Plugins(object):
         pass_status = True
         for cls in self.classes:
             this_method = getattr(self.classes[cls], 'before')
+            # We try to call the plugin's `before()` method.
+            # If the method explicitly raises an ElodiePluginError we'll fail the import
+            #  by setting pass_status to False.
+            # If any other error occurs we log the message and proceed as usual.
+            # By default, plugins don't change behavior.
             try:
                 this_method(file_path, destination_path, media)
             except ElodiePluginError as err:
                 log.warn('Plugin {} raised an exception: {}'.format(cls, err))
+                log.error(format_exc())
                 pass_status = False
+            except:
+                log.error(format_exc())
         return pass_status

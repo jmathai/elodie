@@ -180,3 +180,22 @@ plugins=Dummy,ThrowError
         del load_config.config
 
     assert status == False, status
+
+@mock.patch('elodie.config.config_file', '%s/config.ini-throw-runtime-error' % gettempdir())
+def test_throw_error_runtime_error():
+    with open('%s/config.ini-throw-runtime-error' % gettempdir(), 'w') as f:
+        f.write("""
+[Plugins]
+plugins=RuntimeError
+        """)
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    plugins = Plugins()
+    plugins.load()
+    status = plugins.run_all_before('', '', '')
+
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    assert status == True, status

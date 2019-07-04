@@ -930,6 +930,24 @@ def test_process_existing_file_without_changes():
     shutil.rmtree(folder)
     shutil.rmtree(os.path.dirname(os.path.dirname(destination)))
 
+@mock.patch('elodie.config.config_file', '%s/config.ini-plugin-raise-error' % gettempdir())
+def test_process_file_with_plugin_raise_error():
+    with open('%s/config.ini-plugin-raise-error' % gettempdir(), 'w') as f:
+        f.write("""
+[Plugins]
+plugins=ThrowError
+        """)
+    filesystem = FileSystem()
+    temporary_folder, folder = helper.create_working_folder()
+
+    origin = os.path.join(folder,'plain.jpg')
+    shutil.copyfile(helper.get_file('plain.jpg'), origin)
+
+    media = Photo(origin)
+    destination = filesystem.process_file(origin, temporary_folder, media)
+
+    assert destination is None, destination
+
 def test_set_utime_with_exif_date():
     filesystem = FileSystem()
     temporary_folder, folder = helper.create_working_folder()
