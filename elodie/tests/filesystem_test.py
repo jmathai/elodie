@@ -883,6 +883,7 @@ full_path=%year/%month/%day
 
     if hasattr(load_config, 'config'):
         del load_config.config
+
     filesystem = FileSystem()
     temporary_folder, folder = helper.create_working_folder()
 
@@ -898,9 +899,11 @@ full_path=%year/%month/%day
 
     if hasattr(load_config, 'config'):
         del load_config.config
+
     media_second = Photo(destination)
     media_second.set_title('foo')
     destination_second = filesystem.process_file(destination, temporary_folder, media_second, allowDuplicate=True)
+
     if hasattr(load_config, 'config'):
         del load_config.config
 
@@ -930,13 +933,17 @@ def test_process_existing_file_without_changes():
     shutil.rmtree(folder)
     shutil.rmtree(os.path.dirname(os.path.dirname(destination)))
 
-@mock.patch('elodie.config.config_file', '%s/config.ini-plugin-raise-error' % gettempdir())
-def test_process_file_with_plugin_raise_error():
-    with open('%s/config.ini-plugin-raise-error' % gettempdir(), 'w') as f:
+@mock.patch('elodie.config.config_file', '%s/config.ini-plugin-throw-error' % gettempdir())
+def test_process_file_with_plugin_throw_error():
+    with open('%s/config.ini-plugin-throw-error' % gettempdir(), 'w') as f:
         f.write("""
 [Plugins]
 plugins=ThrowError
         """)
+
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
     filesystem = FileSystem()
     temporary_folder, folder = helper.create_working_folder()
 
@@ -945,6 +952,9 @@ plugins=ThrowError
 
     media = Photo(origin)
     destination = filesystem.process_file(origin, temporary_folder, media, allowDuplicate=True)
+
+    if hasattr(load_config, 'config'):
+        del load_config.config
 
     assert destination is None, destination
 
@@ -955,6 +965,9 @@ def test_process_file_with_plugin_runtime_error():
 [Plugins]
 plugins=RuntimeError
         """)
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
     filesystem = FileSystem()
     temporary_folder, folder = helper.create_working_folder()
 
@@ -963,6 +976,9 @@ plugins=RuntimeError
 
     media = Photo(origin)
     destination = filesystem.process_file(origin, temporary_folder, media, allowDuplicate=True)
+
+    if hasattr(load_config, 'config'):
+        del load_config.config
 
     assert '2015-12-Dec/Unknown Location/2015-12-05_00-59-26-plain.jpg' in destination, destination
 
