@@ -48,7 +48,11 @@ def error_json(payload):
 
 def _print_debug(string):
     # Print if debug == True or if running with nosetests
-    if(constants.debug is True or 'nose' in sys.modules.keys()):
+    # Commenting out because this causes failures in other tests
+    #  which verify that output is correct.
+    # Use the line below if you want output printed during tests.
+    # if(constants.debug is True or 'nose' in sys.modules.keys()):
+    if(constants.debug is True):
         _print(string)
 
 def _print(s):

@@ -944,9 +944,9 @@ plugins=ThrowError
     shutil.copyfile(helper.get_file('plain.jpg'), origin)
 
     media = Photo(origin)
-    destination = filesystem.process_file(origin, temporary_folder, media)
+    destination = filesystem.process_file(origin, temporary_folder, media, allowDuplicate=True)
 
-    assert '2015-12-Dec/Unknown Location/2015-12-05_00-59-26-plain.jpg' in destination, destination
+    assert destination is None, destination
 
 @mock.patch('elodie.config.config_file', '%s/config.ini-plugin-runtime-error' % gettempdir())
 def test_process_file_with_plugin_runtime_error():
@@ -962,9 +962,9 @@ plugins=RuntimeError
     shutil.copyfile(helper.get_file('plain.jpg'), origin)
 
     media = Photo(origin)
-    destination = filesystem.process_file(origin, temporary_folder, media)
+    destination = filesystem.process_file(origin, temporary_folder, media, allowDuplicate=True)
 
-    assert destination is None, destination
+    assert '2015-12-Dec/Unknown Location/2015-12-05_00-59-26-plain.jpg' in destination, destination
 
 def test_set_utime_with_exif_date():
     filesystem = FileSystem()
