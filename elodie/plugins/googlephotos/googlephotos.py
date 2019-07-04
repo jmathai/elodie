@@ -1,18 +1,24 @@
 """
-Plugin object.
+Google Photos plugin object.
 
 .. moduleauthor:: Jaisen Mathai <jaisen@jmathai.com>
 """
 from __future__ import print_function
-from builtins import object
 
+from elodie.plugins.plugins import PluginBase
 
-class GooglePhotos(object):
+class GooglePhotos(PluginBase):
     """A class to execute plugin actions."""
-    pass
 
-"""
+    __name__ = 'GooglePhotos'
 
+    def __init__(self):
+        pass
+
+    def before(self, file_path, destination_path, media):
+        pass
+
+i"""
 import json
 
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -66,3 +72,4 @@ if (upload_token.status_code == 200) and (upload_token.content):
     if "newMediaItemResults" in resp:
         status = resp["newMediaItemResults"][0]["status"]
         print(status)"""
+

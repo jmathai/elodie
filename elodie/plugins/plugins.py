@@ -21,6 +21,9 @@ class PluginBase(object):
 
     __name__ = 'PluginBase'
 
+    def before(self, file_path, destination_path, media):
+        pass
+
     def log(self, msg):
         log.info(msg)
 

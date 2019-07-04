@@ -4,7 +4,6 @@ Dummy plugin object used for tests.
 .. moduleauthor:: Jaisen Mathai <jaisen@jmathai.com>
 """
 from __future__ import print_function
-from builtins import object
 
 from elodie.plugins.plugins import PluginBase
 
