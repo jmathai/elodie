@@ -131,7 +131,6 @@ plugins=Dummy
 
     plugins = Plugins()
     plugins.load()
-    print(plugins.classes)
     before_ran_1 = plugins.classes['Dummy'].before_ran
     plugins.run_all_before('', '', '')
     before_ran_2 = plugins.classes['Dummy'].before_ran
