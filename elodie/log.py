@@ -5,6 +5,8 @@ General file system methods.
 """
 from __future__ import print_function
 
+import sys
+
 from json import dumps
 
 from elodie import constants
@@ -45,6 +47,11 @@ def error_json(payload):
 
 
 def _print_debug(string):
+    # Print if debug == True or if running with nosetests
+    # Commenting out because this causes failures in other tests
+    #  which verify that output is correct.
+    # Use the line below if you want output printed during tests.
+    # if(constants.debug is True or 'nose' in sys.modules.keys()):
     if(constants.debug is True):
         _print(string)
 
