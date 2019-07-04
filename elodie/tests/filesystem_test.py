@@ -946,6 +946,24 @@ plugins=ThrowError
     media = Photo(origin)
     destination = filesystem.process_file(origin, temporary_folder, media)
 
+    assert '2015-12-Dec/Unknown Location/2015-12-05_00-59-26-plain.jpg' in destination, destination
+
+@mock.patch('elodie.config.config_file', '%s/config.ini-plugin-runtime-error' % gettempdir())
+def test_process_file_with_plugin_runtime_error():
+    with open('%s/config.ini-plugin-runtime-error' % gettempdir(), 'w') as f:
+        f.write("""
+[Plugins]
+plugins=RuntimeError
+        """)
+    filesystem = FileSystem()
+    temporary_folder, folder = helper.create_working_folder()
+
+    origin = os.path.join(folder,'plain.jpg')
+    shutil.copyfile(helper.get_file('plain.jpg'), origin)
+
+    media = Photo(origin)
+    destination = filesystem.process_file(origin, temporary_folder, media)
+
     assert destination is None, destination
 
 def test_set_utime_with_exif_date():

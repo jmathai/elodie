@@ -17,6 +17,7 @@ from elodie import log
 from elodie.config import load_config
 from elodie.localstorage import Db
 from elodie.media.base import Base, get_all_subclasses
+from elodie.plugins.plugins import Plugins
 
 
 class FileSystem(object):
@@ -43,6 +44,10 @@ class FileSystem(object):
         # See build failures in Python3 here.
         #  https://travis-ci.org/jmathai/elodie/builds/483012902
         self.whitespace_regex = '[ \t\n\r\f\v]+'
+
+        # Instantiate a plugins object
+        self.plugins = Plugins()
+
 
     def create_directory(self, directory_path):
         """Create a directory if it does not already exist.
@@ -500,7 +505,6 @@ class FileSystem(object):
         return checksum
 
     def process_file(self, _file, destination, media, **kwargs):
-
         move = False
         if('move' in kwargs):
             move = kwargs['move']
@@ -519,6 +523,13 @@ class FileSystem(object):
         if(checksum is None):
             log.info('Original checksum returned None for %s. Skipping...' %
                      _file)
+            return
+
+        # Run `before()` for every loaded plugin and if any of them raise an exception
+        #  then we skip importing the file and log a message.
+        plugins_run_before_status = self.plugins.run_all_before(_file, destination, media)
+        if(plugins_run_before_status == False):
+            log.warn('At least one plugin pre-run failed for %s' % _file)
             return
 
         media.set_original_name()
