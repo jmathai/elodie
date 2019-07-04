@@ -6,8 +6,12 @@ Dummy plugin object used for tests.
 from __future__ import print_function
 from builtins import object
 
+from elodie.plugins.plugins import PluginBase
 
-class Dummy(object):
+class Dummy(PluginBase):
+
+    __name__ = 'Dummy'
+
     """A dummy class to execute plugin actions for tests."""
     def __init__(self):
         self.before_ran = False

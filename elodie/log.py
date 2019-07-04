@@ -5,6 +5,8 @@ General file system methods.
 """
 from __future__ import print_function
 
+import sys
+
 from json import dumps
 
 from elodie import constants
@@ -45,7 +47,8 @@ def error_json(payload):
 
 
 def _print_debug(string):
-    if(constants.debug is True):
+    # Print if debug == True or if running with nosetests
+    if(constants.debug is True or 'nose' in sys.modules.keys()):
         _print(string)
 
 def _print(s):

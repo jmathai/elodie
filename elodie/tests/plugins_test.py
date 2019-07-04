@@ -87,7 +87,7 @@ def test_load_plugins_many():
     with open('%s/config.ini-load-plugins-many' % gettempdir(), 'w') as f:
         f.write("""
 [Plugins]
-plugins=GooglePhotos,Dummy
+plugins=ThrowError,Dummy
         """)
     if hasattr(load_config, 'config'):
         del load_config.config
@@ -98,7 +98,9 @@ plugins=GooglePhotos,Dummy
     if hasattr(load_config, 'config'):
         del load_config.config
 
-    assert plugins.plugins == ['GooglePhotos','Dummy'], plugins.plugins
+    assert plugins.plugins == ['ThrowError','Dummy'], plugins.plugins
+    assert plugins.classes['ThrowError'].__name__ == 'ThrowError', plugins.classes['ThrowError'].__name__
+    assert plugins.classes['Dummy'].__name__ == 'Dummy', plugins.classes['Dummy'].__name__
     assert len(plugins.classes) == 2, len(plugins.classes)
 
 @mock.patch('elodie.config.config_file', '%s/config.ini-load-plugins-many-with-invalid' % gettempdir())
@@ -106,7 +108,7 @@ def test_load_plugins_set_many_with_invalid():
     with open('%s/config.ini-load-plugins-many-with-invalid' % gettempdir(), 'w') as f:
         f.write("""
 [Plugins]
-plugins=GooglePhotos,Dummy,DNE
+plugins=ThrowError,Dummy,DNE
         """)
     if hasattr(load_config, 'config'):
         del load_config.config
@@ -117,7 +119,7 @@ plugins=GooglePhotos,Dummy,DNE
     if hasattr(load_config, 'config'):
         del load_config.config
 
-    assert plugins.plugins == ['GooglePhotos','Dummy'], plugins.plugins
+    assert plugins.plugins == ['ThrowError','Dummy'], plugins.plugins
 
 @mock.patch('elodie.config.config_file', '%s/config.ini-run-before' % gettempdir())
 def test_run_before():
@@ -140,3 +142,41 @@ plugins=Dummy
 
     assert before_ran_1 == False, before_ran_1
     assert before_ran_2 == True, before_ran_2
+
+@mock.patch('elodie.config.config_file', '%s/config.ini-throw-error' % gettempdir())
+def test_throw_error():
+    with open('%s/config.ini-throw-error' % gettempdir(), 'w') as f:
+        f.write("""
+[Plugins]
+plugins=ThrowError
+        """)
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    plugins = Plugins()
+    plugins.load()
+    status = plugins.run_all_before('', '', '')
+
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    assert status == False, status
+
+@mock.patch('elodie.config.config_file', '%s/config.ini-throw-error-one-of-many' % gettempdir())
+def test_throw_error_one_of_many():
+    with open('%s/config.ini-throw-error-one-of-many' % gettempdir(), 'w') as f:
+        f.write("""
+[Plugins]
+plugins=Dummy,ThrowError
+        """)
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    plugins = Plugins()
+    plugins.load()
+    status = plugins.run_all_before('', '', '')
+
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    assert status == False, status

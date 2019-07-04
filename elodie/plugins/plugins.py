@@ -6,11 +6,24 @@ Plugin object.
 from __future__ import print_function
 from builtins import object
 
-from sys import exc_info
 from importlib import import_module
+from sys import exc_info
+from traceback import format_exc
 
 from elodie.config import load_plugin_config
 from elodie import log
+
+class ElodiePluginError(Exception):
+    pass
+
+
+class PluginBase(object):
+
+    __name__ = 'PluginBase'
+
+    def log(self, msg):
+        log.info(msg)
+
 
 
 class Plugins(object):
@@ -19,10 +32,15 @@ class Plugins(object):
     def __init__(self):
         self.plugins = []
         self.classes = {}
+        self.loaded = False
 
     def load(self):
         """Load plugins from config file.
         """
+        # If plugins have been loaded then return
+        if self.loaded == True:
+            return
+
         plugin_list = load_plugin_config()
         for plugin in plugin_list:
             plugin_lower = plugin.lower()
@@ -38,13 +56,22 @@ class Plugins(object):
                 # We only append to self.plugins if we're able to load the class
                 self.plugins.append(plugin)
             except:
-                log.warn('Some error occurred initiating plugin {} - {}'.format(plugin, exc_info()[0]))
-                continue
+                log.error('An error occurred initiating plugin {}'.format(plugin))
+                log.error(format_exc())
+
+        self.loaded = True
 
 
     def run_all_before(self, file_path, destination_path, media):
+        self.load()
         """Process `before` methods of each plugin that was loaded.
         """
+        pass_status = True
         for cls in self.classes:
             this_method = getattr(self.classes[cls], 'before')
-            this_method(file_path, destination_path, media)
+            try:
+                this_method(file_path, destination_path, media)
+            except ElodiePluginError as err:
+                log.warn('Plugin {} raised an exception: {}'.format(cls, err))
+                pass_status = False
+        return pass_status
