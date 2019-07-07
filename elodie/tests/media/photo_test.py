@@ -1,20 +1,22 @@
 # -*- coding: utf-8
 # Project imports
 from __future__ import unicode_literals
+import mock
 import os
 import sys
 
 from datetime import datetime
 import shutil
-import tempfile
 import time
 
 from nose.plugins.skip import SkipTest
+from tempfile import gettempdir
 
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))))
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
 
 import helper
+from elodie.config import load_config
 from elodie.media.media import Media
 from elodie.media.photo import Photo
 
@@ -56,6 +58,85 @@ def test_is_not_valid():
     photo = Photo(helper.get_file('text.txt'))
 
     assert not photo.is_valid()
+
+@mock.patch('elodie.config.config_file', '%s/config.ini-date-taken-adjusted-no-config' % gettempdir())
+def test_get_date_taken_adjusted_no_config():
+    with open('%s/config.ini-date-taken-adjusted-no-config' % gettempdir(), 'w') as f:
+        f.write("""
+        """)
+    
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    photo = Photo(helper.get_file('plain.jpg'))
+    metadata = photo.get_metadata()
+    date_taken_adj = photo.get_date_taken_adjusted(metadata['date_taken'], metadata['latitude'], metadata['longitude'])
+
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+@mock.patch('elodie.config.config_file', '%s/config.ini-date-taken-adjusted-do-not-use-location' % gettempdir())
+def test_get_date_taken_adjusted_do_not_use_location():
+    with open('%s/config.ini-date-taken-adjusted-do-not-use-location' % gettempdir(), 'w') as f:
+        f.write("""
+[Timezone]
+use_location=False
+        """)
+    
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    photo = Photo(helper.get_file('plain.jpg'))
+    metadata = photo.get_metadata()
+    date_taken_adj = photo.get_date_taken_adjusted(metadata['date_taken'], metadata['latitude'], metadata['longitude'])
+
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    assert date_taken_adj == helper.time_convert((2015, 12, 5, 0, 59, 26, 5, 339, 0)), date_taken_adj
+
+@mock.patch('elodie.config.config_file', '%s/config.ini-date-taken-adjusted-without-exif-location' % gettempdir())
+def test_get_date_taken_adjusted_without_exif_location():
+    with open('%s/config.ini-date-taken-adjusted-without-exif-location' % gettempdir(), 'w') as f:
+        f.write("""
+[Timezone]
+use_location=True
+        """)
+    
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    photo = Photo(helper.get_file('plain.jpg'))
+    metadata = photo.get_metadata()
+    date_taken_adj = photo.get_date_taken_adjusted(metadata['date_taken'], metadata['latitude'], metadata['longitude'])
+
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    assert date_taken_adj == helper.time_convert((2015, 12, 5, 0, 59, 26, 5, 339, 0)), date_taken_adj
+
+@mock.patch('elodie.config.config_file', '%s/config.ini-date-taken-adjusted-for-timestamp-use-location' % gettempdir())
+def test_get_date_taken_adjusted_for_timestamp_use_location():
+    with open('%s/config.ini-date-taken-adjusted-for-timestamp-use-location' % gettempdir(), 'w') as f:
+        f.write("""
+[Timezone]
+use_location=True
+        """)
+    
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    photo = Photo(helper.get_file('with-location.jpg'))
+    metadata = photo.get_metadata()
+    date_taken_adj = photo.get_date_taken_adjusted(metadata['date_taken'], metadata['latitude'], metadata['longitude'])
+    date_taken_adj_from_metadata = photo.get_metadata()['date_taken_adjusted']
+    is_dst = date_taken_adj.tm_isdst
+
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    assert date_taken_adj == date_taken_adj_from_metadata, (date_taken_adj, date_taken_adj_from_metadata)
+    assert date_taken_adj == helper.time_convert((2015, 12, 5, 7, 59, 26, 5, 339, is_dst)), date_taken_adj
 
 def test_get_metadata_of_invalid_photo():
     photo = Photo(helper.get_file('invalid.jpg'))
