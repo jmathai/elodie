@@ -10,7 +10,7 @@ from importlib import import_module
 from sys import exc_info
 from traceback import format_exc
 
-from elodie.config import load_plugin_config
+from elodie.config import load_config_for_plugin, load_plugin_config
 from elodie import log
 
 class ElodiePluginError(Exception):
@@ -21,7 +21,13 @@ class PluginBase(object):
 
     __name__ = 'PluginBase'
 
-    def before(self, file_path, destination_path, media):
+    def __init__(self):
+        self.config_for_plugin = load_config_for_plugin(self.__name__)
+
+    def after(self, file_path, destination_folder, final_file_path, media):
+        pass
+
+    def before(self, file_path, destination_folder, media):
         pass
 
     def log(self, msg):

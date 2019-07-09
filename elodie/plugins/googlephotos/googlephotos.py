@@ -5,71 +5,110 @@ Google Photos plugin object.
 """
 from __future__ import print_function
 
-from elodie.plugins.plugins import PluginBase
-
-class GooglePhotos(PluginBase):
-    """A class to execute plugin actions."""
-
-    __name__ = 'GooglePhotos'
-
-    def __init__(self):
-        pass
-
-    def before(self, file_path, destination_path, media):
-        pass
-
-i"""
 import json
+
+from os.path import basename, isfile
 
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import AuthorizedSession
 from google.oauth2.credentials import Credentials
 
-scopes = [
-"https://www.googleapis.com/auth/photoslibrary",
-"https://www.googleapis.com/auth/photoslibrary.appendonly",
-"https://www.googleapis.com/auth/photoslibrary.sharing"
-]
+from elodie.plugins.plugins import PluginBase
 
-auth_file = 'client_id.json'
+class GooglePhotos(PluginBase):
+    """A class to execute plugin actions.
+       
+       Requires a config file with the following configurations set.
+       secrets_file:
+            The full file path where to find the downloaded secrets.
+       auth_file:
+            The full file path where to store authenticated tokens.
+    
+    """
 
-try:
-    creds = Credentials.from_authorized_user_file(auth_file, scopes)
-except:
-    print('no creds')
-    #flow = InstalledAppFlow.from_client_secrets_file('/Users/jaisen/Downloads/client_secret_1004259275591-5g51kj0feetbet88o8le5i16hbr3ucb6.apps.googleusercontent.com-3.json', scopes)
-    flow = InstalledAppFlow.from_client_secrets_file('/Users/jaisen/Downloads/client_secret_1004259275591-ogsk179e96cs0h126qj590mofk86gdqo.apps.googleusercontent.com.json', scopes)
-    creds = flow.run_local_server()
-    cred_dict = {
-        'token': creds.token,
-        'refresh_token': creds.refresh_token,
-        'id_token': creds.id_token,
-        'scopes': creds.scopes,
-        'token_uri': creds.token_uri,
-        'client_id': creds.client_id,
-        'client_secret': creds.client_secret
-    }
+    __name__ = 'GooglePhotos'
 
-    with open(auth_file, 'w') as f:
-        f.write(json.dumps(cred_dict))
+    def __init__(self):
+        super(GooglePhotos, self).__init__()
+        self.upload_url = 'https://photoslibrary.googleapis.com/v1/uploads'
+        self.media_create_url = 'https://photoslibrary.googleapis.com/v1/mediaItems:batchCreate'
+        self.scopes = [
+            'https://www.googleapis.com/auth/photoslibrary',
+            'https://www.googleapis.com/auth/photoslibrary.appendonly',
+            'https://www.googleapis.com/auth/photoslibrary.sharing'
+        ]
+        
+        self.secrets_file = None
+        if('secrets_file' in self.config_for_plugin):
+            self.secrets_file = self.config_for_plugin['secrets_file']
+        # 'client_id.json'
+        self.auth_file = None
+        if('auth_file' in self.config_for_plugin):
+            self.auth_file = self.config_for_plugin['auth_file']
+        self.session = None
 
-session = AuthorizedSession(creds)
+    def after(self, file_path, destination_folder, final_file_path, media):
+        pass
 
+    def before(self, file_path, destination_folder, media):
+        pass
 
+    def set_session(self):
+        # Try to load credentials from an auth file.
+        # If it doesn't exist or is not valid then catch the 
+        #  exception and reauthenticate.
+        try:
+            creds = Credentials.from_authorized_user_file(self.auth_file, self.scopes)
+        except:
+            print(self.secrets_file)
+            flow = InstalledAppFlow.from_client_secrets_file(self.secrets_file, self.scopes)
+            creds = flow.run_local_server()
+            cred_dict = {
+                'token': creds.token,
+                'refresh_token': creds.refresh_token,
+                'id_token': creds.id_token,
+                'scopes': creds.scopes,
+                'token_uri': creds.token_uri,
+                'client_id': creds.client_id,
+                'client_secret': creds.client_secret
+            }
 
-session.headers["Content-type"] = "application/octet-stream"
-session.headers["X-Goog-Upload-Protocol"] = "raw"
-session.headers["X-Goog-Upload-File-Name"] = 'foo.jpg' #os.path.basename(photo_file_name)
+            # Store the returned authentication tokens to the auth_file.
+            with open(self.auth_file, 'w') as f:
+                f.write(json.dumps(cred_dict))
 
-photo_file = open("/Users/jaisen/Downloads/test.png", mode='rb')
-photo_bytes = photo_file.read()
+        self.session = AuthorizedSession(creds)
+        self.session.headers["Content-type"] = "application/octet-stream"
+        self.session.headers["X-Goog-Upload-Protocol"] = "raw"
 
-upload_token = session.post('https://photoslibrary.googleapis.com/v1/uploads', photo_bytes)
-if (upload_token.status_code == 200) and (upload_token.content):
-    create_body = json.dumps({"newMediaItems":[{"description":"","simpleMediaItem":{"uploadToken":upload_token.content.decode()}}]}, indent=4)
-    resp = session.post('https://photoslibrary.googleapis.com/v1/mediaItems:batchCreate', create_body).json()
-    print(resp)
-    if "newMediaItemResults" in resp:
-        status = resp["newMediaItemResults"][0]["status"]
-        print(status)"""
+    def upload(self, path_to_photo):
+        self.set_session()
+        if(self.session is None):
+            self.log('Could not initialize session')
+            return None
 
+        self.session.headers["X-Goog-Upload-File-Name"] = basename(path_to_photo)
+        if(not isfile(path_to_photo)):
+            self.log('Could not find file: {}'.format(path_to_photo))
+            return None
+
+        with open(path_to_photo, 'rb') as f:
+            photo_bytes = f.read()
+
+        upload_token = self.session.post(self.upload_url, photo_bytes)
+        if(upload_token.status_code != 200 or not upload_token.content):
+            self.log('Uploading media failed: ({}) {}'.format(upload_token.status_code, upload_token.content))
+            return None
+
+        create_body = json.dumps({'newMediaItems':[{'description':'','simpleMediaItem':{'uploadToken':upload_token.content.decode()}}]}, indent=4)
+        resp = self.session.post(self.media_create_url, create_body).json()
+        if(
+            'newMediaItemResults' not in resp or
+            'status' not in resp['newMediaItemResults'][0] or
+            'message' not in resp['newMediaItemResults'][0]['status'] or
+            resp['newMediaItemResults'][0]['status']['message'] != 'Success'
+        ):
+            self.log('Creating new media item failed: {}'.format(resp['newMediaItemResults'][0]['status']))
+            return None
+        
+        return resp['newMediaItemResults'][0]
