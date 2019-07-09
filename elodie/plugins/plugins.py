@@ -70,8 +70,7 @@ class Plugins(object):
 
         self.loaded = True
 
-
-    def run_all_before(self, file_path, destination_path, media):
+    def run_all_before(self, file_path, destination_folder, media):
         self.load()
         """Process `before` methods of each plugin that was loaded.
         """
@@ -84,7 +83,7 @@ class Plugins(object):
             # If any other error occurs we log the message and proceed as usual.
             # By default, plugins don't change behavior.
             try:
-                this_method(file_path, destination_path, media)
+                this_method(file_path, destination_folder, media)
             except ElodiePluginError as err:
                 log.warn('Plugin {} raised an exception: {}'.format(cls, err))
                 log.error(format_exc())
@@ -92,3 +91,6 @@ class Plugins(object):
             except:
                 log.error(format_exc())
         return pass_status
+
+    def run_all_after(self, file_path, destination_folder, final_file_path, media):
+        pass
