@@ -28,6 +28,7 @@ def test_photo_extensions():
     assert 'cr2' in extensions
     assert 'dng' in extensions
     assert 'gif' in extensions
+    assert 'heic' in extensions
     assert 'jpg' in extensions
     assert 'jpeg' in extensions
     assert 'nef' in extensions
@@ -158,6 +159,12 @@ def test_is_not_valid():
     photo = Photo(helper.get_file('text.txt'))
 
     assert not photo.is_valid()
+
+def test_is_valid_fallback_using_pillow():
+    photo = Photo(helper.get_file('imghdr-error.jpg'))
+
+    assert photo.is_valid()
+
 
 def test_set_album():
     temporary_folder, folder = helper.create_working_folder()
@@ -330,6 +337,7 @@ def test_various_types():
         'arw': (2007, 4, 8, 17, 41, 18, 6, 98, 0),
         'cr2': (2005, 10, 29, 16, 14, 44, 5, 302, 0),
         'dng': (2009, 10, 20, 9, 10, 46, 1, 293, 0),
+        'heic': (2019, 5, 26, 10, 33, 20, 6, 146, 0),
         'nef': (2008, 10, 24, 9, 12, 56, 4, 298, 0),
         'rw2': (2014, 11, 19, 23, 7, 44, 2, 323, 0)
     }
