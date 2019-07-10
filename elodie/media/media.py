@@ -128,6 +128,7 @@ class Media(Base):
 
         with ExifTool(executable_=exiftool, addedargs=self.exiftool_addedargs) as et:
             metadata = et.get_metadata(source)
+            print(metadata)
             if not metadata:
                 return False
 
