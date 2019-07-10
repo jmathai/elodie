@@ -12,6 +12,7 @@ import os
 import re
 import time
 from datetime import datetime
+from PIL import Image
 from re import compile
 
 
@@ -29,7 +30,7 @@ class Photo(Media):
     __name__ = 'Photo'
 
     #: Valid extensions for photo files.
-    extensions = ('arw', 'cr2', 'dng', 'gif', 'jpeg', 'jpg', 'nef', 'rw2')
+    extensions = ('arw', 'cr2', 'dng', 'gif', 'heic', 'jpeg', 'jpg', 'nef', 'rw2')
 
     def __init__(self, source=None):
         super(Photo, self).__init__(source)
@@ -91,6 +92,12 @@ class Photo(Media):
         """
         source = self.source
 
+        # HEIC is not well supported yet so we special case it.
+        # https://github.com/python-pillow/Pillow/issues/2806
+        extension = os.path.splitext(source)[1][1:].lower()
+        if(extension == 'heic'):
+            return True
+
         # gh-4 This checks if the source file is an image.
         # It doesn't validate against the list of supported types.
         if(imghdr.what(source) is None):
@@ -98,19 +105,13 @@ class Photo(Media):
             # see https://github.com/jmathai/elodie/issues/281
             # before giving up, we use `pillow` imaging library to detect file type
             #
-            # It is important to note that the library doesn’t decode or load the
+            # It is important to note that the library doesn't decode or load the
             # raster data unless it really has to. When you open a file,
             # the file header is read to determine the file format and extract
             # things like mode, size, and other properties required to decode the file,
             # but the rest of the file is not processed until later.
-            try:
-                from PIL import Image
-            except ImportError:
-                log.info('Could not detect image type for %s. This could be fixed by installing pillow (https://pillow.readthedocs.io/). Skipping...' % source)
-                return False
-
             im = Image.open(source)
             if(im.format is None):
                 return False
 
-        return os.path.splitext(source)[1][1:].lower() in self.extensions
+        return extension in self.extensions

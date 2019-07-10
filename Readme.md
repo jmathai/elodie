@@ -13,7 +13,7 @@ Getting started takes just a few minutes.
 
 Elodie relies on the great [ExifTool library by Phil Harvey](http://www.sno.phy.queensu.ca/~phil/exiftool/). You'll need to install it for your platform.
 
-Some features for video files will only work with newer versions of ExifTool and have been tested on version 10.20 or higher. Check your version by typing `exiftool -ver` and see the [manual installation instructions for ExifTool](http://www.sno.phy.queensu.ca/~phil/exiftool/install.html#Unix) if needed.
+Some features for video files will only work with newer versions of ExifTool and have been tested on version 10.20 or higher. Support for HEIC files requires version 11.50 or higher. Check your version by typing `exiftool -ver` and see the [manual installation instructions for ExifTool](http://www.sno.phy.queensu.ca/~phil/exiftool/install.html#Unix) if needed.
 
 ```
 # OSX (uses homebrew, http://brew.sh/)
