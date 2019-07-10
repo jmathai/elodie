@@ -49,7 +49,23 @@ class GooglePhotos(PluginBase):
         self.session = None
 
     def after(self, file_path, destination_folder, final_file_path, media):
-        pass
+        self.db.set(final_file_path, media)
+
+    def batch(self):
+        queue = self.db.get_all()
+        status = True
+        count = 0
+        for key in queue:
+            this_status = self.upload(key)
+            if(this_status):
+                # Remove from queue if successful then increment count
+                self.db.delete(key)
+                count = count + 1
+                self.display('{} uploaded successfully.'.format(key))
+            else:
+                status = False
+                self.display('{} failed to upload.'.format(key))
+        return (status, count)
 
     def before(self, file_path, destination_folder, media):
         pass

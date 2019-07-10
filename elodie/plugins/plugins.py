@@ -6,11 +6,15 @@ Plugin object.
 from __future__ import print_function
 from builtins import object
 
+from json import dumps, loads
 from importlib import import_module
+from os.path import dirname, dirname, isdir, isfile
+from os import mkdir
 from sys import exc_info
 from traceback import format_exc
 
 from elodie.config import load_config_for_plugin, load_plugin_config
+from elodie.constants import application_directory
 from elodie import log
 
 class ElodiePluginError(Exception):
@@ -23,8 +27,12 @@ class PluginBase(object):
 
     def __init__(self):
         self.config_for_plugin = load_config_for_plugin(self.__name__)
+        self.db = PluginDb(self.__name__)
 
     def after(self, file_path, destination_folder, final_file_path, media):
+        pass
+
+    def batch(self):
         pass
 
     def before(self, file_path, destination_folder, media):
@@ -33,6 +41,59 @@ class PluginBase(object):
     def log(self, msg):
         log.info(msg)
 
+    def display(self, msg):
+        log.all(dumps(
+            {self.__name__: msg}
+        ))
+
+class PluginDb(object):
+
+    def __init__(self, plugin_name):
+        self.db_file = '{}/plugins/{}.json'.format(
+            application_directory,
+            plugin_name.lower()
+        )
+
+        # If the plugin db directory does not exist, create it
+        if(not isdir(dirname(self.db_file))):
+            mkdir(dirname(self.db_file))
+
+        # If the db file does not exist we initialize it
+        if(not isfile(self.db_file)):
+            with open(self.db_file, 'w+') as f:
+                f.write(dumps({}))
+
+
+    def get(self, key):
+        with open(self.db_file, 'r') as f:
+            db = loads(f.read())
+
+        if(key not in db):
+            return None
+
+        return db[key]
+
+    def set(self, key, value):
+        with open(self.db_file, 'r') as f:
+            db = loads(f.read())
+
+        db[key] = value
+        with open(self.db_file, 'w') as f:
+            f.write(dumps(db))
+
+    def get_all(self):
+        with open(self.db_file, 'r') as f:
+            db = loads(f.read())
+        return db
+
+    def delete(self, key):
+        with open(self.db_file, 'r') as f:
+            db = loads(f.read())
+
+        # delete key without throwing an exception
+        db.pop(key, None)
+        with open(self.db_file, 'w') as f:
+            f.write(dumps(db))
 
 
 class Plugins(object):
@@ -71,9 +132,9 @@ class Plugins(object):
         self.loaded = True
 
     def run_all_before(self, file_path, destination_folder, media):
-        self.load()
         """Process `before` methods of each plugin that was loaded.
         """
+        self.load()
         pass_status = True
         for cls in self.classes:
             this_method = getattr(self.classes[cls], 'before')
@@ -93,4 +154,43 @@ class Plugins(object):
         return pass_status
 
     def run_all_after(self, file_path, destination_folder, final_file_path, media):
-        pass
+        """Process `before` methods of each plugin that was loaded.
+        """
+        self.load()
+        pass_status = True
+        for cls in self.classes:
+            this_method = getattr(self.classes[cls], 'before')
+            # We try to call the plugin's `before()` method.
+            # If the method explicitly raises an ElodiePluginError we'll fail the import
+            #  by setting pass_status to False.
+            # If any other error occurs we log the message and proceed as usual.
+            # By default, plugins don't change behavior.
+            try:
+                this_method(file_path, destination_folder, media)
+            except ElodiePluginError as err:
+                log.warn('Plugin {} raised an exception: {}'.format(cls, err))
+                log.error(format_exc())
+                pass_status = False
+            except:
+                log.error(format_exc())
+        return pass_status
+
+    def run_batch(self):
+        self.load()
+        pass_status = True
+        for cls in self.classes:
+            this_method = getattr(self.classes[cls], 'batch')
+            # We try to call the plugin's `before()` method.
+            # If the method explicitly raises an ElodiePluginError we'll fail the import
+            #  by setting pass_status to False.
+            # If any other error occurs we log the message and proceed as usual.
+            # By default, plugins don't change behavior.
+            try:
+                this_method()
+            except ElodiePluginError as err:
+                log.warn('Plugin {} raised an exception: {}'.format(cls, err))
+                log.error(format_exc())
+                pass_status = False
+            except:
+                log.error(format_exc())
+        return pass_status

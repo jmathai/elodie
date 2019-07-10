@@ -8,8 +8,9 @@ from tempfile import gettempdir
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))))
 
 from . import helper
+from .helper import test_setup_func
 from elodie.config import load_config
-from elodie.plugins.plugins import Plugins
+from elodie.plugins.plugins import Plugins, PluginBase, PluginDb
 
 @mock.patch('elodie.config.config_file', '%s/config.ini-load-plugins-unset-backwards-compat' % gettempdir())
 def test_load_plugins_unset_backwards_compat():
@@ -199,3 +200,45 @@ plugins=RuntimeError
         del load_config.config
 
     assert status == True, status
+
+def test_plugin_base_inherits_db():
+    plugin_base = PluginBase()
+    assert hasattr(plugin_base.db, 'get')
+    assert hasattr(plugin_base.db, 'set')
+    assert hasattr(plugin_base.db, 'get_all')
+    assert hasattr(plugin_base.db, 'delete')
+
+def test_db_initialize_file():
+    db = PluginDb('foobar')
+    try:
+        os.remove(db.db_file)
+    except OSError:
+        pass
+    db = PluginDb('foobar')
+
+def test_db_get_then_set_then_get_then_delete():
+    db = PluginDb('foobar')
+    foo = db.get('foo')
+    assert foo is None, foo
+    db.set('foo', 'bar')
+    foo = db.get('foo')
+    assert foo == 'bar', foo
+    db.delete('foo')
+    foo = db.get('foo')
+    assert foo is None, foo
+
+def test_db_get_all():
+    # we initialize the db to get the file path to delete then reinitialize
+    db = PluginDb('foobar')
+    try:
+        os.remove(db.db_file)
+    except OSError:
+        pass
+    db = PluginDb('foobar')
+    db.set('a', '1')
+    db.set('b', '2')
+    db.set('c', '3')
+    db.set('d', '4')
+    all_rows = db.get_all()
+
+    assert all_rows == {'a': '1', 'b': '2', 'c': '3', 'd': '4'}, all_rows

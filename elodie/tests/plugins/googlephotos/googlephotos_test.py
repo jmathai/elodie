@@ -77,3 +77,32 @@ def test_googlephotos_upload_invalid_empty():
     status = gp.upload(helper.get_file('invalid.jpg'))
     
     assert status is None, status
+
+@mock.patch('elodie.config.config_file', '%s/config.ini-googlephotos-batch' % gettempdir())
+def test_googlephotos_batch():
+    with open('%s/config.ini-googlephotos-batch' % gettempdir(), 'w') as f:
+        f.write(config_string_fmt)
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    final_file_path = helper.get_file('plain.jpg')
+    gp = GooglePhotos()
+    gp.after('', '', final_file_path, {'foo': 'bar'})
+    db_row = gp.db.get(final_file_path)
+    assert db_row == {'foo': 'bar'}, db_row
+
+    status, count = gp.batch()
+    db_row_after = gp.db.get(final_file_path)
+    assert status == True, status
+    assert count == 1, count
+    assert db_row_after is None, db_row_after
+
+
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+        
+    gp.set_session()
+    status = gp.upload(helper.get_file('invalid.jpg'))
+    
+    assert status is None, status
