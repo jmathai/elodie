@@ -110,8 +110,6 @@ class Photo(Media):
                 # but the rest of the file is not processed until later.
                 try:
                     im = Image.open(source)
-                except OSError:
-                    return False
                 except IOError:
                     return False
 
