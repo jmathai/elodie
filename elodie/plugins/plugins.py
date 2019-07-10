@@ -6,6 +6,8 @@ Plugin object.
 from __future__ import print_function
 from builtins import object
 
+import io
+
 from json import dumps, loads
 from importlib import import_module
 from os.path import dirname, dirname, isdir, isfile
@@ -29,17 +31,19 @@ class PluginBase(object):
         self.config_for_plugin = load_config_for_plugin(self.__name__)
         self.db = PluginDb(self.__name__)
 
-    def after(self, file_path, destination_folder, final_file_path, media):
+    def after(self, file_path, destination_folder, final_file_path, metadata):
         pass
 
     def batch(self):
         pass
 
-    def before(self, file_path, destination_folder, media):
+    def before(self, file_path, destination_folder):
         pass
 
     def log(self, msg):
-        log.info(msg)
+        log.info(dumps(
+            {self.__name__: msg}
+        ))
 
     def display(self, msg):
         log.all(dumps(
@@ -60,12 +64,12 @@ class PluginDb(object):
 
         # If the db file does not exist we initialize it
         if(not isfile(self.db_file)):
-            with open(self.db_file, 'w+') as f:
+            with io.open(self.db_file, 'w+') as f:
                 f.write(dumps({}))
 
 
     def get(self, key):
-        with open(self.db_file, 'r') as f:
+        with io.open(self.db_file, 'r') as f:
             db = loads(f.read())
 
         if(key not in db):
@@ -74,26 +78,26 @@ class PluginDb(object):
         return db[key]
 
     def set(self, key, value):
-        with open(self.db_file, 'r') as f:
+        with io.open(self.db_file, 'r') as f:
             db = loads(f.read())
 
         db[key] = value
-        with open(self.db_file, 'w') as f:
-            f.write(dumps(db))
+        with io.open(self.db_file, 'rb+') as f:
+            f.write(unicode(dumps(db, ensure_ascii=False).encode('utf8')))
 
     def get_all(self):
-        with open(self.db_file, 'r') as f:
+        with io.open(self.db_file, 'r') as f:
             db = loads(f.read())
         return db
 
     def delete(self, key):
-        with open(self.db_file, 'r') as f:
+        with io.open(self.db_file, 'r') as f:
             db = loads(f.read())
 
         # delete key without throwing an exception
         db.pop(key, None)
-        with open(self.db_file, 'w') as f:
-            f.write(dumps(db))
+        with io.open(self.db_file, 'rb+') as f:
+            f.write(unicode(dumps(db, ensure_ascii=False).encode('utf8')))
 
 
 class Plugins(object):
@@ -131,7 +135,7 @@ class Plugins(object):
 
         self.loaded = True
 
-    def run_all_before(self, file_path, destination_folder, media):
+    def run_all_before(self, file_path, destination_folder):
         """Process `before` methods of each plugin that was loaded.
         """
         self.load()
@@ -144,7 +148,7 @@ class Plugins(object):
             # If any other error occurs we log the message and proceed as usual.
             # By default, plugins don't change behavior.
             try:
-                this_method(file_path, destination_folder, media)
+                this_method(file_path, destination_folder)
             except ElodiePluginError as err:
                 log.warn('Plugin {} raised an exception: {}'.format(cls, err))
                 log.error(format_exc())
@@ -153,20 +157,21 @@ class Plugins(object):
                 log.error(format_exc())
         return pass_status
 
-    def run_all_after(self, file_path, destination_folder, final_file_path, media):
+    def run_all_after(self, file_path, destination_folder, final_file_path, metadata):
         """Process `before` methods of each plugin that was loaded.
         """
         self.load()
         pass_status = True
         for cls in self.classes:
-            this_method = getattr(self.classes[cls], 'before')
+            this_method = getattr(self.classes[cls], 'after')
             # We try to call the plugin's `before()` method.
             # If the method explicitly raises an ElodiePluginError we'll fail the import
             #  by setting pass_status to False.
             # If any other error occurs we log the message and proceed as usual.
             # By default, plugins don't change behavior.
             try:
-                this_method(file_path, destination_folder, media)
+                this_method(file_path, destination_folder, final_file_path, metadata)
+                log.info('Called after() for {}'.format(cls))
             except ElodiePluginError as err:
                 log.warn('Plugin {} raised an exception: {}'.format(cls, err))
                 log.error(format_exc())

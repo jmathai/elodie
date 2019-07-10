@@ -72,7 +72,10 @@ def import_file(_file, destination, album_from_folder, trash, allow_duplicates):
     return dest_path or None
 
 @click.command('batch')
-def _batch():
+@click.option('--debug', default=False, is_flag=True,
+              help='Override the value in constants.py with True.')
+def _batch(debug):
+    constants.debug = debug
     plugins = Plugins()
     plugins.run_batch()
        

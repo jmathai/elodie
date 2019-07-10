@@ -48,8 +48,9 @@ class GooglePhotos(PluginBase):
             self.auth_file = self.config_for_plugin['auth_file']
         self.session = None
 
-    def after(self, file_path, destination_folder, final_file_path, media):
-        self.db.set(final_file_path, media)
+    def after(self, file_path, destination_folder, final_file_path, metadata):
+        self.log(u'Added {} to db.'.format(final_file_path))
+        self.db.set(final_file_path, metadata['original_name'])
 
     def batch(self):
         queue = self.db.get_all()
@@ -67,7 +68,7 @@ class GooglePhotos(PluginBase):
                 self.display('{} failed to upload.'.format(key))
         return (status, count)
 
-    def before(self, file_path, destination_folder, media):
+    def before(self, file_path, destination_folder):
         pass
 
     def set_session(self):
@@ -77,7 +78,6 @@ class GooglePhotos(PluginBase):
         try:
             creds = Credentials.from_authorized_user_file(self.auth_file, self.scopes)
         except:
-            print(self.secrets_file)
             flow = InstalledAppFlow.from_client_secrets_file(self.secrets_file, self.scopes)
             creds = flow.run_local_server()
             cred_dict = {
@@ -123,7 +123,11 @@ class GooglePhotos(PluginBase):
             'newMediaItemResults' not in resp or
             'status' not in resp['newMediaItemResults'][0] or
             'message' not in resp['newMediaItemResults'][0]['status'] or
-            resp['newMediaItemResults'][0]['status']['message'] != 'Success'
+            (
+                resp['newMediaItemResults'][0]['status']['message'] != 'Success' and # photos
+                resp['newMediaItemResults'][0]['status']['message'] != 'OK' # videos
+            )
+
         ):
             self.log('Creating new media item failed: {}'.format(resp['newMediaItemResults'][0]['status']))
             return None

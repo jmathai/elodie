@@ -15,5 +15,5 @@ class ThrowError(PluginBase):
     def __init__(self):
         pass
 
-    def before(self, file_path, destination_folder, media):
+    def before(self, file_path, destination_folder):
         raise ElodiePluginError('Sample plugin error')
