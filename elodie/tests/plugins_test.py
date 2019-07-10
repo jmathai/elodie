@@ -134,7 +134,7 @@ plugins=Dummy
     plugins = Plugins()
     plugins.load()
     before_ran_1 = plugins.classes['Dummy'].before_ran
-    plugins.run_all_before('', '', '')
+    plugins.run_all_before('', '')
     before_ran_2 = plugins.classes['Dummy'].before_ran
 
     if hasattr(load_config, 'config'):
@@ -155,7 +155,7 @@ plugins=ThrowError
 
     plugins = Plugins()
     plugins.load()
-    status = plugins.run_all_before('', '', '')
+    status = plugins.run_all_before('', '')
 
     if hasattr(load_config, 'config'):
         del load_config.config
@@ -174,7 +174,7 @@ plugins=Dummy,ThrowError
 
     plugins = Plugins()
     plugins.load()
-    status = plugins.run_all_before('', '', '')
+    status = plugins.run_all_before('', '')
 
     if hasattr(load_config, 'config'):
         del load_config.config
@@ -193,7 +193,7 @@ plugins=RuntimeError
 
     plugins = Plugins()
     plugins.load()
-    status = plugins.run_all_before('', '', '')
+    status = plugins.run_all_before('', '')
 
     if hasattr(load_config, 'config'):
         del load_config.config

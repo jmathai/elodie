@@ -65,7 +65,7 @@ class PluginDb(object):
         # If the db file does not exist we initialize it
         if(not isfile(self.db_file)):
             with io.open(self.db_file, 'w+') as f:
-                f.write(dumps({}))
+                f.write(unicode(dumps({})))
 
 
     def get(self, key):
