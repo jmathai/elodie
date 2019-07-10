@@ -112,6 +112,8 @@ class Photo(Media):
                     im = Image.open(source)
                 except OSError:
                     return False
+                except IOError:
+                    return False
 
                 if(im.format is None):
                     return False
