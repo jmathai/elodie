@@ -8,7 +8,6 @@ from tempfile import gettempdir
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))))
 
 from . import helper
-from .helper import test_setup_func
 from elodie.config import load_config
 from elodie.plugins.plugins import Plugins, PluginBase, PluginDb
 

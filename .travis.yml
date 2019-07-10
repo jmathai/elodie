@@ -10,6 +10,7 @@ before_install:
   - "sudo apt-get install python-dev python-pip -y"
 install:
   - "pip install -r elodie/tests/requirements.txt"
+  - "pip install -r elodie/plugins/googlephotos/requirements.txt"
   - "pip install coveralls"
 before_script:
   - "mkdir ~/.elodie"
