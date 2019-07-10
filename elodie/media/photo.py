@@ -95,23 +95,25 @@ class Photo(Media):
         # HEIC is not well supported yet so we special case it.
         # https://github.com/python-pillow/Pillow/issues/2806
         extension = os.path.splitext(source)[1][1:].lower()
-        if(extension == 'heic'):
-            return True
+        if(extension != 'heic'):
+            # gh-4 This checks if the source file is an image.
+            # It doesn't validate against the list of supported types.
+            if(imghdr.what(source) is None):
+                # imghdr won't detect all variants of images (https://bugs.python.org/issue28591)
+                # see https://github.com/jmathai/elodie/issues/281
+                # before giving up, we use `pillow` imaging library to detect file type
+                #
+                # It is important to note that the library doesn't decode or load the
+                # raster data unless it really has to. When you open a file,
+                # the file header is read to determine the file format and extract
+                # things like mode, size, and other properties required to decode the file,
+                # but the rest of the file is not processed until later.
+                try:
+                    im = Image.open(source)
+                except OSError:
+                    return False
 
-        # gh-4 This checks if the source file is an image.
-        # It doesn't validate against the list of supported types.
-        if(imghdr.what(source) is None):
-            # imghdr won't detect all variants of images (https://bugs.python.org/issue28591)
-            # see https://github.com/jmathai/elodie/issues/281
-            # before giving up, we use `pillow` imaging library to detect file type
-            #
-            # It is important to note that the library doesn't decode or load the
-            # raster data unless it really has to. When you open a file,
-            # the file header is read to determine the file format and extract
-            # things like mode, size, and other properties required to decode the file,
-            # but the rest of the file is not processed until later.
-            im = Image.open(source)
-            if(im.format is None):
-                return False
+                if(im.format is None):
+                    return False
 
         return extension in self.extensions
