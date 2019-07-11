@@ -11,8 +11,6 @@ before_install:
 install:
   - "pip install -r elodie/tests/requirements.txt"
   - "pip install coveralls"
-# command to run tests
-# test mapquest key
 before_script:
   - "mkdir ~/.elodie"
   - "sed 's/your-api-key-goes-here/x8wQLqGhW7qK3sFpjYtVTogVtoMK0S8s/g' config.ini-sample > ~/.elodie/config.ini"
@@ -28,4 +26,4 @@ before_script:
 after_success:
   - "coveralls"
 script:
-  - "nosetests --with-coverage --cover-package=elodie -w elodie/tests"
+  - "./elodie/tests/run_tests.py -w elodie/tests --with-coverage --cover-package=elodie"
