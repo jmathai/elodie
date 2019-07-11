@@ -9,7 +9,6 @@ from click.testing import CliRunner
 from nose.plugins.skip import SkipTest
 from nose.tools import assert_raises
 from six import text_type, unichr as six_unichr
-from tempfile import gettempdir
 
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))))
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))))
@@ -604,6 +603,44 @@ def test_verify_error():
 
     assert origin in result.output, result.output
     assert 'Error           1' in result.output, result.output
+
+@mock.patch('elodie.config.config_file', '%s/config.ini-cli-batch-plugin-googlephotos' % os.environ['ELODIE_APPLICATION_DIRECTORY'])
+def test_cli_batch_plugin_googlephotos():
+    auth_file = helper.get_file('plugins/googlephotos/auth_file.json')
+    secrets_file = helper.get_file('plugins/googlephotos/secrets_file.json')
+    config_string = """
+    [Plugins]
+    plugins=GooglePhotos
+
+    [PluginGooglePhotos]
+    auth_file={}
+    secrets_file={}
+            """
+    config_string_fmt = config_string.format(
+        auth_file,
+        secrets_file
+    )
+    with open('%s/config.ini-cli-batch-plugin-googlephotos' % os.environ['ELODIE_APPLICATION_DIRECTORY'], 'w') as f:
+        f.write(config_string_fmt)
+
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    final_file_path_1 = helper.get_file('plain.jpg')
+    final_file_path_2 = helper.get_file('no-exif.jpg')
+    sample_metadata_1 = Photo(final_file_path_1).get_metadata()
+    sample_metadata_2 = Photo(final_file_path_2).get_metadata()
+    gp = GooglePhotos()
+    gp.after('', '', final_file_path_1, sample_metadata_1)
+    gp.after('', '', final_file_path_2, sample_metadata_1)
+
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    runner = CliRunner()
+    result = runner.invoke(elodie._batch)
+    assert "elodie/elodie/tests/files/plain.jpg uploaded successfully.\"}\n" in result.output, result.output
+    assert "elodie/elodie/tests/files/no-exif.jpg uploaded successfully.\"}\n" in result.output, result.output
 
 def test_cli_debug_import():
     runner = CliRunner()

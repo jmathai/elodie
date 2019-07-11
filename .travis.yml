@@ -28,4 +28,4 @@ before_script:
 after_success:
   - "coveralls"
 script:
-  - "nosetests --with-coverage --cover-package=elodie -w elodie/tests"
+  - "./elodie/tests/run_tests.py -w elodie/tests --with-coverage --cover-package=elodie"
