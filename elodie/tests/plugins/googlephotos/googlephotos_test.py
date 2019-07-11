@@ -11,6 +11,8 @@ sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.realp
 import helper
 from elodie.config import load_config
 from elodie.plugins.googlephotos.googlephotos import GooglePhotos
+from elodie.media.audio import Audio
+from elodie.media.photo import Photo
 
 # Globals to simplify mocking configs
 auth_file = helper.get_file('plugins/googlephotos/auth_file.json')
@@ -28,6 +30,10 @@ config_string_fmt = config_string.format(
     secrets_file
 )
 
+sample_photo = Photo(helper.get_file('plain.jpg'))
+sample_metadata = sample_photo.get_metadata()
+sample_metadata['original_name'] = 'foobar'
+
 @mock.patch('elodie.config.config_file', '%s/config.ini-googlephotos-set-session' % gettempdir())
 def test_googlephotos_set_session():
     with open('%s/config.ini-googlephotos-set-session' % gettempdir(), 'w') as f:
@@ -43,6 +49,43 @@ def test_googlephotos_set_session():
     assert gp.session is None, gp.session
     gp.set_session()
     assert gp.session is not None, gp.session
+
+@mock.patch('elodie.config.config_file', '%s/config.ini-googlephotos-after-supported' % gettempdir())
+def test_googlephotos_after_supported():
+    with open('%s/config.ini-googlephotos-after-supported' % gettempdir(), 'w') as f:
+        f.write(config_string_fmt)
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    final_file_path = helper.get_file('plain.jpg')
+    gp = GooglePhotos()
+    gp.after('', '', final_file_path, sample_metadata)
+    db_row = gp.db.get(final_file_path)
+
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    assert db_row == 'foobar', db_row
+
+@mock.patch('elodie.config.config_file', '%s/config.ini-googlephotos-after-unsupported' % gettempdir())
+def test_googlephotos_after_unsupported():
+    with open('%s/config.ini-googlephotos-after-unsupported' % gettempdir(), 'w') as f:
+        f.write(config_string_fmt)
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    final_file_path = helper.get_file('audio.m4a')
+    sample_photo = Audio(final_file_path)
+    sample_metadata = sample_photo.get_metadata()
+    sample_metadata['original_name'] = 'foobar'
+    gp = GooglePhotos()
+    gp.after('', '', final_file_path, sample_metadata)
+    db_row = gp.db.get(final_file_path)
+
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    assert db_row == None, db_row
 
 @mock.patch('elodie.config.config_file', '%s/config.ini-googlephotos-upload' % gettempdir())
 def test_googlephotos_upload():
@@ -87,9 +130,9 @@ def test_googlephotos_batch():
 
     final_file_path = helper.get_file('plain.jpg')
     gp = GooglePhotos()
-    gp.after('', '', final_file_path, {'foo': 'bar'})
+    gp.after('', '', final_file_path, sample_metadata)
     db_row = gp.db.get(final_file_path)
-    assert db_row == {'foo': 'bar'}, db_row
+    assert db_row == 'foobar', db_row
 
     status, count = gp.batch()
     db_row_after = gp.db.get(final_file_path)

@@ -64,7 +64,7 @@ class PluginDb(object):
 
         # If the db file does not exist we initialize it
         if(not isfile(self.db_file)):
-            with io.open(self.db_file, 'w+') as f:
+            with io.open(self.db_file, 'wb') as f:
                 f.write(unicode(dumps({})))
 
 
@@ -79,11 +79,13 @@ class PluginDb(object):
 
     def set(self, key, value):
         with io.open(self.db_file, 'r') as f:
-            db = loads(f.read())
+            data = f.read()
+            db = loads(data)
 
         db[key] = value
-        with io.open(self.db_file, 'rb+') as f:
-            f.write(unicode(dumps(db, ensure_ascii=False).encode('utf8')))
+        new_content = unicode(dumps(db, ensure_ascii=False).encode('utf8'))
+        with io.open(self.db_file, 'wb') as f:
+            f.write(new_content)
 
     def get_all(self):
         with io.open(self.db_file, 'r') as f:
@@ -96,8 +98,9 @@ class PluginDb(object):
 
         # delete key without throwing an exception
         db.pop(key, None)
-        with io.open(self.db_file, 'rb+') as f:
-            f.write(unicode(dumps(db, ensure_ascii=False).encode('utf8')))
+        new_content = unicode(dumps(db, ensure_ascii=False).encode('utf8'))
+        with io.open(self.db_file, 'wb') as f:
+            f.write(new_content)
 
 
 class Plugins(object):

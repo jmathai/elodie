@@ -14,6 +14,8 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import AuthorizedSession
 from google.oauth2.credentials import Credentials
 
+from elodie.media.photo import Photo
+from elodie.media.video import Video
 from elodie.plugins.plugins import PluginBase
 
 class GooglePhotos(PluginBase):
@@ -49,8 +51,12 @@ class GooglePhotos(PluginBase):
         self.session = None
 
     def after(self, file_path, destination_folder, final_file_path, metadata):
-        self.log(u'Added {} to db.'.format(final_file_path))
-        self.db.set(final_file_path, metadata['original_name'])
+        extension = metadata['extension']
+        if(extension in Photo.extensions or extension in Video.extensions):
+            self.log(u'Added {} to db.'.format(final_file_path))
+            self.db.set(final_file_path, metadata['original_name'])
+        else:
+            self.log(u'Skipping {} which is not a supported media type.'.format(final_file_path))
 
     def batch(self):
         queue = self.db.get_all()
