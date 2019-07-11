@@ -26,8 +26,6 @@ def test_debug():
     assert constants.debug == constants.debug, constants.debug
 
 def test_application_directory_default():
-    os.environ['ELODIE_APPLICATION_DIRECTORY'] = None
-    reload(constants)
     expected_path = '{}/.elodie'.format(os.path.expanduser('~'))
     assert constants.application_directory == expected_path, constants.application_directory
 

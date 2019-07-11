@@ -9,6 +9,7 @@ from click.testing import CliRunner
 from nose.plugins.skip import SkipTest
 from nose.tools import assert_raises
 from six import text_type, unichr as six_unichr
+from tempfile import gettempdir
 
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))))
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))))
@@ -604,7 +605,7 @@ def test_verify_error():
     assert origin in result.output, result.output
     assert 'Error           1' in result.output, result.output
 
-@mock.patch('elodie.config.config_file', '%s/config.ini-cli-batch-plugin-googlephotos' % os.environ['ELODIE_APPLICATION_DIRECTORY'])
+@mock.patch('elodie.config.config_file', '%s/config.ini-cli-batch-plugin-googlephotos' % gettempdir())
 def test_cli_batch_plugin_googlephotos():
     auth_file = helper.get_file('plugins/googlephotos/auth_file.json')
     secrets_file = helper.get_file('plugins/googlephotos/secrets_file.json')
@@ -620,7 +621,7 @@ def test_cli_batch_plugin_googlephotos():
         auth_file,
         secrets_file
     )
-    with open('%s/config.ini-cli-batch-plugin-googlephotos' % os.environ['ELODIE_APPLICATION_DIRECTORY'], 'w') as f:
+    with open('%s/config.ini-cli-batch-plugin-googlephotos' % gettempdir(), 'w') as f:
         f.write(config_string_fmt)
 
     if hasattr(load_config, 'config'):
