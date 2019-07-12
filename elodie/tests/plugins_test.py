@@ -155,12 +155,14 @@ plugins=ThrowError
 
     plugins = Plugins()
     plugins.load()
-    status = plugins.run_all_before('', '')
+    status_before = plugins.run_all_before('', '')
+    status_after = plugins.run_all_before('', '')
 
     if hasattr(load_config, 'config'):
         del load_config.config
 
-    assert status == False, status
+    assert status_before == False, status_before
+    assert status_after == False, status_after
 
 @mock.patch('elodie.config.config_file', '%s/config.ini-throw-error-one-of-many' % gettempdir())
 def test_throw_error_one_of_many():
@@ -174,12 +176,14 @@ plugins=Dummy,ThrowError
 
     plugins = Plugins()
     plugins.load()
-    status = plugins.run_all_before('', '')
+    status_before = plugins.run_all_before('', '')
+    status_after = plugins.run_all_before('', '')
 
     if hasattr(load_config, 'config'):
         del load_config.config
 
-    assert status == False, status
+    assert status_before == False, status_before
+    assert status_after == False, status_after
 
 @mock.patch('elodie.config.config_file', '%s/config.ini-throw-runtime-error' % gettempdir())
 def test_throw_error_runtime_error():
@@ -193,12 +197,14 @@ plugins=RuntimeError
 
     plugins = Plugins()
     plugins.load()
-    status = plugins.run_all_before('', '')
+    status_before = plugins.run_all_before('', '')
+    status_after = plugins.run_all_before('', '')
 
     if hasattr(load_config, 'config'):
         del load_config.config
 
-    assert status == True, status
+    assert status_before == True, status_before
+    assert status_after == True, status_after
 
 def test_plugin_base_inherits_db():
     plugin_base = PluginBase()
