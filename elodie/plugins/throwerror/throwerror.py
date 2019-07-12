@@ -15,5 +15,11 @@ class ThrowError(PluginBase):
     def __init__(self):
         pass
 
+    def after(self, file_path, destination_folder, final_file_path, metadata):
+        raise ElodiePluginError('Sample plugin error for after')
+
+    def batch(self):
+        raise ElodiePluginError('Sample plugin error for batch')
+
     def before(self, file_path, destination_folder):
-        raise ElodiePluginError('Sample plugin error')
+        raise ElodiePluginError('Sample plugin error for before')

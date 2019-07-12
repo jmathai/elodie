@@ -139,28 +139,6 @@ class Plugins(object):
 
         self.loaded = True
 
-    def run_all_before(self, file_path, destination_folder):
-        """Process `before` methods of each plugin that was loaded.
-        """
-        self.load()
-        pass_status = True
-        for cls in self.classes:
-            this_method = getattr(self.classes[cls], 'before')
-            # We try to call the plugin's `before()` method.
-            # If the method explicitly raises an ElodiePluginError we'll fail the import
-            #  by setting pass_status to False.
-            # If any other error occurs we log the message and proceed as usual.
-            # By default, plugins don't change behavior.
-            try:
-                this_method(file_path, destination_folder)
-            except ElodiePluginError as err:
-                log.warn('Plugin {} raised an exception: {}'.format(cls, err))
-                log.error(format_exc())
-                pass_status = False
-            except:
-                log.error(format_exc())
-        return pass_status
-
     def run_all_after(self, file_path, destination_folder, final_file_path, metadata):
         """Process `before` methods of each plugin that was loaded.
         """
@@ -177,8 +155,9 @@ class Plugins(object):
                 this_method(file_path, destination_folder, final_file_path, metadata)
                 log.info('Called after() for {}'.format(cls))
             except ElodiePluginError as err:
-                log.warn('Plugin {} raised an exception: {}'.format(cls, err))
+                log.warn('Plugin {} raised an exception in run_all_before: {}'.format(cls, err))
                 log.error(format_exc())
+                log.error('false')
                 pass_status = False
             except:
                 log.error(format_exc())
@@ -196,8 +175,32 @@ class Plugins(object):
             # By default, plugins don't change behavior.
             try:
                 this_method()
+                log.info('Called batch() for {}'.format(cls))
             except ElodiePluginError as err:
-                log.warn('Plugin {} raised an exception: {}'.format(cls, err))
+                log.warn('Plugin {} raised an exception in run_batch: {}'.format(cls, err))
+                log.error(format_exc())
+                pass_status = False
+            except:
+                log.error(format_exc())
+        return pass_status
+
+    def run_all_before(self, file_path, destination_folder):
+        """Process `before` methods of each plugin that was loaded.
+        """
+        self.load()
+        pass_status = True
+        for cls in self.classes:
+            this_method = getattr(self.classes[cls], 'before')
+            # We try to call the plugin's `before()` method.
+            # If the method explicitly raises an ElodiePluginError we'll fail the import
+            #  by setting pass_status to False.
+            # If any other error occurs we log the message and proceed as usual.
+            # By default, plugins don't change behavior.
+            try:
+                this_method(file_path, destination_folder)
+                log.info('Called before() for {}'.format(cls))
+            except ElodiePluginError as err:
+                log.warn('Plugin {} raised an exception in run_all_after: {}'.format(cls, err))
                 log.error(format_exc())
                 pass_status = False
             except:
