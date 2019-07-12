@@ -20,15 +20,21 @@ from elodie.config import load_config_for_plugin, load_plugin_config
 from elodie.constants import application_directory
 from elodie import log
 
+
 class ElodiePluginError(Exception):
+    """Exception which can be thrown by plugins to return failures.
+    """
     pass
 
 
 class PluginBase(object):
-
+    """Base class which all plugins should inherit from.
+       Defines stubs for all methods and exposes logging and database functionality
+    """
     __name__ = 'PluginBase'
 
     def __init__(self):
+        # Loads the config for the plugin from config.ini
         self.config_for_plugin = load_config_for_plugin(self.__name__)
         self.db = PluginDb(self.__name__)
 
@@ -42,17 +48,21 @@ class PluginBase(object):
         pass
 
     def log(self, msg):
+        # Writes an info log not shown unless being run in --debug mode.
         log.info(dumps(
             {self.__name__: msg}
         ))
 
     def display(self, msg):
+        # Writes a log for all modes and will be displayed.
         log.all(dumps(
             {self.__name__: msg}
         ))
 
 class PluginDb(object):
-
+    """A database module which provides a simple key/value database.
+       The database is a JSON file located at %application_directory%/plugins/%pluginname.lower()%.json
+    """
     def __init__(self, plugin_name):
         self.db_file = '{}/plugins/{}.json'.format(
             application_directory,
@@ -105,7 +115,9 @@ class PluginDb(object):
 
 
 class Plugins(object):
-    """A class to execute plugin actions."""
+    """Plugin object which manages all interaction with plugins.
+       Exposes methods to load plugins and execute their methods.
+    """
 
     def __init__(self):
         self.plugins = []

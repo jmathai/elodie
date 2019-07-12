@@ -75,6 +75,8 @@ def import_file(_file, destination, album_from_folder, trash, allow_duplicates):
 @click.option('--debug', default=False, is_flag=True,
               help='Override the value in constants.py with True.')
 def _batch(debug):
+    """Run batch() for all plugins.
+    """
     constants.debug = debug
     plugins = Plugins()
     plugins.run_batch()

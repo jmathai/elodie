@@ -1,5 +1,20 @@
 """
 Google Photos plugin object.
+This plugin will queue imported photos into the plugin's database file.
+Using this plugin should have no impact on performance of importing photos.
+
+In order to upload the photos to Google Photos you need to run the following command.
+
+```
+    ./elodie.py batch
+```
+
+That command will execute the batch() method on all plugins, including this one.
+This plugin's batch() function reads all files from the database file and attempts to 
+    upload them to Google Photos.
+This plugin does not aim to keep Google Photos in sync.
+Once a photo is uploaded it's removed from the database and no records are kept thereafter.
+
 Upload code adapted from https://github.com/eshmu/gphotos-upload
 
 .. moduleauthor:: Jaisen Mathai <jaisen@jmathai.com>
