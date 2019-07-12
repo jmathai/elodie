@@ -84,21 +84,24 @@ class GooglePhotos(PluginBase):
         try:
             creds = Credentials.from_authorized_user_file(self.auth_file, self.scopes)
         except:
-            flow = InstalledAppFlow.from_client_secrets_file(self.secrets_file, self.scopes)
-            creds = flow.run_local_server()
-            cred_dict = {
-                'token': creds.token,
-                'refresh_token': creds.refresh_token,
-                'id_token': creds.id_token,
-                'scopes': creds.scopes,
-                'token_uri': creds.token_uri,
-                'client_id': creds.client_id,
-                'client_secret': creds.client_secret
-            }
+            try:
+                flow = InstalledAppFlow.from_client_secrets_file(self.secrets_file, self.scopes)
+                creds = flow.run_local_server()
+                cred_dict = {
+                    'token': creds.token,
+                    'refresh_token': creds.refresh_token,
+                    'id_token': creds.id_token,
+                    'scopes': creds.scopes,
+                    'token_uri': creds.token_uri,
+                    'client_id': creds.client_id,
+                    'client_secret': creds.client_secret
+                }
 
-            # Store the returned authentication tokens to the auth_file.
-            with open(self.auth_file, 'w') as f:
-                f.write(json.dumps(cred_dict))
+                # Store the returned authentication tokens to the auth_file.
+                with open(self.auth_file, 'w') as f:
+                    f.write(json.dumps(cred_dict))
+            except:
+                return
 
         self.session = AuthorizedSession(creds)
         self.session.headers["Content-type"] = "application/octet-stream"

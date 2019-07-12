@@ -104,6 +104,23 @@ def test_googlephotos_upload():
     
     assert status is not None, status
 
+@mock.patch('elodie.config.config_file', '%s/config.ini-googlephotos-upload-session-fail' % gettempdir())
+def test_googlephotos_upload_session_fail():
+    with open('%s/config.ini-googlephotos-upload-session-fail' % gettempdir(), 'w') as f:
+        f.write(config_string)
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    gp = GooglePhotos()
+
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    gp.set_session()
+    status = gp.upload(helper.get_file('plain.jpg'))
+    
+    assert status is None, status
+
 @mock.patch('elodie.config.config_file', '%s/config.ini-googlephotos-upload-invalid-empty' % gettempdir())
 def test_googlephotos_upload_invalid_empty():
     with open('%s/config.ini-googlephotos-upload-invalid-empty' % gettempdir(), 'w') as f:
@@ -118,6 +135,23 @@ def test_googlephotos_upload_invalid_empty():
 
     gp.set_session()
     status = gp.upload(helper.get_file('invalid.jpg'))
+    
+    assert status is None, status
+
+@mock.patch('elodie.config.config_file', '%s/config.ini-googlephotos-upload-dne' % gettempdir())
+def test_googlephotos_upload_dne():
+    with open('%s/config.ini-googlephotos-upload-dne' % gettempdir(), 'w') as f:
+        f.write(config_string_fmt)
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    gp = GooglePhotos()
+
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    gp.set_session()
+    status = gp.upload('/file/does/not/exist')
     
     assert status is None, status
 
