@@ -15,6 +15,11 @@ class RuntimeError(PluginBase):
     def __init__(self):
         pass
 
-    def before(self, file_path, destination_folder):
+    def after(self, file_path, destination_folder, final_file_path, metadata):
         print(does_not_exist)
 
+    def batch(self):
+        print(does_not_exist)
+
+    def before(self, file_path, destination_folder):
+        print(does_not_exist)
