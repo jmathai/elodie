@@ -4,7 +4,6 @@ Dummy plugin object used for tests.
 .. moduleauthor:: Jaisen Mathai <jaisen@jmathai.com>
 """
 from __future__ import print_function
-from builtins import object
 
 from elodie.plugins.plugins import PluginBase
 
@@ -16,6 +15,6 @@ class Dummy(PluginBase):
     def __init__(self):
         self.before_ran = False
 
-    def before(self, file_path, destination_path, media):
+    def before(self, file_path, destination_folder):
         self.before_ran = True
 

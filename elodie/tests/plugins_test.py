@@ -9,7 +9,7 @@ sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirna
 
 from . import helper
 from elodie.config import load_config
-from elodie.plugins.plugins import Plugins
+from elodie.plugins.plugins import Plugins, PluginBase, PluginDb
 
 @mock.patch('elodie.config.config_file', '%s/config.ini-load-plugins-unset-backwards-compat' % gettempdir())
 def test_load_plugins_unset_backwards_compat():
@@ -134,7 +134,7 @@ plugins=Dummy
     plugins = Plugins()
     plugins.load()
     before_ran_1 = plugins.classes['Dummy'].before_ran
-    plugins.run_all_before('', '', '')
+    plugins.run_all_before('', '')
     before_ran_2 = plugins.classes['Dummy'].before_ran
 
     if hasattr(load_config, 'config'):
@@ -155,12 +155,16 @@ plugins=ThrowError
 
     plugins = Plugins()
     plugins.load()
-    status = plugins.run_all_before('', '', '')
+    status_after = plugins.run_all_after('', '', '', '')
+    status_batch = plugins.run_batch()
+    status_before = plugins.run_all_before('', '')
 
     if hasattr(load_config, 'config'):
         del load_config.config
 
-    assert status == False, status
+    assert status_after == False, status_after
+    assert status_batch == False, status_batch
+    assert status_before == False, status_before
 
 @mock.patch('elodie.config.config_file', '%s/config.ini-throw-error-one-of-many' % gettempdir())
 def test_throw_error_one_of_many():
@@ -174,12 +178,16 @@ plugins=Dummy,ThrowError
 
     plugins = Plugins()
     plugins.load()
-    status = plugins.run_all_before('', '', '')
+    status_after = plugins.run_all_after('', '', '', '')
+    status_batch = plugins.run_batch()
+    status_before = plugins.run_all_before('', '')
 
     if hasattr(load_config, 'config'):
         del load_config.config
 
-    assert status == False, status
+    assert status_after == False, status_after
+    assert status_batch == False, status_batch
+    assert status_before == False, status_before
 
 @mock.patch('elodie.config.config_file', '%s/config.ini-throw-runtime-error' % gettempdir())
 def test_throw_error_runtime_error():
@@ -193,9 +201,55 @@ plugins=RuntimeError
 
     plugins = Plugins()
     plugins.load()
-    status = plugins.run_all_before('', '', '')
+    status_after = plugins.run_all_after('', '', '', '')
+    status_batch = plugins.run_batch()
+    status_before = plugins.run_all_before('', '')
 
     if hasattr(load_config, 'config'):
         del load_config.config
 
-    assert status == True, status
+    assert status_after == True, status_after
+    assert status_batch == True, status_batch
+    assert status_before == True, status_before
+
+def test_plugin_base_inherits_db():
+    plugin_base = PluginBase()
+    assert hasattr(plugin_base.db, 'get')
+    assert hasattr(plugin_base.db, 'set')
+    assert hasattr(plugin_base.db, 'get_all')
+    assert hasattr(plugin_base.db, 'delete')
+
+def test_db_initialize_file():
+    db = PluginDb('foobar')
+    try:
+        os.remove(db.db_file)
+    except OSError:
+        pass
+    db = PluginDb('foobar')
+
+def test_db_get_then_set_then_get_then_delete():
+    db = PluginDb('foobar')
+    foo = db.get('foo')
+    assert foo is None, foo
+    db.set('foo', 'bar')
+    foo = db.get('foo')
+    assert foo == 'bar', foo
+    db.delete('foo')
+    foo = db.get('foo')
+    assert foo is None, foo
+
+def test_db_get_all():
+    # we initialize the db to get the file path to delete then reinitialize
+    db = PluginDb('foobar')
+    try:
+        os.remove(db.db_file)
+    except OSError:
+        pass
+    db = PluginDb('foobar')
+    db.set('a', '1')
+    db.set('b', '2')
+    db.set('c', '3')
+    db.set('d', '4')
+    all_rows = db.get_all()
+
+    assert all_rows == {'a': '1', 'b': '2', 'c': '3', 'd': '4'}, all_rows

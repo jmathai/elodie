@@ -532,7 +532,7 @@ class FileSystem(object):
 
         # Run `before()` for every loaded plugin and if any of them raise an exception
         #  then we skip importing the file and log a message.
-        plugins_run_before_status = self.plugins.run_all_before(_file, destination, media)
+        plugins_run_before_status = self.plugins.run_all_before(_file, destination)
         if(plugins_run_before_status == False):
             log.warn('At least one plugin pre-run failed for %s' % _file)
             return
@@ -593,6 +593,14 @@ class FileSystem(object):
         db = Db()
         db.add_hash(checksum, dest_path)
         db.update_hash_db()
+
+        # Run `after()` for every loaded plugin and if any of them raise an exception
+        #  then we skip importing the file and log a message.
+        plugins_run_after_status = self.plugins.run_all_after(_file, destination, dest_path, metadata)
+        if(plugins_run_after_status == False):
+            log.warn('At least one plugin pre-run failed for %s' % _file)
+            return
+
 
         return dest_path
 

@@ -27,3 +27,13 @@ def load_plugin_config():
         return config['Plugins']['plugins'].split(',')
 
     return []
+
+def load_config_for_plugin(name):
+    # Plugins store data using Plugin%PluginName% format.
+    key = 'Plugin{}'.format(name)
+    config = load_config()
+
+    if key in config:
+        return config[key]
+
+    return {}
