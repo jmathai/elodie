@@ -27,6 +27,7 @@ from elodie.media.text import Text
 from elodie.media.audio import Audio
 from elodie.media.photo import Photo
 from elodie.media.video import Video
+from elodie.plugins.plugins import Plugins
 from elodie.result import Result
 
 
@@ -70,6 +71,16 @@ def import_file(_file, destination, album_from_folder, trash, allow_duplicates):
 
     return dest_path or None
 
+@click.command('batch')
+@click.option('--debug', default=False, is_flag=True,
+              help='Override the value in constants.py with True.')
+def _batch(debug):
+    """Run batch() for all plugins.
+    """
+    constants.debug = debug
+    plugins = Plugins()
+    plugins.run_batch()
+       
 
 @click.command('import')
 @click.option('--destination', type=click.Path(file_okay=False),
@@ -340,6 +351,7 @@ main.add_command(_import)
 main.add_command(_update)
 main.add_command(_generate_db)
 main.add_command(_verify)
+main.add_command(_batch)
 
 
 if __name__ == '__main__':
