@@ -15,6 +15,7 @@ from os import mkdir
 from sys import exc_info
 from traceback import format_exc
 
+from elodie.compatability import _bytes
 from elodie.config import load_config_for_plugin, load_plugin_config
 from elodie.constants import application_directory
 from elodie import log
@@ -65,7 +66,7 @@ class PluginDb(object):
         # If the db file does not exist we initialize it
         if(not isfile(self.db_file)):
             with io.open(self.db_file, 'wb') as f:
-                f.write(unicode(dumps({})))
+                f.write(_bytes(dumps({})))
 
 
     def get(self, key):
@@ -83,7 +84,7 @@ class PluginDb(object):
             db = loads(data)
 
         db[key] = value
-        new_content = unicode(dumps(db, ensure_ascii=False).encode('utf8'))
+        new_content = dumps(db, ensure_ascii=False).encode('utf8')
         with io.open(self.db_file, 'wb') as f:
             f.write(new_content)
 
@@ -98,7 +99,7 @@ class PluginDb(object):
 
         # delete key without throwing an exception
         db.pop(key, None)
-        new_content = unicode(dumps(db, ensure_ascii=False).encode('utf8'))
+        new_content = dumps(db, ensure_ascii=False).encode('utf8')
         with io.open(self.db_file, 'wb') as f:
             f.write(new_content)
 

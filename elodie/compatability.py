@@ -24,6 +24,11 @@ def _decode(string, encoding=sys.getfilesystemencoding()):
 
     return string
 
+def _bytes(string):
+    if constants.python_version == 3:
+        return bytes(string, 'utf8')
+    else:
+        return bytes(string)
 
 def _copyfile(src, dst):
     # shutil.copy seems slow, changing to streaming according to
