@@ -26,6 +26,9 @@ def test_debug():
     assert constants.debug == constants.debug, constants.debug
 
 def test_application_directory_default():
+    if('ELODIE_APPLICATION_DIRECTORY' in os.environ):
+        del os.environ['ELODIE_APPLICATION_DIRECTORY']
+    reload(constants)
     expected_path = '{}/.elodie'.format(os.path.expanduser('~'))
     assert constants.application_directory == expected_path, constants.application_directory
 
@@ -35,7 +38,8 @@ def test_application_directory_override_invalid():
     directory_to_check = constants.application_directory
 
     # reset
-    os.environ['ELODIE_APPLICATION_DIRECTORY'] = ''
+    if('ELODIE_APPLICATION_DIRECTORY' in os.environ):
+        del os.environ['ELODIE_APPLICATION_DIRECTORY']
     reload(constants)
 
     expected_path = '{}/.elodie'.format(os.path.expanduser('~'))
@@ -49,7 +53,8 @@ def test_application_directory_override_valid():
     hash_db_to_check = constants.hash_db
 
     # reset
-    os.environ['ELODIE_APPLICATION_DIRECTORY'] = ''
+    if('ELODIE_APPLICATION_DIRECTORY' in os.environ):
+        del os.environ['ELODIE_APPLICATION_DIRECTORY']
     reload(constants)
 
     assert directory_to_check == cwd, constants.application_directory
@@ -78,12 +83,16 @@ def test_mapquest_base_url_override():
     url_to_check = constants.mapquest_base_url
 
     # reset
-    os.environ['ELODIE_MAPQUEST_BASE_URL'] = ''
+    if('ELODIE_MAPQUEST_BASE_URL' in os.environ):
+        del os.environ['ELODIE_MAPQUEST_BASE_URL']
     reload(constants)
 
     assert url_to_check == 'foobar', constants.mapquest_base_url
 
-def test_mapquest_Key():
+def test_mapquest_key_default():
+    if('ELODIE_MAPQUEST_KEY' in os.environ):
+        os.environ['ELODIE_MAPQUEST_KEY'] = None
+    reload(constants)
     assert constants.mapquest_key == None, constants.mapquest_key
 
 def test_mapquest_key_override():
@@ -92,10 +101,11 @@ def test_mapquest_key_override():
     key_to_check = constants.mapquest_key
 
     # reset
-    os.environ['ELODIE_MAPQUEST_KEY'] = ''
+    if('ELODIE_MAPQUEST_KEY' in os.environ):
+        del os.environ['ELODIE_MAPQUEST_KEY']
     reload(constants)
 
-    assert key_to_check == 'foobar', constants.mapquest_key
+    assert key_to_check == 'foobar', key_to_check
 
 def test_accepted_language():
     assert constants.accepted_language == 'en', constants.accepted_language
