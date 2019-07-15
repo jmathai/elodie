@@ -103,11 +103,15 @@ class Photo(Media):
         # https://github.com/python-pillow/Pillow/issues/2806
         extension = os.path.splitext(source)[1][1:].lower()
         if(extension != 'heic'):
+            # gh-4 This checks if the source file is an image.
+            # It doesn't validate against the list of supported types.
+            # We check with imghdr and pillow.
             if(imghdr.what(source) is None):
-                # gh-4 This checks if the source file is an image.
-                # It doesn't validate against the list of supported types.
-                # We check with imghdr and pillow.
-                if(self.pillow is not None):
+                # Pillow is used as a fallback and if it's not available we trust
+                #   what imghdr returned.
+                if(self.pillow is None):
+                    return False
+                else:
                     # imghdr won't detect all variants of images (https://bugs.python.org/issue28591)
                     # see https://github.com/jmathai/elodie/issues/281
                     # before giving up, we use `pillow` imaging library to detect file type
@@ -124,7 +128,5 @@ class Photo(Media):
 
                     if(im.format is None):
                         return False
-                else:
-                    return False
         
         return extension in self.extensions
