@@ -149,7 +149,7 @@ class GooglePhotos(PluginBase):
             )
 
         ):
-            self.log('Creating new media item failed: {}'.format(resp['newMediaItemResults'][0]['status']))
+            self.log('Creating new media item failed: {}'.format(json.dumps(resp)))
             return None
         
         return resp['newMediaItemResults'][0]
