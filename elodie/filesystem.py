@@ -10,6 +10,7 @@ import os
 import re
 import shutil
 import time
+import calendar
 
 from elodie import compatability
 from elodie import geolocation
@@ -628,5 +629,5 @@ class FileSystem(object):
         else:
             # We don't make any assumptions about time zones and
             # assume local time zone.
-            date_taken_in_seconds = time.mktime(date_taken)
+            date_taken_in_seconds = calendar.timegm(date_taken)
             os.utime(file_path, (time.time(), (date_taken_in_seconds)))
