@@ -207,35 +207,35 @@ name=%date-%original_name.%extension
 def test_get_file_name_plain():
     filesystem = FileSystem()
     media = Photo(helper.get_file('plain.jpg'))
-    file_name = filesystem.get_file_name(media)
+    file_name = filesystem.get_file_name(media.get_metadata())
 
     assert file_name == helper.path_tz_fix('2015-12-05_00-59-26-plain.jpg'), file_name
 
 def test_get_file_name_with_title():
     filesystem = FileSystem()
     media = Photo(helper.get_file('with-title.jpg'))
-    file_name = filesystem.get_file_name(media)
+    file_name = filesystem.get_file_name(media.get_metadata())
 
     assert file_name == helper.path_tz_fix('2015-12-05_00-59-26-with-title-some-title.jpg'), file_name
 
 def test_get_file_name_with_original_name_exif():
     filesystem = FileSystem()
     media = Photo(helper.get_file('with-filename-in-exif.jpg'))
-    file_name = filesystem.get_file_name(media)
+    file_name = filesystem.get_file_name(media.get_metadata())
 
     assert file_name == helper.path_tz_fix('2015-12-05_00-59-26-foobar.jpg'), file_name
 
 def test_get_file_name_with_original_name_title_exif():
     filesystem = FileSystem()
     media = Photo(helper.get_file('with-filename-and-title-in-exif.jpg'))
-    file_name = filesystem.get_file_name(media)
+    file_name = filesystem.get_file_name(media.get_metadata())
 
     assert file_name == helper.path_tz_fix('2015-12-05_00-59-26-foobar-foobar-title.jpg'), file_name
 
 def test_get_file_name_with_uppercase_and_spaces():
     filesystem = FileSystem()
     media = Photo(helper.get_file('Plain With Spaces And Uppercase 123.jpg'))
-    file_name = filesystem.get_file_name(media)
+    file_name = filesystem.get_file_name(media.get_metadata())
 
     assert file_name == helper.path_tz_fix('2015-12-05_00-59-26-plain-with-spaces-and-uppercase-123.jpg'), file_name
 
@@ -252,7 +252,7 @@ name=%date-%original_name.%extension
 
     filesystem = FileSystem()
     media = Photo(helper.get_file('plain.jpg'))
-    file_name = filesystem.get_file_name(media)
+    file_name = filesystem.get_file_name(media.get_metadata())
 
     if hasattr(load_config, 'config'):
         del load_config.config
@@ -272,7 +272,7 @@ name=%date-%original_name-%title.%extension
 
     filesystem = FileSystem()
     media = Photo(helper.get_file('with-title.jpg'))
-    file_name = filesystem.get_file_name(media)
+    file_name = filesystem.get_file_name(media.get_metadata())
 
     if hasattr(load_config, 'config'):
         del load_config.config
@@ -292,7 +292,7 @@ name=%date-%original_name-%title.%extension
 
     filesystem = FileSystem()
     media = Photo(helper.get_file('plain.jpg'))
-    file_name = filesystem.get_file_name(media)
+    file_name = filesystem.get_file_name(media.get_metadata())
 
     if hasattr(load_config, 'config'):
         del load_config.config
@@ -313,7 +313,7 @@ capitalization=lower
 
     filesystem = FileSystem()
     media = Photo(helper.get_file('plain.jpg'))
-    file_name = filesystem.get_file_name(media)
+    file_name = filesystem.get_file_name(media.get_metadata())
 
     if hasattr(load_config, 'config'):
         del load_config.config
@@ -334,7 +334,7 @@ capitalization=garabage
 
     filesystem = FileSystem()
     media = Photo(helper.get_file('plain.jpg'))
-    file_name = filesystem.get_file_name(media)
+    file_name = filesystem.get_file_name(media.get_metadata())
 
     if hasattr(load_config, 'config'):
         del load_config.config
@@ -355,7 +355,7 @@ capitalization=upper
 
     filesystem = FileSystem()
     media = Photo(helper.get_file('plain.jpg'))
-    file_name = filesystem.get_file_name(media)
+    file_name = filesystem.get_file_name(media.get_metadata())
 
     if hasattr(load_config, 'config'):
         del load_config.config
