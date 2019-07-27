@@ -60,7 +60,7 @@ class Photo(Media):
 
         exif = self.get_exiftool_attributes()
         if not exif:
-            return seconds_since_epoch
+            return time.gmtime(seconds_since_epoch)
 
         # We need to parse a string from EXIF into a timestamp.
         # EXIF DateTimeOriginal and EXIF DateTime are both stored
