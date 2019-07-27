@@ -787,6 +787,29 @@ def test_process_file_validate_original_checksum():
     assert origin_checksum_preprocess == origin_checksum, (origin_checksum_preprocess, origin_checksum)
 
 
+# See https://github.com/jmathai/elodie/issues/330
+def test_process_file_no_exif_date_is_correct_gh_330():
+    filesystem = FileSystem()
+    temporary_folder, folder = helper.create_working_folder()
+
+    origin = os.path.join(folder,'photo.jpg')
+    shutil.copyfile(helper.get_file('no-exif.jpg'), origin)
+
+    atime = 1330712100
+    utime = 1330712900
+    os.utime(origin, (atime, utime))
+
+    media = Photo(origin)
+    metadata = media.get_metadata()
+
+    destination = filesystem.process_file(origin, temporary_folder, media, allowDuplicate=True)
+
+    shutil.rmtree(folder)
+    shutil.rmtree(os.path.dirname(os.path.dirname(destination)))
+
+    assert '/2012-03-Mar/' in destination, destination
+    assert '/2012-03-02_18-28-20' in destination, destination
+
 def test_process_file_with_location_and_title():
     filesystem = FileSystem()
     temporary_folder, folder = helper.create_working_folder()

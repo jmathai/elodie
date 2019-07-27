@@ -519,6 +519,7 @@ class FileSystem(object):
             allow_duplicate = kwargs['allowDuplicate']
 
         stat_info_original = os.stat(_file)
+        metadata = media.get_metadata()
 
         if(not media.is_valid()):
             print('%s is not a valid media file. Skipping...' % _file)
@@ -537,14 +538,13 @@ class FileSystem(object):
             log.warn('At least one plugin pre-run failed for %s' % _file)
             return
 
-        media.set_original_name()
-        metadata = media.get_metadata()
-
         directory_name = self.get_folder_path(metadata)
 
         dest_directory = os.path.join(destination, directory_name)
         file_name = self.get_file_name(media)
         dest_path = os.path.join(dest_directory, file_name)
+
+        media.set_original_name()
 
         # If source and destination are identical then
         #  we should not write the file. gh-210
