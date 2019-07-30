@@ -112,7 +112,7 @@ class FileSystem(object):
         """
         return os.getcwd()
 
-    def get_file_name(self, media):
+    def get_file_name(self, metadata):
         """Generate file name for a photo or video using its metadata.
 
         Originally we hardcoded the file name to include an ISO date format.
@@ -128,10 +128,6 @@ class FileSystem(object):
             :class:`~elodie.media.video.Video`
         :returns: str or None for non-photo or non-videos
         """
-        if(not media.is_valid()):
-            return None
-
-        metadata = media.get_metadata()
         if(metadata is None):
             return None
 
@@ -519,6 +515,7 @@ class FileSystem(object):
             allow_duplicate = kwargs['allowDuplicate']
 
         stat_info_original = os.stat(_file)
+        metadata = media.get_metadata()
 
         if(not media.is_valid()):
             print('%s is not a valid media file. Skipping...' % _file)
@@ -537,14 +534,12 @@ class FileSystem(object):
             log.warn('At least one plugin pre-run failed for %s' % _file)
             return
 
-        media.set_original_name()
-        metadata = media.get_metadata()
-
         directory_name = self.get_folder_path(metadata)
-
         dest_directory = os.path.join(destination, directory_name)
-        file_name = self.get_file_name(media)
+        file_name = self.get_file_name(metadata)
         dest_path = os.path.join(dest_directory, file_name)
+
+        media.set_original_name()
 
         # If source and destination are identical then
         #  we should not write the file. gh-210
