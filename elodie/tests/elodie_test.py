@@ -237,6 +237,35 @@ def test_import_file_send_to_trash_true():
 
     assert dest_path1 is not None
 
+@mock.patch('elodie.config.config_file', '%s/config.ini-import-with-full-path' % gettempdir())
+def test_import_with_full_path():
+    with open('%s/config.ini-custom-filename' % gettempdir(), 'w') as f:
+        f.write("""
+[Directory]
+location=%city
+year=%Y
+month=%m
+full_path=%year-%month/%location
+        """)
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    temporary_folder, folder = helper.create_working_folder()
+    temporary_folder_destination, folder_destination = helper.create_working_folder()
+
+    origin = '%s/plain.jpg' % folder
+    shutil.copyfile(helper.get_file('plain.jpg'), origin)
+
+    dest_path = elodie.import_file(origin, folder_destination, False, True, False)
+
+    shutil.rmtree(folder)
+    shutil.rmtree(folder_destination)
+
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    assert '2015-12-Dec/Unknown Location/2015-12-05_00-59-26-plain.jpg' in dest_path
+
 def test_import_destination_in_source():
     temporary_folder, folder = helper.create_working_folder()
     folder_destination = '{}/destination'.format(folder)
