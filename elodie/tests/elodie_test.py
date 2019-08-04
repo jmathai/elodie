@@ -245,7 +245,7 @@ def test_import_with_full_path():
 location=%city
 year=%Y
 month=%m
-full_path=%year-%month/%location
+full_path=%year/%location
         """)
     if hasattr(load_config, 'config'):
         del load_config.config
@@ -264,7 +264,7 @@ full_path=%year-%month/%location
     if hasattr(load_config, 'config'):
         del load_config.config
 
-    assert '2015-12-Dec/Unknown Location/2015-12-05_00-59-26-plain.jpg' in dest_path
+    assert '2015/Unknown Location/2015-12-05_00-59-26-plain.jpg' in dest_path
 
 def test_import_destination_in_source():
     temporary_folder, folder = helper.create_working_folder()
@@ -644,7 +644,7 @@ def test_cli_import_with_full_path():
 location=%city
 year=%Y
 month=%m
-full_path=%year-%month/%location
+full_path=%year/%location
         """)
     if hasattr(load_config, 'config'):
         del load_config.config
@@ -667,7 +667,7 @@ full_path=%year-%month/%location
     if hasattr(load_config, 'config'):
         del load_config.config
 
-    assert '2015-12-Dec/Unknown Location/2015-12-05_00-59-26-plain.jpg' in result.output, result.output
+    assert '2015/Unknown Location/2015-12-05_00-59-26-plain.jpg' in result.output, result.output
 
 @mock.patch('elodie.config.config_file', '%s/config.ini-cli-batch-plugin-googlephotos' % gettempdir())
 def test_cli_batch_plugin_googlephotos():
