@@ -243,8 +243,6 @@ def test_import_with_full_path():
         f.write("""
 [Directory]
 location=%city
-year=%Y
-month=%m
 date=%Y-%m
 full_path=%year/%location
         """)
@@ -643,8 +641,6 @@ def test_cli_import_with_full_path():
         f.write("""
 [Directory]
 location=%city
-year=%Y
-month=%m
 date=%Y-%m
 full_path=%date/%location
         """)
