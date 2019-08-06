@@ -244,7 +244,7 @@ def test_import_with_full_path():
 [Directory]
 location=%city
 date=%Y-%m
-full_path=%year/%location
+full_path=%date/%location
         """)
     if hasattr(load_config, 'config'):
         del load_config.config
