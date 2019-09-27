@@ -97,8 +97,10 @@ def _batch(debug):
               help='Import the file even if it\'s already been imported.')
 @click.option('--debug', default=False, is_flag=True,
               help='Override the value in constants.py with True.')
+@click.option('--exclude', multiple=True,
+              help='Exclude directory.')
 @click.argument('paths', nargs=-1, type=click.Path())
-def _import(destination, source, file, album_from_folder, trash, allow_duplicates, debug, paths):
+def _import(destination, source, file, album_from_folder, trash, allow_duplicates, debug, paths, exclude):
     """Import files or directories by reading their EXIF and organizing them accordingly.
     """
     constants.debug = debug
@@ -110,6 +112,9 @@ def _import(destination, source, file, album_from_folder, trash, allow_duplicate
 
     files = set()
     paths = set(paths)
+    excludeDir = set()
+    if exclude:
+        excludeDir.update(exclude)
     if source:
         source = _decode(source)
         paths.add(source)
@@ -118,7 +123,7 @@ def _import(destination, source, file, album_from_folder, trash, allow_duplicate
     for path in paths:
         path = os.path.expanduser(path)
         if os.path.isdir(path):
-            files.update(FILESYSTEM.get_all_files(path, None))
+            files.update(FILESYSTEM.get_all_files(path, None, excludeDir))
         else:
             files.add(path)
 
