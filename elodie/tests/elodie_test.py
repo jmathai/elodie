@@ -290,6 +290,71 @@ def test_import_invalid_file_exit_code():
 
     assert result.exit_code == 1, result.exit_code
 
+def test_import_file_with_single_exclude():
+    temporary_folder, folder = helper.create_working_folder()
+    temporary_folder_destination, folder_destination = helper.create_working_folder()
+
+    origin_valid = '%s/valid.jpg' % folder
+    shutil.copyfile(helper.get_file('plain.jpg'), origin_valid)
+
+    runner = CliRunner()
+    result = runner.invoke(elodie._import, ['--destination', folder_destination, '--exclude-regex', 'var', origin_valid])
+
+    assert 'Success         0' in result.output, result.output
+    assert 'Error           0' in result.output, result.output
+
+def test_import_file_with_multiple_exclude():
+    temporary_folder, folder = helper.create_working_folder()
+    temporary_folder_destination, folder_destination = helper.create_working_folder()
+
+    origin_valid = '%s/valid.jpg' % folder
+    shutil.copyfile(helper.get_file('plain.jpg'), origin_valid)
+
+    runner = CliRunner()
+    result = runner.invoke(elodie._import, ['--destination', folder_destination, '--exclude-regex', 'does not exist in path', '--exclude-regex', origin_valid[0:5], origin_valid])
+
+    assert 'Success         0' in result.output, result.output
+    assert 'Error           0' in result.output, result.output
+
+def test_import_file_with_non_matching_exclude():
+    temporary_folder, folder = helper.create_working_folder()
+    temporary_folder_destination, folder_destination = helper.create_working_folder()
+
+    origin_valid = '%s/valid.jpg' % folder
+    shutil.copyfile(helper.get_file('plain.jpg'), origin_valid)
+
+    runner = CliRunner()
+    result = runner.invoke(elodie._import, ['--destination', folder_destination, '--exclude-regex', 'does not exist in path', origin_valid])
+
+    assert 'Success         1' in result.output, result.output
+    assert 'Error           0' in result.output, result.output
+
+def test_import_directory_with_matching_exclude():
+    temporary_folder, folder = helper.create_working_folder()
+    temporary_folder_destination, folder_destination = helper.create_working_folder()
+
+    origin_valid = '%s/valid.jpg' % folder
+    shutil.copyfile(helper.get_file('plain.jpg'), origin_valid)
+
+    runner = CliRunner()
+    result = runner.invoke(elodie._import, ['--destination', folder_destination, '--source', folder, '--exclude-regex', folder[1:5]])
+
+    assert 'Success         0' in result.output, result.output
+    assert 'Error           0' in result.output, result.output
+
+def test_import_directory_with_non_matching_exclude():
+    temporary_folder, folder = helper.create_working_folder()
+    temporary_folder_destination, folder_destination = helper.create_working_folder()
+
+    origin_valid = '%s/valid.jpg' % folder
+    shutil.copyfile(helper.get_file('plain.jpg'), origin_valid)
+
+    runner = CliRunner()
+    result = runner.invoke(elodie._import, ['--destination', folder_destination, '--source', folder, '--exclude-regex', 'non-matching'])
+
+    assert 'Success         1' in result.output, result.output
+    assert 'Error           0' in result.output, result.output
+
 def test_update_location_on_audio():
     temporary_folder, folder = helper.create_working_folder()
     temporary_folder_destination, folder_destination = helper.create_working_folder()
