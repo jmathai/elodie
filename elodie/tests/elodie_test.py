@@ -282,7 +282,7 @@ def test_import_invalid_file_exit_code():
 
     helper.reset_dbs()
     runner = CliRunner()
-    result = runner.invoke(elodie._import, ['--destination', folder_destination, origin_invalid, origin_valid])
+    result = runner.invoke(elodie._import, ['--destination', folder_destination, '--allow-duplicates', origin_invalid, origin_valid])
     helper.restore_dbs()
 
     shutil.rmtree(folder)
@@ -298,7 +298,7 @@ def test_import_file_with_single_exclude():
     shutil.copyfile(helper.get_file('plain.jpg'), origin_valid)
 
     runner = CliRunner()
-    result = runner.invoke(elodie._import, ['--destination', folder_destination, '--exclude-regex', 'var', origin_valid])
+    result = runner.invoke(elodie._import, ['--destination', folder_destination, '--exclude-regex', 'var', '--allow-duplicates', origin_valid])
 
     assert 'Success         0' in result.output, result.output
     assert 'Error           0' in result.output, result.output
@@ -311,7 +311,7 @@ def test_import_file_with_multiple_exclude():
     shutil.copyfile(helper.get_file('plain.jpg'), origin_valid)
 
     runner = CliRunner()
-    result = runner.invoke(elodie._import, ['--destination', folder_destination, '--exclude-regex', 'does not exist in path', '--exclude-regex', origin_valid[0:5], origin_valid])
+    result = runner.invoke(elodie._import, ['--destination', folder_destination, '--exclude-regex', 'does not exist in path', '--exclude-regex', origin_valid[0:5], '--allow-duplicates', origin_valid])
 
     assert 'Success         0' in result.output, result.output
     assert 'Error           0' in result.output, result.output
@@ -324,7 +324,7 @@ def test_import_file_with_non_matching_exclude():
     shutil.copyfile(helper.get_file('plain.jpg'), origin_valid)
 
     runner = CliRunner()
-    result = runner.invoke(elodie._import, ['--destination', folder_destination, '--exclude-regex', 'does not exist in path', origin_valid])
+    result = runner.invoke(elodie._import, ['--destination', folder_destination, '--exclude-regex', 'does not exist in path', '--allow-duplicates', origin_valid])
 
     assert 'Success         1' in result.output, result.output
     assert 'Error           0' in result.output, result.output
@@ -337,7 +337,7 @@ def test_import_directory_with_matching_exclude():
     shutil.copyfile(helper.get_file('plain.jpg'), origin_valid)
 
     runner = CliRunner()
-    result = runner.invoke(elodie._import, ['--destination', folder_destination, '--source', folder, '--exclude-regex', folder[1:5]])
+    result = runner.invoke(elodie._import, ['--destination', folder_destination, '--source', folder, '--exclude-regex', folder[1:5], '--allow-duplicates'])
 
     assert 'Success         0' in result.output, result.output
     assert 'Error           0' in result.output, result.output
@@ -350,7 +350,7 @@ def test_import_directory_with_non_matching_exclude():
     shutil.copyfile(helper.get_file('plain.jpg'), origin_valid)
 
     runner = CliRunner()
-    result = runner.invoke(elodie._import, ['--destination', folder_destination, '--source', folder, '--exclude-regex', 'non-matching'])
+    result = runner.invoke(elodie._import, ['--destination', folder_destination, '--source', folder, '--exclude-regex', 'non-matching', '--allow-duplicates'])
 
     assert 'Success         1' in result.output, result.output
     assert 'Error           0' in result.output, result.output
