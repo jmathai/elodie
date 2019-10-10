@@ -97,10 +97,10 @@ def _batch(debug):
               help='Import the file even if it\'s already been imported.')
 @click.option('--debug', default=False, is_flag=True,
               help='Override the value in constants.py with True.')
-@click.option('--exclude', multiple=True,
-              help='Exclude directory.')
+@click.option('--exclude-regex', default=set(), multiple=True,
+              help='Regular expression for directories or files to exclude.')
 @click.argument('paths', nargs=-1, type=click.Path())
-def _import(destination, source, file, album_from_folder, trash, allow_duplicates, debug, paths, exclude):
+def _import(destination, source, file, album_from_folder, trash, allow_duplicates, debug, exclude_regex, paths):
     """Import files or directories by reading their EXIF and organizing them accordingly.
     """
     constants.debug = debug
@@ -112,20 +112,20 @@ def _import(destination, source, file, album_from_folder, trash, allow_duplicate
 
     files = set()
     paths = set(paths)
-    excludeDir = set()
-    if exclude:
-        excludeDir.update(exclude)
     if source:
         source = _decode(source)
         paths.add(source)
     if file:
         paths.add(file)
+    exclude_regex_list = set()
+    exclude_regex_list.update(exclude_regex)
     for path in paths:
         path = os.path.expanduser(path)
         if os.path.isdir(path):
-            files.update(FILESYSTEM.get_all_files(path, None, excludeDir))
+            files.update(FILESYSTEM.get_all_files(path, None, exclude_regex_list))
         else:
-            files.add(path)
+            if not FILESYSTEM.should_exclude(path, exclude_regex_list, True):
+                files.add(path)
 
     for current_file in files:
         dest_path = import_file(current_file, destination, album_from_folder,
