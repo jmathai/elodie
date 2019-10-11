@@ -298,7 +298,7 @@ def test_import_file_with_single_exclude():
     shutil.copyfile(helper.get_file('plain.jpg'), origin_valid)
 
     runner = CliRunner()
-    result = runner.invoke(elodie._import, ['--destination', folder_destination, '--exclude-regex', 'var', '--allow-duplicates', origin_valid])
+    result = runner.invoke(elodie._import, ['--destination', folder_destination, '--exclude-regex', origin_valid[0:5], '--allow-duplicates', origin_valid])
 
     assert 'Success         0' in result.output, result.output
     assert 'Error           0' in result.output, result.output
