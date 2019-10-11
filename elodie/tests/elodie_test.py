@@ -355,6 +355,61 @@ def test_import_directory_with_non_matching_exclude():
     assert 'Success         1' in result.output, result.output
     assert 'Error           0' in result.output, result.output
 
+@mock.patch('elodie.config.config_file', '%s/config.ini-import-file-with-single-config-exclude' % gettempdir())
+def test_import_file_with_single_config_exclude():
+    config_string = """
+    [Exclusions]
+    name1=valid
+            """
+    with open('%s/config.ini-import-file-with-single-config-exclude' % gettempdir(), 'w') as f:
+        f.write(config_string)
+
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    temporary_folder, folder = helper.create_working_folder()
+    temporary_folder_destination, folder_destination = helper.create_working_folder()
+
+    origin_valid = '%s/valid.jpg' % folder
+    shutil.copyfile(helper.get_file('plain.jpg'), origin_valid)
+
+    runner = CliRunner()
+    result = runner.invoke(elodie._import, ['--destination', folder_destination, '--allow-duplicates', origin_valid, '--debug'])
+
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    assert 'Success         0' in result.output, result.output
+    assert 'Error           0' in result.output, result.output
+
+@mock.patch('elodie.config.config_file', '%s/config.ini-import-file-with-multiple-config-exclude' % gettempdir())
+def test_import_file_with_multiple_config_exclude():
+    config_string = """
+    [Exclusions]
+    name1=notvalidatall
+    name2=valid
+            """
+    with open('%s/config.ini-import-file-with-multiple-config-exclude' % gettempdir(), 'w') as f:
+        f.write(config_string)
+
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    temporary_folder, folder = helper.create_working_folder()
+    temporary_folder_destination, folder_destination = helper.create_working_folder()
+
+    origin_valid = '%s/valid.jpg' % folder
+    shutil.copyfile(helper.get_file('plain.jpg'), origin_valid)
+
+    runner = CliRunner()
+    result = runner.invoke(elodie._import, ['--destination', folder_destination, '--allow-duplicates', origin_valid, '--debug'])
+
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    assert 'Success         0' in result.output, result.output
+    assert 'Error           0' in result.output, result.output
+
 def test_update_location_on_audio():
     temporary_folder, folder = helper.create_working_folder()
     temporary_folder_destination, folder_destination = helper.create_working_folder()
@@ -702,11 +757,12 @@ def test_cli_batch_plugin_googlephotos():
     gp.after('', '', final_file_path_1, sample_metadata_1)
     gp.after('', '', final_file_path_2, sample_metadata_1)
 
+    runner = CliRunner()
+    result = runner.invoke(elodie._batch)
+
     if hasattr(load_config, 'config'):
         del load_config.config
 
-    runner = CliRunner()
-    result = runner.invoke(elodie._batch)
     assert "elodie/elodie/tests/files/plain.jpg uploaded successfully.\"}\n" in result.output, result.output
     assert "elodie/elodie/tests/files/no-exif.jpg uploaded successfully.\"}\n" in result.output, result.output
 
