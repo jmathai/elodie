@@ -19,6 +19,7 @@ from elodie import constants
 from elodie import geolocation
 from elodie import log
 from elodie.compatability import _decode
+from elodie.config import load_config
 from elodie.filesystem import FileSystem
 from elodie.localstorage import Db
 from elodie.media.base import Base, get_all_subclasses
@@ -117,8 +118,15 @@ def _import(destination, source, file, album_from_folder, trash, allow_duplicate
         paths.add(source)
     if file:
         paths.add(file)
-    exclude_regex_list = set()
-    exclude_regex_list.update(exclude_regex)
+
+    # if no exclude list was passed in we check if there's a config
+    if len(exclude_regex) == 0:
+        config = load_config()
+        if 'Exclusions' in config:
+            exclude_regex = [value for key, value in config.items('Exclusions')]
+
+    exclude_regex_list = set(exclude_regex)
+
     for path in paths:
         path = os.path.expanduser(path)
         if os.path.isdir(path):
