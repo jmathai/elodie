@@ -19,6 +19,7 @@ from elodie import constants
 from elodie import geolocation
 from elodie import log
 from elodie.compatability import _decode
+from elodie.config import load_config
 from elodie.filesystem import FileSystem
 from elodie.localstorage import Db
 from elodie.media.base import Base, get_all_subclasses
@@ -97,8 +98,10 @@ def _batch(debug):
               help='Import the file even if it\'s already been imported.')
 @click.option('--debug', default=False, is_flag=True,
               help='Override the value in constants.py with True.')
+@click.option('--exclude-regex', default=set(), multiple=True,
+              help='Regular expression for directories or files to exclude.')
 @click.argument('paths', nargs=-1, type=click.Path())
-def _import(destination, source, file, album_from_folder, trash, allow_duplicates, debug, paths):
+def _import(destination, source, file, album_from_folder, trash, allow_duplicates, debug, exclude_regex, paths):
     """Import files or directories by reading their EXIF and organizing them accordingly.
     """
     constants.debug = debug
@@ -115,12 +118,22 @@ def _import(destination, source, file, album_from_folder, trash, allow_duplicate
         paths.add(source)
     if file:
         paths.add(file)
+
+    # if no exclude list was passed in we check if there's a config
+    if len(exclude_regex) == 0:
+        config = load_config()
+        if 'Exclusions' in config:
+            exclude_regex = [value for key, value in config.items('Exclusions')]
+
+    exclude_regex_list = set(exclude_regex)
+
     for path in paths:
         path = os.path.expanduser(path)
         if os.path.isdir(path):
-            files.update(FILESYSTEM.get_all_files(path, None))
+            files.update(FILESYSTEM.get_all_files(path, None, exclude_regex_list))
         else:
-            files.add(path)
+            if not FILESYSTEM.should_exclude(path, exclude_regex_list, True):
+                files.add(path)
 
     for current_file in files:
         dest_path = import_file(current_file, destination, album_from_folder,
