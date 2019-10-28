@@ -1126,6 +1126,36 @@ def test_set_utime_without_exif_date():
     assert final_stat.st_mtime == time.mktime(metadata_final['date_taken']), (final_stat.st_mtime, time.mktime(metadata_final['date_taken']))
     assert initial_checksum == final_checksum
 
+def test_should_exclude_with_no_exclude_arg():
+    filesystem = FileSystem()
+    result = filesystem.should_exclude('/some/path')
+    assert result == False, result
+
+def test_should_exclude_with_non_matching_regex():
+    filesystem = FileSystem()
+    result = filesystem.should_exclude('/some/path', {re.compile('foobar')})
+    assert result == False, result
+
+def test_should_exclude_with_matching_regex():
+    filesystem = FileSystem()
+    result = filesystem.should_exclude('/some/path', {re.compile('some')})
+    assert result == True, result
+
+def test_should_not_exclude_with_multiple_with_non_matching_regex():
+    filesystem = FileSystem()
+    result = filesystem.should_exclude('/some/path', {re.compile('foobar'), re.compile('dne')})
+    assert result == False, result
+
+def test_should_exclude_with_multiple_with_one_matching_regex():
+    filesystem = FileSystem()
+    result = filesystem.should_exclude('/some/path', {re.compile('foobar'), re.compile('some')})
+    assert result == True, result
+
+def test_should_exclude_with_complex_matching_regex():
+    filesystem = FileSystem()
+    result = filesystem.should_exclude('/var/folders/j9/h192v5v95gd_fhpv63qzyd1400d9ct/T/T497XPQH2R/UATR2GZZTX/2016-04-Apr/London/2016-04-07_11-15-26-valid-sample-title.txt', {re.compile('London.*\.txt$')})
+    assert result == True, result
+
 @mock.patch('elodie.config.config_file', '%s/config.ini-does-not-exist' % gettempdir())
 def test_get_folder_path_definition_default():
     if hasattr(load_config, 'config'):

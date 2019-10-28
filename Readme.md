@@ -128,6 +128,9 @@ Options:
   --trash                  After copying files, move the old files to the
                            trash.
   --allow-duplicates       Import the file even if it's already been imported.
+  --debug                  Override the value in constants.py with True.
+  --exclude-regex TEXT     Regular expression for directories or files to
+                           exclude.
   --help                   Show this message and exit.
 ```
 
@@ -166,6 +169,20 @@ Options:
 
 ```
 Usage: elodie.py verify
+```
+
+### Excluding folders and files from being imported
+
+If you have specific folders or files which you would like to prevent from being imported you can provide regular expressions which will be used to match and skip files from being imported.
+
+You can specify an exclusion at run time by using the `--exclude-regex` argument of the `import` command. You can pass multiple `--exclude-regex` arguments and all folder/file paths which match will be (silently) skipped.
+
+If there are certain file or folder paths you *never* want to import then you can also add an `[Exclusions]` section to your `config.ini` file. Similar to the command line argument you can provide multiple exclusions. Here is an example.
+
+```
+[Exclusions]
+synology_folders=@eaDir
+thumbnails=.thumbnails
 ```
 
 ### Create your own folder structure

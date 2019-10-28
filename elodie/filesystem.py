@@ -85,7 +85,7 @@ class FileSystem(object):
 
         return False
 
-    def get_all_files(self, path, extensions=None):
+    def get_all_files(self, path, extensions=None, exclude_regex_list=set()):
         """Recursively get all files which match a path and extension.
 
         :param str path string: Path to start recursive file listing
@@ -99,11 +99,19 @@ class FileSystem(object):
             for cls in subclasses:
                 extensions.update(cls.extensions)
 
+        # Create a list of compiled regular expressions to match against the file path
+        compiled_regex_list = [re.compile(regex) for regex in exclude_regex_list]
         for dirname, dirnames, filenames in os.walk(path):
             for filename in filenames:
-                # If file extension is in `extensions` then append to the list
-                if os.path.splitext(filename)[1][1:].lower() in extensions:
-                    yield os.path.join(dirname, filename)
+                # If file extension is in `extensions` 
+                # And if file path is not in exclude regexes
+                # Then append to the list
+                filename_path = os.path.join(dirname, filename)
+                if (
+                        os.path.splitext(filename)[1][1:].lower() in extensions and
+                        not self.should_exclude(filename_path, compiled_regex_list, False)
+                    ):
+                    yield filename_path
 
     def get_current_directory(self):
         """Get the current working directory.
@@ -625,3 +633,15 @@ class FileSystem(object):
             # assume local time zone.
             date_taken_in_seconds = time.mktime(date_taken)
             os.utime(file_path, (time.time(), (date_taken_in_seconds)))
+
+    def should_exclude(self, path, regex_list=set(), needs_compiled=False):
+        if(len(regex_list) == 0):
+            return False
+
+        if(needs_compiled):
+            compiled_list = []
+            for regex in regex_list:
+                compiled_list.append(re.compile(regex))
+            regex_list = compiled_list
+
+        return any(regex.search(path) for regex in regex_list)
