@@ -10,3 +10,6 @@ build/**
 **/*.nef
 **/*.rw2
 env/**
+*.sw[a-p]
+*.egg-info/*
+*.env/
