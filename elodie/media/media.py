@@ -99,7 +99,14 @@ class Media(Base):
             #   -json output format.
             # https://github.com/jmathai/elodie/issues/171
             # http://u88.n24.queensu.ca/exiftool/forum/index.php/topic,7952.0.html  # noqa
-            this_coordinate = float(exif[key])
+            # Exception handling reason:
+            #   If there is EXIF data with null values for lat/long, python gets angry
+            #   that it cannot convert nothing to a float. Here, we cast the value to 0.0
+            try:
+                this_coordinate = float(exif[key])
+            except ValueError:
+                print("Error in converting string to float, setting coordinate to 0.0")
+                this_coordinate = 0.0
 
             # TODO: verify that we need to check ref key
             #   when self.set_gps_ref != True
