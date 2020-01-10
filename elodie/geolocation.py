@@ -7,6 +7,7 @@ from past.utils import old_div
 standard_library.install_aliases()  # noqa
 
 from os import path
+from os import getcwd
 
 import requests
 import urllib.request
@@ -151,7 +152,7 @@ def place_name(lat, lon):
     if(not isinstance(lon, float)):
         lon = float(lon)
 
-    localdb_response = closestgeoname.query_closest_city(os.path.join(os.getcwd(),'elodie', 'closestgeoname','geonames.sqlite'), lat, lon)
+    localdb_response = closestgeoname.query_closest_city(path.join(getcwd(),'elodie', 'closestgeoname','geonames.sqlite'), lat, lon)
 
     if localdb_response is not None:
         return {"city": localdb_response[0],
