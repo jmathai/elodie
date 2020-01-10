@@ -36,7 +36,7 @@ FILESYSTEM = FileSystem()
 
 
 def import_file(_file, destination, album_from_folder, trash, allow_duplicates):
-    
+
     _file = _decode(_file)
     destination = _decode(destination)
 
@@ -81,7 +81,7 @@ def _batch(debug):
     constants.debug = debug
     plugins = Plugins()
     plugins.run_batch()
-       
+
 
 @click.command('import')
 @click.option('--destination', type=click.Path(file_okay=False),
@@ -162,7 +162,7 @@ def _generate_db(source, debug):
     if not os.path.isdir(source):
         log.error('Source is not a valid directory %s' % source)
         sys.exit(1)
-        
+
     db = Db()
     db.backup_hash_db()
     db.reset_hash_db()
@@ -171,7 +171,7 @@ def _generate_db(source, debug):
         result.append((current_file, True))
         db.add_hash(db.checksum(current_file), current_file)
         log.progress()
-    
+
     db.update_hash_db()
     log.progress('', True)
     result.write()
@@ -350,7 +350,7 @@ def _update(album, location, time, title, paths, debug):
             result.append((current_file, False))
 
     result.write()
-    
+
     if has_errors:
         sys.exit(1)
 

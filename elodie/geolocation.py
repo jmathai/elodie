@@ -18,6 +18,8 @@ from elodie import constants
 from elodie import log
 from elodie.localstorage import Db
 
+import elodie.closestgeoname.closestgeoname as closestgeoname
+
 __KEY__ = None
 __DEFAULT_LOCATION__ = 'Unknown Location'
 __PREFER_ENGLISH_NAMES__ = None
@@ -148,6 +150,23 @@ def place_name(lat, lon):
         lat = float(lat)
     if(not isinstance(lon, float)):
         lon = float(lon)
+
+    localdb_response = closestgeoname.query_closest_city(os.path.join(os.getcwd(),'elodie', 'closestgeoname','geonames.sqlite'), lat, lon)
+
+    if localdb_response is not None:
+        return {"city": localdb_response[0],
+                "default": localdb_response[0],
+                "state": localdb_response[1],
+                "country": localdb_response[2]}
+
+    else:
+        # This should only occur if the script is searching for a point
+        # outside the maximum distance on earth. So this would mean
+        # there is likely an error with the GNSS coordinate. But we can
+        # continue to see if other services (MapQuest) has a way to handle it.
+        print("lat/long likely to be incorrect... continuing with other service")
+        print("lat: {}, lon: {}".format(lat, lon))
+        pass
 
     # Try to get cached location first
     db = Db()

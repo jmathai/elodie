@@ -105,8 +105,7 @@ class Media(Base):
             try:
                 this_coordinate = float(exif[key])
             except ValueError:
-                print("Error in converting string to float, setting coordinate to 0.0")
-                this_coordinate = 0.0
+                return None
 
             # TODO: verify that we need to check ref key
             #   when self.set_gps_ref != True

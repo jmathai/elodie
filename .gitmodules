@@ -1,0 +1,3 @@
+[submodule "elodie/closestgeoname"]
+	path = elodie/closestgeoname
+	url = git@github.com:evanjt/closestgeoname.git
