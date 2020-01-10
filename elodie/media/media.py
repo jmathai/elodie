@@ -13,11 +13,8 @@ from __future__ import print_function
 import os
 
 # load modules
-from elodie import constants
-from elodie.dependencies import get_exiftool
 from elodie.external.pyexiftool import ExifTool
 from elodie.media.base import Base
-
 
 class Media(Base):
 
@@ -52,10 +49,6 @@ class Media(Base):
         self.longitude_ref_key = 'EXIF:GPSLongitudeRef'
         self.original_name_key = 'XMP:OriginalFileName'
         self.set_gps_ref = True
-        self.exiftool_addedargs = [
-            u'-config',
-            u'"{}"'.format(constants.exiftool_config)
-        ]
 
     def get_album(self):
         """Get album from EXIF
@@ -128,14 +121,16 @@ class Media(Base):
         :returns: dict, or False if exiftool was not available.
         """
         source = self.source
-        exiftool = get_exiftool()
-        if(exiftool is None):
-            return False
 
-        with ExifTool(executable_=exiftool, addedargs=self.exiftool_addedargs) as et:
-            metadata = et.get_metadata(source)
-            if not metadata:
-                return False
+        #Cache metadata results and use if already exists for media
+        if(self.metadata is None):
+            metadata = ExifTool().get_metadata(source)
+            self.metadata = metadata
+        else:
+            metadata = self.metadata
+
+        if not metadata:
+            return False
 
         return metadata
 
@@ -324,13 +319,8 @@ class Media(Base):
             return None
 
         source = self.source
-        exiftool = get_exiftool()
-        if(exiftool is None):
-            return False
-
 
         status = ''
-        with ExifTool(executable_=exiftool, addedargs=self.exiftool_addedargs) as et:
-            status = et.set_tags(tags, source)
+        ExifTool().set_tags(tags,source)
 
         return status != ''
