@@ -31,7 +31,7 @@ CITY_COLNAMES = ['Geonameid',
                 'Timezone',
                 'ModificationDate']
 STATE_COLNAMES = ["AdCode", "State", "StateClean", "ID"]
-DBFILENAME = 'geonames.sqlite'
+DBFILENAME = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'geonames.sqlite')
 MIN_QUERY_DIST = 0.1 # Metres
 
 def import_dump(city_filename, admin_filename, country_filename, city_colnames, state_colnames, encoding='utf-8', delimiter='\t'):
@@ -118,6 +118,7 @@ def query_closest_city(db_path, latitude, longitude, epsg=4326, query_buffer_dis
     # Hence, this is faster for huge datasets as less points are considered in the spatial
     # query, but slower for small datasets as more iterations will need to occur if no point
     # exists
+
     row = None
     while row is None:
         # Prevent an infinite loop
@@ -234,10 +235,23 @@ def extract_zip(filename):
                 filename = fileName
     return filename
 
+def check_db_existance(dbfilename, columns_city, columns_state):
+    if os.path.exists(dbfilename):
+        return True
+    else:
+        print("GeoNames database", dbfilename, "does not exist. Choose an option")
+        try:
+            download_dataset(columns_city, columns_state, dbfilename)
+        except:
+            return False
+        return True
+
+
 def main():
-    if os.path.exists(os.path.join(os.getcwd(), DBFILENAME)):
+    dbpath = os.path.join(DBFILENAME)
+    if check_db_existance(dbpath, CITY_COLNAMES, STATE_COLNAMES):
         parser = argparse.ArgumentParser()
-        parser.add_argument("--database", type=str, help="Set the file for database (default: geonames.sqlite)", default="geonames.sqlite")
+        parser.add_argument("--database", type=str, help="Set the file for database (default: {})".format(DBFILENAME), default=DBFILENAME)
         parser.add_argument("longitude", type=float, help="X coordinate (Longitude)")
         parser.add_argument("latitude", type=float, help="Y coordinate (Latitude)")
         args = parser.parse_args()
@@ -245,9 +259,7 @@ def main():
         result = query_closest_city(args.database, args.latitude, args.longitude,
                                         query_buffer_distance=MIN_QUERY_DIST)
         print("{}, {}, {}".format(result[0], result[1], result[2]))
-    else:
-        print("GeoNames database", DBFILENAME, "does not exist. Choose an option")
-        download_dataset(CITY_COLNAMES, STATE_COLNAMES, DBFILENAME)
+
 
 if __name__ == "__main__":
     main()

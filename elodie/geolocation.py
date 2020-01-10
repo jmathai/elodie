@@ -152,7 +152,7 @@ def place_name(lat, lon):
     if(not isinstance(lon, float)):
         lon = float(lon)
 
-    localdb_response = closestgeoname.query_closest_city(path.join(getcwd(),'elodie', 'closestgeoname','geonames.sqlite'), lat, lon)
+    localdb_response = closestgeoname.query_closest_city(closestgeoname.DBFILENAME, lat, lon)
 
     if localdb_response is not None:
         return {"city": localdb_response[0],
