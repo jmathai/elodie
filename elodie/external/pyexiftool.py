@@ -151,8 +151,16 @@ def format_error (result):
         else:
             return 'exiftool finished with error: "%s"' % strip_nl(result) 
 
+class Singleton(type):
+    """Metaclass to use the singleton [anti-]pattern"""
+    instance = None
 
-class ExifTool(object):
+    def __call__(cls, *args, **kwargs):
+        if cls.instance is None:
+            cls.instance = super(Singleton, cls).__call__(*args, **kwargs)
+        return cls.instance
+
+class ExifTool(object, metaclass=Singleton):
     """Run the `exiftool` command-line tool and communicate to it.
 
     You can pass two arguments to the constructor:
