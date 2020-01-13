@@ -18,9 +18,21 @@ from elodie.media.audio import Audio
 from elodie.media.media import Media
 from elodie.media.photo import Photo
 from elodie.media.video import Video
+from elodie.external.pyexiftool import ExifTool
+from elodie.dependencies import get_exiftool
+from elodie import constants
 
 os.environ['TZ'] = 'GMT'
 
+def setup_module():
+    exiftool_addedargs = [
+            u'-config',
+            u'"{}"'.format(constants.exiftool_config)
+        ]
+    ExifTool(executable_=get_exiftool(), addedargs=exiftool_addedargs).start()
+
+def teardown_module():
+    ExifTool().terminate
 
 def test_get_file_path():
     media = Media(helper.get_file('plain.jpg'))
@@ -86,7 +98,7 @@ def test_get_original_name_invalid_file():
     original_name = media.get_original_name()
 
     assert original_name is None, original_name
-    
+
 def test_set_original_name_when_exists():
     temporary_folder, folder = helper.create_working_folder()
 
