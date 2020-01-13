@@ -68,6 +68,7 @@ def test_googlephotos_after_supported():
 
     sample_photo = Photo(helper.get_file('plain.jpg'))
     sample_metadata = sample_photo.get_metadata()
+    sample_metadata['original_name'] = 'foobar'
     final_file_path = helper.get_file('plain.jpg')
     gp = GooglePhotos()
     gp.after('', '', final_file_path, sample_metadata)
@@ -175,6 +176,7 @@ def test_googlephotos_batch():
 
     sample_photo = Photo(helper.get_file('plain.jpg'))
     sample_metadata = sample_photo.get_metadata()
+    sample_metadata['original_name'] = 'foobar'
     final_file_path = helper.get_file('plain.jpg')
     gp = GooglePhotos()
     gp.after('', '', final_file_path, sample_metadata)
