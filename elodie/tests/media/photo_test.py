@@ -16,7 +16,6 @@ sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirna
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
 
 import helper
-from elodie.config import load_config
 from elodie.media.media import Media
 from elodie.media.photo import Photo
 
@@ -61,6 +60,7 @@ def test_is_not_valid():
 
 @mock.patch('elodie.config.config_file', '%s/config.ini-date-taken-adjusted-no-config' % gettempdir())
 def test_get_date_taken_adjusted_no_config():
+    from elodie.config import load_config
     with open('%s/config.ini-date-taken-adjusted-no-config' % gettempdir(), 'w') as f:
         f.write("""
         """)
@@ -77,6 +77,7 @@ def test_get_date_taken_adjusted_no_config():
 
 @mock.patch('elodie.config.config_file', '%s/config.ini-date-taken-adjusted-do-not-use-location' % gettempdir())
 def test_get_date_taken_adjusted_do_not_use_location():
+    from elodie.config import load_config
     with open('%s/config.ini-date-taken-adjusted-do-not-use-location' % gettempdir(), 'w') as f:
         f.write("""
 [Timezone]
@@ -97,6 +98,7 @@ use_location=False
 
 @mock.patch('elodie.config.config_file', '%s/config.ini-date-taken-adjusted-without-exif-location' % gettempdir())
 def test_get_date_taken_adjusted_without_exif_location():
+    from elodie.config import load_config
     with open('%s/config.ini-date-taken-adjusted-without-exif-location' % gettempdir(), 'w') as f:
         f.write("""
 [Timezone]
@@ -117,6 +119,7 @@ use_location=True
 
 @mock.patch('elodie.config.config_file', '%s/config.ini-date-taken-adjusted-for-timestamp-use-location' % gettempdir())
 def test_get_date_taken_adjusted_for_timestamp_use_location():
+    from elodie.config import load_config
     with open('%s/config.ini-date-taken-adjusted-for-timestamp-use-location' % gettempdir(), 'w') as f:
         f.write("""
 [Timezone]

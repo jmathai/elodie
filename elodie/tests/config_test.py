@@ -10,12 +10,12 @@ from mock import patch
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))))
 
 from elodie import constants
-from elodie.config import load_config
 
 BASE_PATH = os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
 @patch('elodie.config.config_file', '%s/config.ini-sample' % BASE_PATH)
 def test_load_config_singleton_success():
+    from elodie.config import load_config
     config = load_config()
     assert config['MapQuest']['key'] == 'your-api-key-goes-here', config.get('MapQuest', 'key')
     config.set('MapQuest', 'key', 'new-value')
@@ -27,5 +27,6 @@ def test_load_config_singleton_success():
 
 @patch('elodie.config.config_file', '%s/config.ini-does-not-exist' % BASE_PATH)
 def test_load_config_singleton_no_file():
+    from elodie.config import load_config
     config = load_config()
     assert config == {}, config
