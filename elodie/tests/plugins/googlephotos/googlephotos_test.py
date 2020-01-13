@@ -13,6 +13,9 @@ from elodie.config import load_config
 from elodie.plugins.googlephotos.googlephotos import GooglePhotos
 from elodie.media.audio import Audio
 from elodie.media.photo import Photo
+from elodie.external.pyexiftool import ExifTool
+from elodie.dependencies import get_exiftool
+from elodie import constants
 
 # Globals to simplify mocking configs
 auth_file = helper.get_file('plugins/googlephotos/auth_file.json')
@@ -33,6 +36,16 @@ config_string_fmt = config_string.format(
 sample_photo = Photo(helper.get_file('plain.jpg'))
 sample_metadata = sample_photo.get_metadata()
 sample_metadata['original_name'] = 'foobar'
+
+def setup_module():
+    exiftool_addedargs = [
+            u'-config',
+            u'"{}"'.format(constants.exiftool_config)
+        ]
+    ExifTool(executable_=get_exiftool(), addedargs=exiftool_addedargs).start()
+
+def teardown_module():
+    ExifTool().terminate
 
 @mock.patch('elodie.config.config_file', '%s/config.ini-googlephotos-set-session' % gettempdir())
 def test_googlephotos_set_session():
