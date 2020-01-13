@@ -65,6 +65,8 @@ import warnings
 import logging
 import codecs
 
+from future.utils import with_metaclass
+
 try:        # Py3k compatibility
     basestring
 except NameError:
@@ -160,7 +162,7 @@ class Singleton(type):
             cls.instance = super(Singleton, cls).__call__(*args, **kwargs)
         return cls.instance
 
-class ExifTool(object, metaclass=Singleton):
+class ExifTool(object, with_metaclass(Singleton)):
     """Run the `exiftool` command-line tool and communicate to it.
 
     You can pass two arguments to the constructor:
