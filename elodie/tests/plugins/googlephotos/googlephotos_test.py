@@ -33,10 +33,6 @@ config_string_fmt = config_string.format(
     secrets_file
 )
 
-sample_photo = Photo(helper.get_file('plain.jpg'))
-sample_metadata = sample_photo.get_metadata()
-sample_metadata['original_name'] = 'foobar'
-
 def setup_module():
     exiftool_addedargs = [
             u'-config',
@@ -70,6 +66,8 @@ def test_googlephotos_after_supported():
     if hasattr(load_config, 'config'):
         del load_config.config
 
+    sample_photo = Photo(helper.get_file('plain.jpg'))
+    sample_metadata = sample_photo.get_metadata()
     final_file_path = helper.get_file('plain.jpg')
     gp = GooglePhotos()
     gp.after('', '', final_file_path, sample_metadata)
@@ -175,6 +173,8 @@ def test_googlephotos_batch():
     if hasattr(load_config, 'config'):
         del load_config.config
 
+    sample_photo = Photo(helper.get_file('plain.jpg'))
+    sample_metadata = sample_photo.get_metadata()
     final_file_path = helper.get_file('plain.jpg')
     gp = GooglePhotos()
     gp.after('', '', final_file_path, sample_metadata)
