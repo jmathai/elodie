@@ -21,6 +21,8 @@ from elodie.media.video import Video
 
 os.environ['TZ'] = 'GMT'
 
+setup_module = helper.setup_module
+teardown_module = helper.teardown_module
 
 def test_get_file_path():
     media = Media(helper.get_file('plain.jpg'))
@@ -86,7 +88,7 @@ def test_get_original_name_invalid_file():
     original_name = media.get_original_name()
 
     assert original_name is None, original_name
-    
+
 def test_set_original_name_when_exists():
     temporary_folder, folder = helper.create_working_folder()
 

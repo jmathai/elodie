@@ -13,11 +13,8 @@ from __future__ import print_function
 import os
 
 # load modules
-from elodie import constants
-from elodie.dependencies import get_exiftool
 from elodie.external.pyexiftool import ExifTool
 from elodie.media.base import Base
-
 
 class Media(Base):
 
@@ -52,10 +49,7 @@ class Media(Base):
         self.longitude_ref_key = 'EXIF:GPSLongitudeRef'
         self.original_name_key = 'XMP:OriginalFileName'
         self.set_gps_ref = True
-        self.exiftool_addedargs = [
-            u'-config',
-            u'"{}"'.format(constants.exiftool_config)
-        ]
+        self.exif_metadata = None
 
     def get_album(self):
         """Get album from EXIF
@@ -122,16 +116,15 @@ class Media(Base):
         :returns: dict, or False if exiftool was not available.
         """
         source = self.source
-        exiftool = get_exiftool()
-        if(exiftool is None):
+
+        #Cache exif metadata results and use if already exists for media
+        if(self.exif_metadata is None):
+            self.exif_metadata = ExifTool().get_metadata(source)
+
+        if not self.exif_metadata:
             return False
 
-        with ExifTool(executable_=exiftool, addedargs=self.exiftool_addedargs) as et:
-            metadata = et.get_metadata(source)
-            if not metadata:
-                return False
-
-        return metadata
+        return self.exif_metadata
 
     def get_camera_make(self):
         """Get the camera make stored in EXIF.
@@ -211,6 +204,7 @@ class Media(Base):
         """Resets any internal cache
         """
         self.exiftool_attributes = None
+        self.exif_metadata = None
         super(Media, self).reset_cache()
 
     def set_album(self, album):
@@ -318,13 +312,8 @@ class Media(Base):
             return None
 
         source = self.source
-        exiftool = get_exiftool()
-        if(exiftool is None):
-            return False
-
 
         status = ''
-        with ExifTool(executable_=exiftool, addedargs=self.exiftool_addedargs) as et:
-            status = et.set_tags(tags, source)
+        status = ExifTool().set_tags(tags,source)
 
         return status != ''

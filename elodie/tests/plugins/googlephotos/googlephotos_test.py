@@ -30,9 +30,8 @@ config_string_fmt = config_string.format(
     secrets_file
 )
 
-sample_photo = Photo(helper.get_file('plain.jpg'))
-sample_metadata = sample_photo.get_metadata()
-sample_metadata['original_name'] = 'foobar'
+setup_module = helper.setup_module
+teardown_module = helper.teardown_module
 
 @mock.patch('elodie.config.config_file', '%s/config.ini-googlephotos-set-session' % gettempdir())
 def test_googlephotos_set_session():
@@ -57,6 +56,9 @@ def test_googlephotos_after_supported():
     if hasattr(load_config, 'config'):
         del load_config.config
 
+    sample_photo = Photo(helper.get_file('plain.jpg'))
+    sample_metadata = sample_photo.get_metadata()
+    sample_metadata['original_name'] = 'foobar'
     final_file_path = helper.get_file('plain.jpg')
     gp = GooglePhotos()
     gp.after('', '', final_file_path, sample_metadata)
@@ -162,6 +164,9 @@ def test_googlephotos_batch():
     if hasattr(load_config, 'config'):
         del load_config.config
 
+    sample_photo = Photo(helper.get_file('plain.jpg'))
+    sample_metadata = sample_photo.get_metadata()
+    sample_metadata['original_name'] = 'foobar'
     final_file_path = helper.get_file('plain.jpg')
     gp = GooglePhotos()
     gp.after('', '', final_file_path, sample_metadata)

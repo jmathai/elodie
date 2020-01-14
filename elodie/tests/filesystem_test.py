@@ -20,9 +20,21 @@ from elodie.media.media import Media
 from elodie.media.photo import Photo
 from elodie.media.video import Video
 from nose.plugins.skip import SkipTest
+from elodie.external.pyexiftool import ExifTool
+from elodie.dependencies import get_exiftool
+from elodie import constants
 
 os.environ['TZ'] = 'GMT'
 
+def setup_module():
+    exiftool_addedargs = [
+            u'-config',
+            u'"{}"'.format(constants.exiftool_config)
+        ]
+    ExifTool(executable_=get_exiftool(), addedargs=exiftool_addedargs).start()
+
+def teardown_module():
+    ExifTool().terminate
 
 def test_create_directory_success():
     filesystem = FileSystem()
@@ -575,7 +587,7 @@ full_path=%year/%month/%location
     path = filesystem.get_folder_path(media.get_metadata())
     if hasattr(load_config, 'config'):
         del load_config.config
-
+        
     assert path == os.path.join('2015','12','Sunnyvale, California'), path
 
 @mock.patch('elodie.config.config_file', '%s/config.ini-location-date' % gettempdir())
