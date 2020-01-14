@@ -30,10 +30,11 @@ from elodie.media.photo import Photo
 from elodie.media.video import Video
 from elodie.plugins.plugins import Plugins
 from elodie.result import Result
-
+from elodie.external.pyexiftool import ExifTool
+from elodie.dependencies import get_exiftool
+from elodie import constants
 
 FILESYSTEM = FileSystem()
-
 
 def import_file(_file, destination, album_from_folder, trash, allow_duplicates):
     
@@ -368,4 +369,10 @@ main.add_command(_batch)
 
 
 if __name__ == '__main__':
-    main()
+    #Initialize ExifTool Subprocess
+    exiftool_addedargs = [
+       u'-config',
+        u'"{}"'.format(constants.exiftool_config)
+    ]
+    with ExifTool(executable_=get_exiftool(), addedargs=exiftool_addedargs) as et:
+        main()

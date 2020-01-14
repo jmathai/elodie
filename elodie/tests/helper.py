@@ -15,6 +15,8 @@ from datetime import datetime
 from datetime import timedelta
 
 from elodie.compatability import _rename
+from elodie.external.pyexiftool import ExifTool
+from elodie.dependencies import get_exiftool
 from elodie import constants
 
 def checksum(file_path, blocksize=65536):
@@ -159,3 +161,14 @@ def restore_dbs():
     # This is no longer needed. See gh-322
     # https://github.com/jmathai/elodie/issues/322
     pass
+
+
+def setup_module():
+    exiftool_addedargs = [
+            u'-config',
+            u'"{}"'.format(constants.exiftool_config)
+        ]
+    ExifTool(executable_=get_exiftool(), addedargs=exiftool_addedargs).start()
+
+def teardown_module():
+    ExifTool().terminate

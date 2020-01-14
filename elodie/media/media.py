@@ -49,6 +49,10 @@ class Media(Base):
         self.longitude_ref_key = 'EXIF:GPSLongitudeRef'
         self.original_name_key = 'XMP:OriginalFileName'
         self.set_gps_ref = True
+<<<<<<< HEAD
+=======
+        self.exif_metadata = None
+>>>>>>> master
 
     def get_album(self):
         """Get album from EXIF
@@ -116,17 +120,14 @@ class Media(Base):
         """
         source = self.source
 
-        #Cache metadata results and use if already exists for media
-        if(self.metadata is None):
-            metadata = ExifTool().get_metadata(source)
-            self.metadata = metadata
-        else:
-            metadata = self.metadata
+        #Cache exif metadata results and use if already exists for media
+        if(self.exif_metadata is None):
+            self.exif_metadata = ExifTool().get_metadata(source)
 
-        if not metadata:
+        if not self.exif_metadata:
             return False
 
-        return metadata
+        return self.exif_metadata
 
     def get_camera_make(self):
         """Get the camera make stored in EXIF.
@@ -206,6 +207,7 @@ class Media(Base):
         """Resets any internal cache
         """
         self.exiftool_attributes = None
+        self.exif_metadata = None
         super(Media, self).reset_cache()
 
     def set_album(self, album):
@@ -315,6 +317,10 @@ class Media(Base):
         source = self.source
 
         status = ''
+<<<<<<< HEAD
         ExifTool().set_tags(tags,source)
+=======
+        status = ExifTool().set_tags(tags,source)
+>>>>>>> master
 
         return status != ''

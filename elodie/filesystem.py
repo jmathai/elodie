@@ -18,9 +18,12 @@ from elodie.config import load_config
 from elodie.localstorage import Db
 from elodie.media.base import Base, get_all_subclasses
 from elodie.plugins.plugins import Plugins
+<<<<<<< HEAD
 from elodie.external.pyexiftool import ExifTool
 from elodie.dependencies import get_exiftool
 from elodie import constants
+=======
+>>>>>>> master
 
 class FileSystem(object):
     """A class for interacting with the file system."""
@@ -50,6 +53,7 @@ class FileSystem(object):
         # Instantiate a plugins object
         self.plugins = Plugins()
 
+<<<<<<< HEAD
         #Initialize ExifTool Subprocess
         exiftool_addedargs = [
             u'-config',
@@ -58,6 +62,8 @@ class FileSystem(object):
 
         ExifTool(executable_=get_exiftool(), addedargs=exiftool_addedargs).start()
 
+=======
+>>>>>>> master
     def create_directory(self, directory_path):
         """Create a directory if it does not already exist.
 
@@ -655,6 +661,3 @@ class FileSystem(object):
             regex_list = compiled_list
 
         return any(regex.search(path) for regex in regex_list)
-
-    def __del__(self):
-        ExifTool().terminate

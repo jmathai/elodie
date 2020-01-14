@@ -20,6 +20,9 @@ from elodie.media.photo import Photo
 
 os.environ['TZ'] = 'GMT'
 
+setup_module = helper.setup_module
+teardown_module = helper.teardown_module
+
 def test_photo_extensions():
     photo = Photo()
     extensions = photo.extensions
