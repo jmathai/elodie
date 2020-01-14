@@ -49,10 +49,7 @@ class Media(Base):
         self.longitude_ref_key = 'EXIF:GPSLongitudeRef'
         self.original_name_key = 'XMP:OriginalFileName'
         self.set_gps_ref = True
-<<<<<<< HEAD
-=======
         self.exif_metadata = None
->>>>>>> master
 
     def get_album(self):
         """Get album from EXIF
@@ -317,10 +314,6 @@ class Media(Base):
         source = self.source
 
         status = ''
-<<<<<<< HEAD
-        ExifTool().set_tags(tags,source)
-=======
         status = ExifTool().set_tags(tags,source)
->>>>>>> master
 
         return status != ''
