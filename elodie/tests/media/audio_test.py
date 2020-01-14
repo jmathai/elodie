@@ -16,8 +16,21 @@ import helper
 from elodie.media.media import Media
 from elodie.media.video import Video
 from elodie.media.audio import Audio
+from elodie.external.pyexiftool import ExifTool
+from elodie.dependencies import get_exiftool
+from elodie import constants
 
 os.environ['TZ'] = 'GMT'
+
+def setup_module():
+    exiftool_addedargs = [
+            u'-config',
+            u'"{}"'.format(constants.exiftool_config)
+        ]
+    ExifTool(executable_=get_exiftool(), addedargs=exiftool_addedargs).start()
+
+def teardown_module():
+    ExifTool().terminate
 
 def test_audio_extensions():
     audio = Audio()
