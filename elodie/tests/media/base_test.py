@@ -20,21 +20,11 @@ from elodie.media.audio import Audio
 from elodie.media.text import Text
 from elodie.media.photo import Photo
 from elodie.media.video import Video
-from elodie.external.pyexiftool import ExifTool
-from elodie.dependencies import get_exiftool
-from elodie import constants
 
 os.environ['TZ'] = 'GMT'
 
-def setup_module():
-    exiftool_addedargs = [
-            u'-config',
-            u'"{}"'.format(constants.exiftool_config)
-        ]
-    ExifTool(executable_=get_exiftool(), addedargs=exiftool_addedargs).start()
-
-def teardown_module():
-    ExifTool().terminate
+setup_module = helper.setup_module
+teardown_module = helper.teardown_module
 
 def test_get_all_subclasses():
     subclasses = get_all_subclasses(Base)

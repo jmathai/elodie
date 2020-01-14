@@ -119,15 +119,12 @@ class Media(Base):
 
         #Cache exif metadata results and use if already exists for media
         if(self.exif_metadata is None):
-            exif_metadata = ExifTool().get_metadata(source)
-            self.exif_metadata = exif_metadata
-        else:
-            exif_metadata = self.exif_metadata
+            self.exif_metadata = ExifTool().get_metadata(source)
 
-        if not exif_metadata:
+        if not self.exif_metadata:
             return False
 
-        return exif_metadata
+        return self.exif_metadata
 
     def get_camera_make(self):
         """Get the camera make stored in EXIF.
