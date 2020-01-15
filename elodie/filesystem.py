@@ -545,6 +545,8 @@ class FileSystem(object):
         file_name = self.get_file_name(metadata)
         dest_path = os.path.join(dest_directory, file_name)        
 
+        media.set_original_name()
+
         # If source and destination are identical then
         #  we should not write the file. gh-210
         if(_file == dest_path):
@@ -587,10 +589,7 @@ class FileSystem(object):
             #  before we made any changes.
             # Then set the utime on the destination file based on metadata.
             os.utime(_file, (stat_info_original.st_atime, stat_info_original.st_mtime))
-            self.set_utime_from_metadata(media.get_metadata(), dest_path)
-
-        #Move media settter to ensure we don't reset metadata cached 
-        media.set_original_name()
+            self.set_utime_from_metadata(metadata, dest_path)
 
         db = Db()
         db.add_hash(checksum, dest_path)
