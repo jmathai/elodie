@@ -88,21 +88,17 @@ class Media(Base):
         for key in self.latitude_keys + self.longitude_keys:
             if key not in exif:
                 continue
-
-            # Assign coordinate to variable
-            this_coordinate = exif[key]
-
-            # If exiftool GPS output is empty, the data returned will be a str
-            # with 0 length.
-            # https://github.com/jmathai/elodie/issues/354
-            if isinstance(this_coordinate, str) and len(this_coordinate) == 0:
+            elif isinstance(exif[key], str) and len(exif[key]) == 0:
+                # If exiftool GPS output is empty, the data returned will be a str
+                # with 0 length.
+                # https://github.com/jmathai/elodie/issues/354
                 continue
 
             # Cast coordinate to a float due to a bug in exiftool's
             #   -json output format.
             # https://github.com/jmathai/elodie/issues/171
             # http://u88.n24.queensu.ca/exiftool/forum/index.php/topic,7952.0.html  # noqa
-            this_coordinate = float(this_coordinate)
+            this_coordinate = float(exif[key])
 
             # TODO: verify that we need to check ref key
             #   when self.set_gps_ref != True
