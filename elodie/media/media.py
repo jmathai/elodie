@@ -95,15 +95,14 @@ class Media(Base):
             # If exiftool GPS output is empty, the data returned will be a str
             # with 0 length.
             # https://github.com/jmathai/elodie/issues/354
-            if len(this_coordinate) == 0:
+            if isinstance(this_coordinate, str) and len(this_coordinate) == 0:
                 continue
 
             # Cast coordinate to a float due to a bug in exiftool's
             #   -json output format.
             # https://github.com/jmathai/elodie/issues/171
             # http://u88.n24.queensu.ca/exiftool/forum/index.php/topic,7952.0.html  # noqa
-            if not isinstance(this_coordinate, float):
-                this_coordinate = float(this_coordinate)
+            this_coordinate = float(this_coordinate)
 
             # TODO: verify that we need to check ref key
             #   when self.set_gps_ref != True
