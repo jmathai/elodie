@@ -113,6 +113,14 @@ def test_get_coordinates_with_zero_coordinate():
     assert helper.isclose(latitude,51.55325), latitude
     assert helper.isclose(longitude,-0.00417777777778), longitude
 
+def test_get_coordinates_with_null_coordinate():
+    photo = Photo(helper.get_file('with-null-coordinates.jpg'))
+    latitude = photo.get_coordinate('latitude')
+    longitude = photo.get_coordinate('longitude')
+
+    assert latitude is None, latitude
+    assert longitude is None, longitude
+
 def test_get_date_taken():
     photo = Photo(helper.get_file('plain.jpg'))
     date_taken = photo.get_date_taken()
