@@ -11,6 +11,7 @@ are used to represent the actual files.
 from __future__ import print_function
 
 import os
+import six
 
 # load modules
 from elodie.external.pyexiftool import ExifTool
@@ -88,7 +89,7 @@ class Media(Base):
         for key in self.latitude_keys + self.longitude_keys:
             if key not in exif:
                 continue
-            elif isinstance(exif[key], str) and len(exif[key]) == 0:
+            if isinstance(exif[key], six.string_types) and len(exif[key]) == 0:
                 # If exiftool GPS output is empty, the data returned will be a str
                 # with 0 length.
                 # https://github.com/jmathai/elodie/issues/354
