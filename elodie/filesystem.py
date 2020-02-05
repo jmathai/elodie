@@ -10,6 +10,7 @@ import os
 import re
 import shutil
 import time
+import locale
 
 from elodie import compatability
 from elodie import geolocation
@@ -23,6 +24,11 @@ class FileSystem(object):
     """A class for interacting with the file system."""
 
     def __init__(self):
+        config = load_config()
+
+        if('Translation' in config and 'datetime' in config['Translation']):
+            locale.setlocale(locale.LC_TIME, config['Translation']['datetime'])
+
         # The default folder path is along the lines of 2017-06-17_01-04-14-dsc_1234-some-title.jpg
         self.default_file_name_definition = {
             'date': '%Y-%m-%d_%H-%M-%S',
