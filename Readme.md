@@ -237,6 +237,15 @@ full_path=%month/%year/%album|%location|%"Beats me"
 
 What this asks me to do is to name the last folder the same as the album I find in EXIF. If I don't find an album in EXIF then I should use the location. If there's no GPS in the EXIf then I should name the last folder `Beats me`.
 
+#### Custom Default Location
+
+If I wasn't able to find a location for your photo I will use the default location "Unknown Location". This can be changed via your `config.ini` file
+
+```
+[UnknownLocation]
+folder_name=Ukendt placering
+```
+
 #### How folder customization works
 
 You can construct your folder structure using a combination of the location, dates and camera make/model. Under the `Directory` section of your `config.ini` file you can define placeholder names and assign each a value. For example, `date=%Y-%m` would create a date placeholder with a value of YYYY-MM which would be filled in with the date from the EXIF on the photo.
