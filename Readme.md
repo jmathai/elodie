@@ -395,6 +395,15 @@ cp config.ini-sample ~/.elodie/config.ini
 
 If you're an english speaker then you will probably want to add `prefer_english_names=True` to the `[MapQuest]` section else you'll have cities named using the local language.
 
+If you want me to try and get location names in your language you can set that in your `config.ini`.
+
+```
+[MapQuest]
+key=YOUR_KEY
+prefer_english_names=False
+prefer_language=da
+```
+
 ## Questions, comments or concerns?
 
 The best ways to provide feedback is by opening a [GitHub issue](https://github.com/jmathai/elodie/issues) or emailing me at [jaisen@jmathai.com](mailto:jaisen@jmathai.com).
