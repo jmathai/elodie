@@ -21,7 +21,7 @@ from elodie.localstorage import Db
 __KEY__ = None
 __DEFAULT_LOCATION__ = 'Unknown Location'
 __PREFER_ENGLISH_NAMES__ = None
-
+__PREFER_LANGUAGE__ = None
 
 def coordinates_by_name(name):
     # Try to get cached location first
@@ -119,6 +119,23 @@ def get_key():
     __KEY__ = config['MapQuest']['key']
     return __KEY__
 
+def get_prefer_language():
+    global __PREFER_LANGUAGE__
+
+    config_file = '%s/config.ini' % constants.application_directory
+    if not path.exists(config_file):
+        return constants.accepted_language
+
+    config = load_config()
+    if('MapQuest' not in config):
+        return constants.accepted_language
+
+    if('prefer_language' not in config['MapQuest']):
+        return constants.accepted_language
+
+    __PREFER_LANGUAGE__ = config['MapQuest']['prefer_language']
+    return __PREFER_LANGUAGE__
+
 def get_prefer_english_names():
     global __PREFER_ENGLISH_NAMES__
     if __PREFER_ENGLISH_NAMES__ is not None:
@@ -189,6 +206,7 @@ def lookup(**kwargs):
     ):
         return None
 
+    prefer_language = get_prefer_language()
     key = get_key()
     prefer_english_names = get_prefer_english_names()
 
@@ -196,7 +214,7 @@ def lookup(**kwargs):
         return None
 
     try:
-        params = {'format': 'json', 'key': key}
+        params = {'format': 'json', 'accept-language': prefer_language, 'key': key}
         params.update(kwargs)
         path = '/geocoding/v1/address'
         if('lat' in kwargs and 'lon' in kwargs):
