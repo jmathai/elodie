@@ -138,8 +138,26 @@ def get_prefer_english_names():
     __PREFER_ENGLISH_NAMES__ = bool(config['MapQuest']['prefer_english_names'])
     return __PREFER_ENGLISH_NAMES__
 
+def get_default_location():
+    global __DEFAULT_LOCATION__
+
+    config_file = '%s/config.ini' % constants.application_directory
+    if not path.exists(config_file):
+        return __DEFAULT_LOCATION__
+
+    config = load_config()
+    if('UnknownLocation' not in config):
+        return __DEFAULT_LOCATION__
+
+    if('folder_name' not in config['UnknownLocation']):
+        return __DEFAULT_LOCATION__
+
+    __DEFAULT_LOCATION__ = config['UnknownLocation']['folder_name']
+    return __DEFAULT_LOCATION__
+
 def place_name(lat, lon):
-    lookup_place_name_default = {'default': __DEFAULT_LOCATION__}
+    default_location = get_default_location()
+    lookup_place_name_default = {'default': default_location}
     if(lat is None or lon is None):
         return lookup_place_name_default
 
