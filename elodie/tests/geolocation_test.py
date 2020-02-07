@@ -125,7 +125,7 @@ def test_lookup_with_prefer_english_names_false():
 @mock.patch('elodie.geolocation.__PREFER_LANGUAGE__', 'da-DK')
 def test_lookup_with_prefer_language_danish():
     res = geolocation.lookup(lat=55.6775055555556, lon=12.5686222222222)
-    assert res['address']['city'] == 'K\xf8benhavn', res
+    assert res['address']['city'] == 'København', res
 
 @mock.patch('elodie.constants.location_db', '%s/location.json-cached' % gettempdir())
 def test_place_name_deprecated_string_cached():
