@@ -211,7 +211,7 @@ def lookup(**kwargs):
     prefer_english_names = get_prefer_english_names()
     params = {'format': 'json', 'key': key}
 
-    if(is not None)
+    if(prefer_language is not None)
        params = {'format': 'json', 'accept-language': prefer_language, 'key': key}
 
     if(key is None):
