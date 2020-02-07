@@ -210,9 +210,6 @@ def lookup(**kwargs):
     key = get_key()
     prefer_english_names = get_prefer_english_names()
 
-    if(prefer_english_names):
-        prefer_language = 'en-EN'
-
     if(key is None):
         return None
 
@@ -228,6 +225,8 @@ def lookup(**kwargs):
                     urllib.parse.urlencode(params)
               )
         headers = {}
+        if(prefer_english_names):
+            headers = {'Accept-Language':'en-EN,en;q=0.8'}
         r = requests.get(url, headers=headers)
         return parse_result(r.json())
     except requests.exceptions.RequestException as e:
