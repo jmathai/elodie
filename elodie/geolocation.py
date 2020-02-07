@@ -124,14 +124,14 @@ def get_prefer_language():
 
     config_file = '%s/config.ini' % constants.application_directory
     if not path.exists(config_file):
-        return constants.accepted_language
+        return None
 
     config = load_config()
     if('MapQuest' not in config):
-        return constants.accepted_language
+        return None
 
     if('prefer_language' not in config['MapQuest']):
-        return constants.accepted_language
+        return None
 
     __PREFER_LANGUAGE__ = config['MapQuest']['prefer_language']
     return __PREFER_LANGUAGE__
