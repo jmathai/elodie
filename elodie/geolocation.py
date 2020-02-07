@@ -121,6 +121,8 @@ def get_key():
 
 def get_prefer_language():
     global __PREFER_LANGUAGE__
+    if __PREFER_LANGUAGE__ is not None:
+        return __PREFER_LANGUAGE__
 
     config_file = '%s/config.ini' % constants.application_directory
     if not path.exists(config_file):
