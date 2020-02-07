@@ -122,6 +122,11 @@ def test_lookup_with_prefer_english_names_false():
     res = geolocation.lookup(lat=55.66333, lon=37.61583)
     assert res['address']['city'] == u'\u041d\u0430\u0433\u043e\u0440\u043d\u044b\u0439 \u0440\u0430\u0439\u043e\u043d', res
 
+@mock.patch('elodie.geolocation.__PREFER_LANGUAGE__', 'da-DK')
+def test_lookup_with_prefer_language_danish():
+    res = geolocation.lookup(lat=55.6775055555556, lon=12.5686222222222)
+    assert res['address']['city'] == 'K\u00f8benhavn', res
+
 @mock.patch('elodie.constants.location_db', '%s/location.json-cached' % gettempdir())
 def test_place_name_deprecated_string_cached():
     # See gh-160 for backwards compatability needed when a string is stored instead of a dict
