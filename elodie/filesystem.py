@@ -543,7 +543,7 @@ class FileSystem(object):
         directory_name = self.get_folder_path(metadata)
         dest_directory = os.path.join(destination, directory_name)
         file_name = self.get_file_name(metadata)
-        dest_path = os.path.join(dest_directory, file_name)
+        dest_path = os.path.join(dest_directory, file_name)        
 
         media.set_original_name()
 
@@ -589,7 +589,7 @@ class FileSystem(object):
             #  before we made any changes.
             # Then set the utime on the destination file based on metadata.
             os.utime(_file, (stat_info_original.st_atime, stat_info_original.st_mtime))
-            self.set_utime_from_metadata(media.get_metadata(), dest_path)
+            self.set_utime_from_metadata(metadata, dest_path)
 
         db = Db()
         db.add_hash(checksum, dest_path)
