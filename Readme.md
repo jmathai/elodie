@@ -282,11 +282,11 @@ By default the resulting filename is all lowercased. To change this behavior to 
 ```
 [File]
 date=%Y-%m-%b-%H-%M-%S
-name=%date-%original_name-%title.jpg
+name=%date-%original_name-%title.%extension
 # -> 2012-05-mar-12-59-30-dsc_1234-my-title.jpg
 
 date=%Y-%m-%b-%H-%M-%S
-name=%date-%original_name-%album.jpg
+name=%date-%original_name-%album.%extension
 capitalization=upper
 # -> 2012-05-MAR-12-59-30-DSC_1234-MY-ALBUM.JPG
 ```
