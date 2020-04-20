@@ -126,13 +126,16 @@ def get_prefer_english_names():
 
     config_file = '%s/config.ini' % constants.application_directory
     if not path.exists(config_file):
+        __PREFER_ENGLISH_NAMES__ = False
         return False
 
     config = load_config()
     if('MapQuest' not in config):
+        __PREFER_ENGLISH_NAMES__ = False
         return False
 
     if('prefer_english_names' not in config['MapQuest']):
+        __PREFER_ENGLISH_NAMES__ = False
         return False
 
     __PREFER_ENGLISH_NAMES__ = bool(config['MapQuest']['prefer_english_names'])
