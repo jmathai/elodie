@@ -9,9 +9,10 @@ before_install:
   - "sudo apt-get update -qq"
   - "sudo apt-get install python-dev python-pip -y"
 install:
-  - "python -m pip install -r elodie/tests/requirements.txt"
-  - "python -m pip install -r elodie/plugins/googlephotos/requirements.txt"
-  - "python -m pip install coveralls"
+  - "pip install -U pip"
+  - "pip install -r elodie/tests/requirements.txt"
+  - "pip install -r elodie/plugins/googlephotos/requirements.txt"
+  - "pip install coveralls"
 before_script:
   - "mkdir ~/.elodie"
   - "sed 's/your-api-key-goes-here/x8wQLqGhW7qK3sFpjYtVTogVtoMK0S8s/g' config.ini-sample > ~/.elodie/config.ini"
