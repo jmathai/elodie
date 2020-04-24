@@ -34,7 +34,6 @@ class Video(Media):
         super(Video, self).__init__(source)
         self.exif_map['date_taken'] = [
             'QuickTime:CreationDate',
-            'QuickTime:CreateDate',
             'QuickTime:CreationDate-und-US',
             'QuickTime:MediaCreateDate',
             'H264:DateTimeOriginal'
