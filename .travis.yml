@@ -1,10 +1,10 @@
 language: python
-dist: trusty
+dist: xenial
 python:
   - "2.7"
-  - "3.4"
+  - "3.8"
 virtualenv:
-  system_site_packages: true
+  system_site_packages: false
 before_install:
   - "sudo apt-get update -qq"
   - "sudo apt-get install python-dev python-pip -y"
