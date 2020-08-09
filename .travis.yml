@@ -2,7 +2,7 @@ language: python
 dist: trusty
 python:
   - "2.7"
-  - "3.4"
+  - "3.8"
 virtualenv:
   system_site_packages: true
 before_install:
