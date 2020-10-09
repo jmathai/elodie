@@ -35,6 +35,7 @@ def test_photo_extensions():
     assert 'jpg' in extensions
     assert 'jpeg' in extensions
     assert 'nef' in extensions
+    assert 'png' in extensions
     assert 'rw2' in extensions
 
     valid_extensions = Photo.get_valid_extensions()
@@ -355,6 +356,7 @@ def test_various_types():
         'dng': (2009, 10, 20, 9, 10, 46, 1, 293, 0),
         'heic': (2019, 5, 26, 10, 33, 20, 6, 146, 0),
         'nef': (2008, 10, 24, 9, 12, 56, 4, 298, 0),
+        'png': (2015, 1, 18, 12, 1, 1, 6, 18, 0),
         'rw2': (2014, 11, 19, 23, 7, 44, 2, 323, 0)
     }
 
