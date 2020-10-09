@@ -10,3 +10,6 @@ build/**
 **/*.nef
 **/*.rw2
 env/**
+.venv/**
+.autoenv.zsh
+.autoenv_leave.zsh
