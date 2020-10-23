@@ -162,7 +162,9 @@ def place_name(lat, lon):
     geolocation_info = lookup(lat=lat, lon=lon)
     if(geolocation_info is not None and 'address' in geolocation_info):
         address = geolocation_info['address']
-        for loc in ['city', 'state', 'country']:
+        # gh-386 adds support for town
+        # taking precedence after city for backwards compatability
+        for loc in ['city', 'town', 'state', 'country']:
             if(loc in address):
                 lookup_place_name[loc] = address[loc]
                 # In many cases the desired key is not available so we
