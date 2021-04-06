@@ -8,15 +8,19 @@ class Result(object):
         self.success = 0
         self.error = 0
         self.error_items = []
+        self.skipped = 0
 
     def append(self, row):
         id, status = row
 
-        if status:
-            self.success += 1
+        if status == 'skipped':
+            self.skipped += 1
         else:
-            self.error += 1
-            self.error_items.append(id)
+            if status:
+                self.success += 1
+            else:
+                self.error += 1
+                self.error_items.append(id)
 
     def write(self):
         if self.error > 0:
@@ -33,6 +37,7 @@ class Result(object):
         result = [
                     ["Success", self.success],
                     ["Error", self.error],
+                    ["Skipped", self.skipped],
                  ]
 
         print("****** SUMMARY ******")
