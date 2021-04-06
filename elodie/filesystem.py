@@ -528,7 +528,6 @@ class FileSystem(object):
             return
 
         checksum = self.process_checksum(_file, allow_duplicate)
-        
         if(checksum is None):
             log.info('Original checksum returned None for %s. Skipping...' %
                      _file)
