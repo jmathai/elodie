@@ -528,10 +528,11 @@ class FileSystem(object):
             return
 
         checksum = self.process_checksum(_file, allow_duplicate)
+        
         if(checksum is None):
             log.info('Original checksum returned None for %s. Skipping...' %
                      _file)
-            return
+            return 'skipped'
 
         # Run `before()` for every loaded plugin and if any of them raise an exception
         #  then we skip importing the file and log a message.
