@@ -168,7 +168,7 @@ class FileSystem(object):
                         place_name,
                     )
                     break
-                elif part in ('album', 'extension', 'title'):
+                elif part in ('album', 'extension', 'title', 'camera_make', 'camera_model'):
                     if metadata[part]:
                         this_value = re.sub(self.whitespace_regex, '-', metadata[part].strip())
                         break
