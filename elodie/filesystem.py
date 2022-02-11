@@ -170,7 +170,7 @@ class FileSystem(object):
                     break
                 elif part in ('album', 'extension', 'title'):
                     if metadata[part]:
-                        this_value = re.sub(self.whitespace_regex, '-', metadata[part].strip())
+                        this_value = re.sub(self.whitespace_regex, '-', str(metadata[part]).strip())
                         break
                 elif part in ('original_name'):
                     # First we check if we have metadata['original_name'].
