@@ -218,6 +218,8 @@ class FileSystem(object):
                     name,
                 )
 
+        name = re.sub('[\?\*\0:|<>]', '_', name)
+
         config = load_config()
 
         if('File' in config and 'capitalization' in config['File'] and config['File']['capitalization'] == 'upper'):
