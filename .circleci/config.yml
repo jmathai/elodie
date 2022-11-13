@@ -3,11 +3,9 @@ orbs:
   python: circleci/python@2.0.3
 
 jobs:
-  build: # this can be any name you choose
+  build:
     executor: python/default
     steps:
-      - python/install-packages:
-          pkg-manager: pip
       - checkout
       - run:
           name: Install packages
