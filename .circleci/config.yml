@@ -33,10 +33,9 @@ jobs:
           command: |
             ./elodie/tests/run_tests.py -w elodie/tests --with-coverage --cover-package=elodie
             coveralls
-
 workflows:
   test_my_app:
     jobs:
-      - test
+      - test:
         requires:
           - build
