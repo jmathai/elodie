@@ -27,6 +27,7 @@ jobs:
           paths:
             - .
   test:
+    executor: python/default
     steps:
       - run:
           command: |
