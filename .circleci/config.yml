@@ -6,10 +6,9 @@ jobs:
   build: # this can be any name you choose
     executor: python/default
     steps:
-      - checkout
-  
       - python/install-packages:
           pkg-manager: pip
+      - checkout
       - run:
           name: Install packages
           command: |
