@@ -18,9 +18,9 @@ jobs:
             ls
             sed "s/your-api-key-goes-here/x8wQLqGhW7qK3sFpjYtVTogVtoMK0S8s/g" config.ini-sample > .elodie/config.ini
             sed -i.bak 's/debug = False/debug = True/g' elodie/constants.py
-            wget http://www.sno.phy.queensu.ca/~phil/exiftool/Image-ExifTool-11.50.tar.gz
-            gzip -dc Image-ExifTool-11.50.tar.gz  | tar -xf -
-            cd Image-ExifTool-11.50
+            wget https://exiftool.org/Image-ExifTool-12.50.tar.gz
+            gzip -dc Image-ExifTool-12.50.tar.gz  | tar -xf -
+            cd Image-ExifTool-12.50
             perl Makefile.PL
             sudo make install
             cd ${ELODIE_DIR}
