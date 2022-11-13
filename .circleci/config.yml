@@ -3,7 +3,7 @@ orbs:
   python: circleci/python@2.0.3
 
 jobs:
-  build:
+  build_and_test:
     executor: python/default
     steps:
       - checkout
@@ -22,20 +22,14 @@ jobs:
             perl Makefile.PL
             sudo make install
             cd ${ELODIE_DIR}
+            ./elodie/tests/run_tests.py -w elodie/tests --with-coverage --cover-package=elodie
+            coveralls
       - persist_to_workspace:
           root: ~/project
           paths:
             - .
-  test:
-    executor: python/default
-    steps:
-      - run:
-          command: |
-            ./elodie/tests/run_tests.py -w elodie/tests --with-coverage --cover-package=elodie
-            coveralls
+
 workflows:
   test_my_app:
     jobs:
-      - test:
-        requires:
-          - build
+      - build_and_test
