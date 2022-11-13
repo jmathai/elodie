@@ -24,6 +24,8 @@ jobs:
             cd Image-ExifTool-12.50
             perl Makefile.PL
             sudo make install
+            echo "which exiftool command"
+            which exiftool
             cd ${ELODIE_DIR}
             ./elodie/tests/run_tests.py -w elodie/tests --with-coverage --cover-package=elodie
             coveralls
