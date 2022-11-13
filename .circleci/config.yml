@@ -8,14 +8,11 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Install packages
+          name: Install dependencies
           command: |
             pip install -r elodie/tests/requirements.txt
             pip install -r elodie/plugins/googlephotos/requirements.txt
             pip install coveralls
-      -run:
-          name: Before tests
-          command: |
             sed 's/your-api-key-goes-here/x8wQLqGhW7qK3sFpjYtVTogVtoMK0S8s/g' config.ini-sample > ~/.elodie/config.ini
             sed -i.bak 's/debug = False/debug = True/g' elodie/constants.py"
             export ELODIE_DIR=${PWD}
