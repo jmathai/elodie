@@ -37,5 +37,6 @@ jobs:
 workflows:
   test_my_app:
     jobs:
-      - build
       - test
+        requires:
+          - build
