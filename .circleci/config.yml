@@ -29,11 +29,9 @@ jobs:
   test:
     steps:
       - run:
-          name: Run tests
-          command: ./elodie/tests/run_tests.py -w elodie/tests --with-coverage --cover-package=elodie
-      - run:
-          name: Send results to coveralls
-          command: coveralls
+          command: |
+            ./elodie/tests/run_tests.py -w elodie/tests --with-coverage --cover-package=elodie
+            coveralls
 
 workflows:
   test_my_app:
