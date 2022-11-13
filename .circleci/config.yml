@@ -3,10 +3,11 @@ orbs:
   python: circleci/python@2.0.3
 
 jobs:
-  build_and_test: # this can be any name you choose
+  build: # this can be any name you choose
     executor: python/default
     steps:
-      - checkout:
+      - checkout
+  
       - python/install-packages:
           pkg-manager: pip
       - run:
@@ -27,18 +28,21 @@ jobs:
             perl Makefile.PL
             sudo make install
             cd ${ELODIE_DIR}
+      - persist_to_workspace:
+          root: ~/project
+          paths:
+            - .
+  test:
+    steps:
       - run:
           name: Run tests
           command: ./elodie/tests/run_tests.py -w elodie/tests --with-coverage --cover-package=elodie
       - run:
           name: Send results to coveralls
           command: coveralls
-      - persist_to_workspace:
-          root: ~/project
-          paths:
-            - .
 
 workflows:
   test_my_app:
     jobs:
-      - build_and_test
+      - build
+      - test
