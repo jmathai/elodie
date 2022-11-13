@@ -1,0 +1,23 @@
+version: 2.1
+orbs:
+  python: circleci/python@2.0.3
+
+jobs:
+  build_and_test: # this can be any name you choose
+    executor: python/default
+    steps:
+      - checkout
+      - python/install-packages:
+          pkg-manager: pip
+      - run:
+          name: Run tests
+          command: python -m pytest
+      - persist_to_workspace:
+          root: ~/project
+          paths:
+            - .
+
+workflows:
+  test_my_app:
+    jobs:
+      - build_and_test
