@@ -10,8 +10,27 @@ jobs:
       - python/install-packages:
           pkg-manager: pip
       - run:
+          name: Install packages
+          command: pip install -r elodie/tests/requirements.txt
+          command: pip install -r elodie/plugins/googlephotos/requirements.txt
+          command: pip install coveralls
+      -run:
+          name: Before tests
+          command: sed 's/your-api-key-goes-here/x8wQLqGhW7qK3sFpjYtVTogVtoMK0S8s/g' config.ini-sample > ~/.elodie/config.ini
+          command: sed -i.bak 's/debug = False/debug = True/g' elodie/constants.py"
+          command: export ELODIE_DIR=${PWD}
+          command: wget http://www.sno.phy.queensu.ca/~phil/exiftool/Image-ExifTool-11.50.tar.gz
+          command: gzip -dc Image-ExifTool-11.50.tar.gz  | tar -xf -
+          command: cd Image-ExifTool-11.50
+          command: perl Makefile.PL
+          command: sudo make install
+          command: cd ${ELODIE_DIR}
+      - run:
           name: Run tests
-          command: python -m pytest
+          command: ./elodie/tests/run_tests.py -w elodie/tests --with-coverage --cover-package=elodie
+      - run:
+          name: Send results to coveralls
+          command: coveralls
       - persist_to_workspace:
           root: ~/project
           paths:
