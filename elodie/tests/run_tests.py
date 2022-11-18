@@ -18,6 +18,8 @@ if __name__ == "__main__":
         temporary_application_directory = tempfile.mkdtemp('-elodie-tests')
         os.environ['ELODIE_APPLICATION_DIRECTORY'] = temporary_application_directory
 
+    print(temporary_application_directory)
+
     # copy config.ini-sample over to the test application directory
     temporary_config_file_sample = '{}/config.ini-sample'.format(os.path.dirname(os.path.dirname(test_directory)))
     temporary_config_file = '{}/config.ini'.format(temporary_application_directory)

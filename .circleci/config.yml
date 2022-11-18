@@ -16,8 +16,6 @@ jobs:
             pip install -r elodie/tests/requirements.txt
             pip install -r elodie/plugins/googlephotos/requirements.txt
             pip install coveralls
-            sed 's/your-api-key-goes-here/x8wQLqGhW7qK3sFpjYtVTogVtoMK0S8s/g' config.ini-sample > ${ELODIE_APPLICATION_DIRECTORY}/config.ini
-            cat ${ELODIE_APPLICATION_DIRECTORY}/config.ini
             sed -i.bak 's/debug = False/debug = True/g' elodie/constants.py
             wget https://exiftool.org/Image-ExifTool-12.50.tar.gz
             gzip -dc Image-ExifTool-12.50.tar.gz  | tar -xf -
