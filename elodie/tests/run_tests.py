@@ -13,6 +13,8 @@ if __name__ == "__main__":
     # check if an environment variable is set for the application directory
     # if not then create a temporary directory to use for the application directory while running tests
     if('ELODIE_APPLICATION_DIRECTORY' not in os.environ):
+        temporary_application_directory = os.environ['ELODIE_APPLICATION_DIRECTORY']
+    else:
         temporary_application_directory = tempfile.mkdtemp('-elodie-tests')
         os.environ['ELODIE_APPLICATION_DIRECTORY'] = temporary_application_directory
 
