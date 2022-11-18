@@ -1,0 +1,38 @@
+version: 2.1
+orbs:
+  python: circleci/python@2.0.3
+
+jobs:
+  build_and_test:
+    executor: python/default
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: |
+            export ELODIE_DIR=${PWD}
+            pip install -r elodie/tests/requirements.txt
+            pip install -r elodie/plugins/googlephotos/requirements.txt
+            pip install coveralls
+            sed -i.bak 's/debug = False/debug = True/g' elodie/constants.py
+            wget https://exiftool.org/Image-ExifTool-12.50.tar.gz
+            gzip -dc Image-ExifTool-12.50.tar.gz  | tar -xf -
+            cd Image-ExifTool-12.50
+            perl Makefile.PL
+            sudo make install
+            echo "which exiftool command"
+            which exiftool
+            cd ${ELODIE_DIR}
+      - run:
+          name: Run tests
+          command: ./elodie/tests/run_tests.py -w elodie/tests --with-coverage --cover-package=elodie
+      - run:
+          name: Generate coverage
+          command: |
+            export COVERALLS_REPO_TOKEN=ID8gtfMwF9LYAukhtZHft0f9uo5Dg6TnU
+            coveralls
+
+workflows:
+  ci:
+    jobs:
+      - build_and_test

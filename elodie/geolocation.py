@@ -108,10 +108,6 @@ def get_key():
         __KEY__ = constants.mapquest_key
         return __KEY__
 
-    config_file = '%s/config.ini' % constants.application_directory
-    if not path.exists(config_file):
-        return None
-
     config = load_config()
     if('MapQuest' not in config):
         return None

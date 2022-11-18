@@ -763,8 +763,8 @@ def test_cli_batch_plugin_googlephotos():
     if hasattr(load_config, 'config'):
         del load_config.config
 
-    assert "elodie/elodie/tests/files/plain.jpg uploaded successfully.\"}\n" in result.output, result.output
-    assert "elodie/elodie/tests/files/no-exif.jpg uploaded successfully.\"}\n" in result.output, result.output
+    assert "elodie/tests/files/plain.jpg uploaded successfully.\"}\n" in result.output, result.output
+    assert "elodie/tests/files/no-exif.jpg uploaded successfully.\"}\n" in result.output, result.output
 
 def test_cli_debug_import():
     runner = CliRunner()
