@@ -5,5 +5,5 @@ future==0.16.0
 configparser==3.5.0
 tabulate==0.7.7
 Pillow==6.2.2; python_version == '2.7'
-Pillow==8.0; python_version >= '3.6'
+Pillow==9.3; python_version >= '3.6'
 six==1.9
