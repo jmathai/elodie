@@ -14,9 +14,6 @@ if __name__ == "__main__":
     temporary_application_directory = tempfile.mkdtemp('-elodie-tests')
     os.environ['ELODIE_APPLICATION_DIRECTORY'] = temporary_application_directory
 
-    print(temporary_application_directory)
-    print(os.environ)
-
     # copy config.ini-sample over to the test application directory
     temporary_config_file_sample = '{}/config.ini-sample'.format(os.path.dirname(os.path.dirname(test_directory)))
     temporary_config_file = '{}/config.ini'.format(temporary_application_directory)
@@ -31,7 +28,6 @@ if __name__ == "__main__":
 
     # set the mapquest key in the temporary config file and write it to the temporary application directory
     config_contents = config_contents.replace('your-api-key-goes-here', 'x8wQLqGhW7qK3sFpjYtVTogVtoMK0S8s')
-    print(config_contents)
     with open(temporary_config_file, 'w+') as f:
         f.write(config_contents)
 
