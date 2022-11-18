@@ -392,6 +392,7 @@ def test_get_folder_path_with_location():
     filesystem = FileSystem()
     media = Photo(helper.get_file('with-location.jpg'))
     path = filesystem.get_folder_path(media.get_metadata())
+    assert constants.mapquest_key = 'foo', constants.mapquest_key
 
     assert path == os.path.join('2015-12-Dec','Sunnyvale'), path
 
