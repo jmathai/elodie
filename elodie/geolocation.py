@@ -140,10 +140,9 @@ def get_prefer_english_names():
 
 def place_name(lat, lon):
     lookup_place_name_default = {'default': __DEFAULT_LOCATION__}
-    print('lookup default')
     if(lat is None or lon is None):
         return lookup_place_name_default
-    print('lookup default is {}'.format(lookup_place_name_default))
+
     # Convert lat/lon to floats
     if(not isinstance(lat, float)):
         lat = float(lat)
@@ -216,6 +215,7 @@ def lookup(**kwargs):
                     path,
                     urllib.parse.urlencode(params)
               )
+        print(url)
         r = requests.get(url, headers=headers)
         return parse_result(r.json())
     except requests.exceptions.RequestException as e:
