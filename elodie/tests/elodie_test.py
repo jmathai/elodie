@@ -42,7 +42,7 @@ def test_import_file_text():
     shutil.rmtree(folder)
     shutil.rmtree(folder_destination)
 
-    assert helper.path_tz_fix(os.path.join('2016-04-Apr','London','2016-04-07_11-15-26-valid-sample-title.txt')) in dest_path, dest_path
+    assert helper.path_tz_fix(os.path.join('2016-04-Apr','Rainham','2016-04-07_11-15-26-valid-sample-title.txt')) in dest_path, dest_path
 
 def test_import_file_audio():
     temporary_folder, folder = helper.create_working_folder()
@@ -90,7 +90,7 @@ def test_import_file_video():
     shutil.rmtree(folder)
     shutil.rmtree(folder_destination)
 
-    assert helper.path_tz_fix(os.path.join('2015-01-Jan','California','2015-01-19_12-45-11-video.mov')) in dest_path, dest_path
+    assert helper.path_tz_fix(os.path.join('2015-01-Jan','Pinecrest','2015-01-19_12-45-11-video.mov')) in dest_path, dest_path
 
 def test_import_file_path_utf8_encoded_ascii_checkmark():
     temporary_folder, folder = helper.create_working_folder()
@@ -109,7 +109,7 @@ def test_import_file_path_utf8_encoded_ascii_checkmark():
     shutil.rmtree(folder)
     shutil.rmtree(folder_destination)
 
-    assert helper.path_tz_fix(os.path.join('2016-04-Apr','London',u'2016-04-07_11-15-26-unicode\u2713filename-sample-title.txt')) in dest_path, dest_path
+    assert helper.path_tz_fix(os.path.join('2016-04-Apr','Rainham',u'2016-04-07_11-15-26-unicode\u2713filename-sample-title.txt')) in dest_path, dest_path
 
 def test_import_file_path_unicode_checkmark():
     temporary_folder, folder = helper.create_working_folder()
@@ -126,7 +126,7 @@ def test_import_file_path_unicode_checkmark():
     shutil.rmtree(folder)
     shutil.rmtree(folder_destination)
 
-    assert helper.path_tz_fix(os.path.join('2016-04-Apr','London',u'2016-04-07_11-15-26-unicode\u2713filename-sample-title.txt')) in dest_path, dest_path
+    assert helper.path_tz_fix(os.path.join('2016-04-Apr','Rainham',u'2016-04-07_11-15-26-unicode\u2713filename-sample-title.txt')) in dest_path, dest_path
 
 def test_import_file_path_utf8_encoded_ascii_latin_nbsp():
     temporary_folder, folder = helper.create_working_folder()
@@ -145,7 +145,7 @@ def test_import_file_path_utf8_encoded_ascii_latin_nbsp():
     shutil.rmtree(folder)
     shutil.rmtree(folder_destination)
 
-    assert helper.path_tz_fix(os.path.join('2016-04-Apr','London',u'2016-04-07_11-15-26-unicode\xa0filename-sample-title.txt')) in dest_path, dest_path
+    assert helper.path_tz_fix(os.path.join('2016-04-Apr','Rainham',u'2016-04-07_11-15-26-unicode\xa0filename-sample-title.txt')) in dest_path, dest_path
 
 def test_import_file_path_unicode_latin_nbsp():
     temporary_folder, folder = helper.create_working_folder()
@@ -162,7 +162,7 @@ def test_import_file_path_unicode_latin_nbsp():
     shutil.rmtree(folder)
     shutil.rmtree(folder_destination)
 
-    assert helper.path_tz_fix(os.path.join('2016-04-Apr','London',u'2016-04-07_11-15-26-unicode\xa0filename-sample-title.txt')) in dest_path, dest_path
+    assert helper.path_tz_fix(os.path.join('2016-04-Apr','Rainham',u'2016-04-07_11-15-26-unicode\xa0filename-sample-title.txt')) in dest_path, dest_path
     
 def test_import_file_allow_duplicate_false():
     temporary_folder, folder = helper.create_working_folder()
@@ -432,8 +432,8 @@ def test_update_location_on_audio():
 
     assert status == True, status
     assert metadata['latitude'] != metadata_processed['latitude'], metadata_processed['latitude']
-    assert helper.isclose(metadata_processed['latitude'], 37.36883), metadata_processed['latitude']
-    assert helper.isclose(metadata_processed['longitude'], -122.03635), metadata_processed['longitude']
+    assert helper.isclose(metadata_processed['latitude'], 37.37187), metadata_processed['latitude']
+    assert helper.isclose(metadata_processed['longitude'], -122.03749), metadata_processed['longitude']
 
 def test_update_location_on_photo():
     temporary_folder, folder = helper.create_working_folder()
@@ -457,8 +457,8 @@ def test_update_location_on_photo():
 
     assert status == True, status
     assert metadata['latitude'] != metadata_processed['latitude']
-    assert helper.isclose(metadata_processed['latitude'], 37.36883), metadata_processed['latitude']
-    assert helper.isclose(metadata_processed['longitude'], -122.03635), metadata_processed['longitude']
+    assert helper.isclose(metadata_processed['latitude'], 37.37187), metadata_processed['latitude']
+    assert helper.isclose(metadata_processed['longitude'], -122.03749), metadata_processed['longitude']
 
 def test_update_location_on_text():
     temporary_folder, folder = helper.create_working_folder()
@@ -482,8 +482,8 @@ def test_update_location_on_text():
 
     assert status == True, status
     assert metadata['latitude'] != metadata_processed['latitude']
-    assert helper.isclose(metadata_processed['latitude'], 37.36883), metadata_processed['latitude']
-    assert helper.isclose(metadata_processed['longitude'], -122.03635), metadata_processed['longitude']
+    assert helper.isclose(metadata_processed['latitude'], 37.37187), metadata_processed['latitude']
+    assert helper.isclose(metadata_processed['longitude'], -122.03749), metadata_processed['longitude']
 
 def test_update_location_on_video():
     temporary_folder, folder = helper.create_working_folder()
@@ -507,8 +507,8 @@ def test_update_location_on_video():
 
     assert status == True, status
     assert metadata['latitude'] != metadata_processed['latitude']
-    assert helper.isclose(metadata_processed['latitude'], 37.36883), metadata_processed['latitude']
-    assert helper.isclose(metadata_processed['longitude'], -122.03635), metadata_processed['longitude']
+    assert helper.isclose(metadata_processed['latitude'], 37.37187), metadata_processed['latitude']
+    assert helper.isclose(metadata_processed['longitude'], -122.03749), metadata_processed['longitude']
 
 def test_update_time_on_audio():
     temporary_folder, folder = helper.create_working_folder()
@@ -763,8 +763,8 @@ def test_cli_batch_plugin_googlephotos():
     if hasattr(load_config, 'config'):
         del load_config.config
 
-    assert "elodie/elodie/tests/files/plain.jpg uploaded successfully.\"}\n" in result.output, result.output
-    assert "elodie/elodie/tests/files/no-exif.jpg uploaded successfully.\"}\n" in result.output, result.output
+    assert "elodie/tests/files/plain.jpg uploaded successfully.\"}\n" in result.output, result.output
+    assert "elodie/tests/files/no-exif.jpg uploaded successfully.\"}\n" in result.output, result.output
 
 def test_cli_debug_import():
     runner = CliRunner()

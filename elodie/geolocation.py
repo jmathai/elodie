@@ -108,10 +108,6 @@ def get_key():
         __KEY__ = constants.mapquest_key
         return __KEY__
 
-    config_file = '%s/config.ini' % constants.application_directory
-    if not path.exists(config_file):
-        return None
-
     config = load_config()
     if('MapQuest' not in config):
         return None
@@ -191,6 +187,9 @@ def lookup(**kwargs):
     ):
         return None
 
+    if('lat' in kwargs and 'lon' in kwargs):
+        kwargs['location'] = '{},{}'.format(kwargs['lat'], kwargs['lon'])
+
     key = get_key()
     prefer_english_names = get_prefer_english_names()
 
@@ -198,19 +197,20 @@ def lookup(**kwargs):
         return None
 
     try:
+        headers = {}
         params = {'format': 'json', 'key': key}
+        if(prefer_english_names):
+            headers = {'Accept-Language':'en-EN,en;q=0.8'}
+            params['locale'] = 'en_US'
         params.update(kwargs)
         path = '/geocoding/v1/address'
         if('lat' in kwargs and 'lon' in kwargs):
-            path = '/nominatim/v1/reverse.php'
+            path = '/geocoding/v1/reverse'
         url = '%s%s?%s' % (
                     constants.mapquest_base_url,
                     path,
                     urllib.parse.urlencode(params)
               )
-        headers = {}
-        if(prefer_english_names):
-            headers = {'Accept-Language':'en-EN,en;q=0.8'}
         r = requests.get(url, headers=headers)
         return parse_result(r.json())
     except requests.exceptions.RequestException as e:
@@ -223,18 +223,74 @@ def lookup(**kwargs):
 
 
 def parse_result(result):
-    if('error' in result):
+    # gh-421
+    # Return None if statusCode is not 0
+    #   https://developer.mapquest.com/documentation/geocoding-api/status-codes/
+    if( 'info' not in result or
+        'statuscode' not in result['info'] or
+        result['info']['statuscode'] != 0
+       ):
         return None
 
-    if(
-        'results' in result and
-        len(result['results']) > 0 and
-        'locations' in result['results'][0]
-        and len(result['results'][0]['locations']) > 0 and
-        'latLng' in result['results'][0]['locations'][0]
-    ):
-        latLng = result['results'][0]['locations'][0]['latLng']
-        if(latLng['lat'] == 39.78373 and latLng['lng'] == -100.445882):
-            return None
+    address = parse_result_address(result)
+    if(address is None):
+        return None
+
+    result['address'] = address
+    result['latLng'] = parse_result_latlon(result)
 
     return result
+
+def parse_result_address(result):
+    # We want to store the city, state and country
+    # The only way determined to identify an unfound address is 
+    #   that none of the indicies were found
+    if( 'results' not in result or
+        len(result['results']) == 0 or
+        'locations' not in result['results'][0] or
+        len(result['results'][0]['locations']) == 0
+        ):
+        return None
+
+    index_found = False
+    addresses = {'city': None, 'state': None, 'country': None}
+    result_compat = {}
+    result_compat['address'] = {}
+
+
+    locations = result['results'][0]['locations'][0]
+    # We are looping over locations to find the adminAreaNType key which
+    #   has a value of City, State or Country.
+    # Once we find it then we obtain the value from the key adminAreaN
+    #   where N is a numeric index.
+    # For example
+    #   * adminArea1Type = 'City'
+    #   * adminArea1 = 'Sunnyvale'
+    for key in locations:
+        # Check if the key is of the form adminArea1Type
+        if(key[-4:] == 'Type'):
+            # If it's a type then check if it corresponds to one we are intereated in
+            #   and store the index by parsing the key
+            key_prefix = key[:-4]
+            key_index = key[-5:-4]
+            if(locations[key].lower() in addresses):
+                addresses[locations[key].lower()] = locations[key_prefix]
+                index_found = True
+
+    if(index_found is False):
+        return None
+
+    return addresses
+
+def parse_result_latlon(result):
+    if( 'results' not in result or
+        len(result['results']) == 0 or
+        'locations' not in result['results'][0] or
+        len(result['results'][0]['locations']) == 0 or
+        'latLng' not in result['results'][0]['locations'][0]
+        ):
+        return None
+
+    latLng = result['results'][0]['locations'][0]['latLng'];
+
+    return {'lat': latLng['lat'], 'lon': latLng['lng']}

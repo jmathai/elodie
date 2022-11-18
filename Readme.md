@@ -1,7 +1,7 @@
 # Hello, I'm Elodie
 ~~ *Your Personal EXIF-based Photo, Video and Audio Assistant* ~~
 
-[![Build Status](https://travis-ci.org/jmathai/elodie.svg?branch=master)](https://travis-ci.org/jmathai/elodie) [![Coverage Status](https://coveralls.io/repos/github/jmathai/elodie/badge.svg?branch=master)](https://coveralls.io/github/jmathai/elodie?branch=master) [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/jmathai/elodie/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/jmathai/elodie/?branch=master)
+[![CircleCI](https://dl.circleci.com/status-badge/img/gh/jmathai/elodie/tree/master.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/jmathai/elodie/tree/master) [![Coverage Status](https://coveralls.io/repos/github/jmathai/elodie/badge.svg?branch=master)](https://coveralls.io/github/jmathai/elodie?branch=master) [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/jmathai/elodie/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/jmathai/elodie/?branch=master)
 
 I made an easy to use app from this open source project. [Check out Elodie, the EXIF-based photo organizer app](https://getelodie.com).
 
@@ -385,7 +385,7 @@ When I organize photos I look at the embedded metadata. Here are the details of 
 
 ## Using OpenStreetMap data from MapQuest
 
-I use MapQuest to help me organize your photos by location. You'll need to sign up for a [free developer account](https://developer.mapquest.com/plan_purchase/steps/business_edition/business_edition_free) and get an API key. They give you 15,000 calls per month so I can't do any more than that unless you shell out some big bucks to them. Once I hit my limit the best I'll be able to do is *Unknown Location* until the following month.
+I use MapQuest to help me organize your photos by location. You'll need to sign up for a [free developer account](https://developer.mapquest.com/plans) and get an API key. They give you 15,000 calls per month so I can't do any more than that unless you shell out some big bucks to them. Once I hit my limit the best I'll be able to do is *Unknown Location* until the following month.
 
 Once you sign up you'll have to get an API key and copy it into a file named `~/.elodie/config.ini`. I've included a `config.ini-sample` file which you can copy to `config.ini`.
 
