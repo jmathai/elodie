@@ -6,7 +6,7 @@ from os import environ, path
 from sys import version_info
 
 #: If True, debug messages will be printed.
-debug = False
+debug = True
 
 #: Directory in which to store Elodie settings.
 application_directory = '{}/.elodie'.format(path.expanduser('~'))
