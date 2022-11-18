@@ -27,7 +27,7 @@ jobs:
       - run:
           name: Run tests
           command: ./elodie/tests/run_tests.py -w elodie/tests --with-coverage --cover-package=elodie
-      -run:
+      - run:
           name: Generate coverage
           command: coveralls
 
