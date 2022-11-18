@@ -33,6 +33,6 @@ jobs:
             coveralls
 
 workflows:
-  test_my_app:
+  ci:
     jobs:
       - build_and_test
