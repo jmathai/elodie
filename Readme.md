@@ -1,7 +1,7 @@
 # Hello, I'm Elodie
 ~~ *Your Personal EXIF-based Photo, Video and Audio Assistant* ~~
 
-[![Build Status](https://travis-ci.org/jmathai/elodie.svg?branch=master)](https://travis-ci.org/jmathai/elodie) [![Coverage Status](https://coveralls.io/repos/github/jmathai/elodie/badge.svg?branch=master)](https://coveralls.io/github/jmathai/elodie?branch=master) [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/jmathai/elodie/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/jmathai/elodie/?branch=master)
+[![CircleCI](https://dl.circleci.com/status-badge/img/gh/jmathai/elodie/tree/master.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/jmathai/elodie/tree/master) [![Coverage Status](https://coveralls.io/repos/github/jmathai/elodie/badge.svg?branch=master)](https://coveralls.io/github/jmathai/elodie?branch=master) [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/jmathai/elodie/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/jmathai/elodie/?branch=master)
 
 I made an easy to use app from this open source project. [Check out Elodie, the EXIF-based photo organizer app](https://getelodie.com).
 
