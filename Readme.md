@@ -3,8 +3,6 @@
 
 [![CircleCI](https://dl.circleci.com/status-badge/img/gh/jmathai/elodie/tree/master.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/jmathai/elodie/tree/master) [![Coverage Status](https://coveralls.io/repos/github/jmathai/elodie/badge.svg?branch=master)](https://coveralls.io/github/jmathai/elodie?branch=master) [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/jmathai/elodie/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/jmathai/elodie/?branch=master)
 
-I made an easy to use app from this open source project. [Check out Elodie, the EXIF-based photo organizer app](https://getelodie.com).
-
 <p align="center"><img src ="https://jmathai.s3.amazonaws.com/github/elodie/elodie-folder-anim.gif" /></p>
 
 ## Quickstart guide
