@@ -24,12 +24,12 @@ jobs:
             echo "which exiftool command"
             which exiftool
             cd ${ELODIE_DIR}
-            ./elodie/tests/run_tests.py -w elodie/tests --with-coverage --cover-package=elodie
-            coveralls
-      - persist_to_workspace:
-          root: ~/project
-          paths:
-            - .
+      - run:
+          name: Run tests
+          command: ./elodie/tests/run_tests.py -w elodie/tests --with-coverage --cover-package=elodie
+      -run:
+          name: Generate coverage
+          command: coveralls
 
 workflows:
   test_my_app:
