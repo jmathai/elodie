@@ -11,8 +11,6 @@ jobs:
           name: Install dependencies
           command: |
             export ELODIE_DIR=${PWD}
-            export ELODIE_APPLICATION_DIRECTORY=${ELODIE_DIR}/.elodie
-            mkdir ${ELODIE_DIR}/.elodie
             pip install -r elodie/tests/requirements.txt
             pip install -r elodie/plugins/googlephotos/requirements.txt
             pip install coveralls
