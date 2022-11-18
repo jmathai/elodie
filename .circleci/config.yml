@@ -10,6 +10,7 @@ jobs:
       - run:
           name: Install dependencies
           command: |
+            export COVERALLS_REPO_TOKEN=ID8gtfMwF9LYAukhtZHft0f9uo5Dg6TnU
             export ELODIE_DIR=${PWD}
             pip install -r elodie/tests/requirements.txt
             pip install -r elodie/plugins/googlephotos/requirements.txt
