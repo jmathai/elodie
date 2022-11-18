@@ -29,7 +29,7 @@ script_directory = path.dirname(path.dirname(path.abspath(__file__)))
 exiftool_config = path.join(script_directory, 'configs', 'ExifTool_config')
 
 #: Path to MapQuest base URL
-mapquest_base_url = 'https://open.mapquestapi.com'
+mapquest_base_url = 'https://www.mapquestapi.com'
 if (
         'ELODIE_MAPQUEST_BASE_URL' in environ and
         environ['ELODIE_MAPQUEST_BASE_URL'] != ''

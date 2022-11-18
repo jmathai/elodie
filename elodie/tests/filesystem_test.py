@@ -543,7 +543,7 @@ full_path=%date/%location
     if hasattr(load_config, 'config'):
         del load_config.config
 
-    assert path == os.path.join('2015-12-05','United States of America-California-Sunnyvale'), path
+    assert path == os.path.join('2015-12-05','US-CA-Sunnyvale'), path
 
 @mock.patch('elodie.config.config_file', '%s/config.ini-fallback' % gettempdir())
 def test_get_folder_path_with_fallback_folder():
@@ -588,7 +588,7 @@ full_path=%year/%month/%location
     if hasattr(load_config, 'config'):
         del load_config.config
         
-    assert path == os.path.join('2015','12','Sunnyvale, California'), path
+    assert path == os.path.join('2015','12','Sunnyvale, CA'), path
 
 @mock.patch('elodie.config.config_file', '%s/config.ini-location-date' % gettempdir())
 def test_get_folder_path_with_with_only_one_level():
@@ -621,7 +621,7 @@ def test_parse_folder_name_default():
     if hasattr(load_config, 'config'):
         del load_config.config
     filesystem = FileSystem()
-    place_name = {'default': u'California', 'country': u'United States of America', 'state': u'California', 'city': u'Sunnyvale'}
+    place_name = {'default': u'CA', 'country': u'US', 'state': u'CA', 'city': u'Sunnyvale'}
     mask = '%city'
     location_parts = re.findall('(%[^%]+)', mask)
     path = filesystem.parse_mask_for_location(mask, location_parts, place_name)
@@ -634,20 +634,20 @@ def test_parse_folder_name_multiple():
     if hasattr(load_config, 'config'):
         del load_config.config
     filesystem = FileSystem()
-    place_name = {'default': u'California', 'country': u'United States of America', 'state': u'California', 'city': u'Sunnyvale'}
+    place_name = {'default': u'CA', 'country': u'US', 'state': u'CA', 'city': u'Sunnyvale'}
     mask = '%city-%state-%country'
     location_parts = re.findall('(%[^%]+)', mask)
     path = filesystem.parse_mask_for_location(mask, location_parts, place_name)
     if hasattr(load_config, 'config'):
         del load_config.config
 
-    assert path == 'Sunnyvale-California-United States of America', path
+    assert path == 'Sunnyvale-CA-US', path
 
 def test_parse_folder_name_static_chars():
     if hasattr(load_config, 'config'):
         del load_config.config
     filesystem = FileSystem()
-    place_name = {'default': u'California', 'country': u'United States of America', 'state': u'California', 'city': u'Sunnyvale'}
+    place_name = {'default': u'CA', 'country': u'US', 'state': u'CA', 'city': u'Sunnyvale'}
     mask = '%city-is-the-city'
     location_parts = re.findall('(%[^%]+)', mask)
     path = filesystem.parse_mask_for_location(mask, location_parts, place_name)
@@ -660,40 +660,40 @@ def test_parse_folder_name_key_not_found():
     if hasattr(load_config, 'config'):
         del load_config.config
     filesystem = FileSystem()
-    place_name = {'default': u'California', 'country': u'United States of America', 'state': u'California'}
+    place_name = {'default': u'CA', 'country': u'US', 'state': u'CA'}
     mask = '%city'
     location_parts = re.findall('(%[^%]+)', mask)
     path = filesystem.parse_mask_for_location(mask, location_parts, place_name)
     if hasattr(load_config, 'config'):
         del load_config.config
 
-    assert path == 'California', path
+    assert path == 'CA', path
 
 def test_parse_folder_name_key_not_found_with_static_chars():
     if hasattr(load_config, 'config'):
         del load_config.config
     filesystem = FileSystem()
-    place_name = {'default': u'California', 'country': u'United States of America', 'state': u'California'}
+    place_name = {'default': u'CA', 'country': u'US', 'state': u'CA'}
     mask = '%city-is-not-found'
     location_parts = re.findall('(%[^%]+)', mask)
     path = filesystem.parse_mask_for_location(mask, location_parts, place_name)
     if hasattr(load_config, 'config'):
         del load_config.config
 
-    assert path == 'California', path
+    assert path == 'CA', path
 
 def test_parse_folder_name_multiple_keys_not_found():
     if hasattr(load_config, 'config'):
         del load_config.config
     filesystem = FileSystem()
-    place_name = {'default': u'United States of America', 'country': u'United States of America'}
+    place_name = {'default': u'US', 'country': u'US'}
     mask = '%city-%state'
     location_parts = re.findall('(%[^%]+)', mask)
     path = filesystem.parse_mask_for_location(mask, location_parts, place_name)
     if hasattr(load_config, 'config'):
         del load_config.config
 
-    assert path == 'United States of America', path
+    assert path == 'US', path
 
 def test_process_file_invalid():
     filesystem = FileSystem()
