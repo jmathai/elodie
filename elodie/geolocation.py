@@ -108,9 +108,11 @@ def get_key():
         __KEY__ = constants.mapquest_key
         return __KEY__
 
-    config_file = '%s/config.ini' % constants.application_directory
+    """config_file = '%s/config.ini' % constants.application_directory
+    print('CONFIG FILE')
+    print(config_file)
     if not path.exists(config_file):
-        return None
+        return None"""
 
     config = load_config()
     if('MapQuest' not in config):
@@ -195,6 +197,8 @@ def lookup(**kwargs):
         kwargs['location'] = '{},{}'.format(kwargs['lat'], kwargs['lon'])
 
     key = get_key()
+    print('KEY IS')
+    print(key)
     prefer_english_names = get_prefer_english_names()
 
     if(key is None):

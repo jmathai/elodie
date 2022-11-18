@@ -15,7 +15,8 @@ if (
         path.isdir(environ['ELODIE_APPLICATION_DIRECTORY'])
    ):
     application_directory = environ['ELODIE_APPLICATION_DIRECTORY']
-
+print('APP DIR')
+print(application_directory)
 #: File in which to store details about media Elodie has seen.
 hash_db = '{}/hash.json'.format(application_directory)
 
