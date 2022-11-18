@@ -215,7 +215,6 @@ def lookup(**kwargs):
                     path,
                     urllib.parse.urlencode(params)
               )
-        print(url)
         r = requests.get(url, headers=headers)
         return parse_result(r.json())
     except requests.exceptions.RequestException as e:

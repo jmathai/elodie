@@ -10,9 +10,11 @@ if __name__ == "__main__":
     # test_directory is what we pass nose.run for where to find tests
     test_directory = os.path.dirname(os.path.abspath(__file__))
 
-    # create a temporary directory to use for the application directory while running tests
-    temporary_application_directory = tempfile.mkdtemp('-elodie-tests')
-    os.environ['ELODIE_APPLICATION_DIRECTORY'] = temporary_application_directory
+    # check if an environment variable is set for the application directory
+    # if not then create a temporary directory to use for the application directory while running tests
+    if('ELODIE_APPLICATION_DIRECTORY' not in os.environ):
+        temporary_application_directory = tempfile.mkdtemp('-elodie-tests')
+        os.environ['ELODIE_APPLICATION_DIRECTORY'] = temporary_application_directory
 
     # copy config.ini-sample over to the test application directory
     temporary_config_file_sample = '{}/config.ini-sample'.format(os.path.dirname(os.path.dirname(test_directory)))
