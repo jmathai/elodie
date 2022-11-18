@@ -1,6 +1,7 @@
 version: 2.1
 orbs:
   python: circleci/python@2.0.3
+  coveralls: coveralls/coveralls@1.0.6
 
 jobs:
   build_and_test:
@@ -24,7 +25,7 @@ jobs:
             which exiftool
             cd ${ELODIE_DIR}
             ./elodie/tests/run_tests.py -w elodie/tests --with-coverage --cover-package=elodie
-            coveralls
+      - coveralls/upload
       - persist_to_workspace:
           root: ~/project
           paths:
