@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 from __future__ import division
 from builtins import range
+from nose.plugins.skip import SkipTest
 from past.utils import old_div
 # Project imports
 import mock
@@ -95,30 +96,22 @@ def test_reverse_lookup_with_invalid_key():
 def test_lookup_with_valid_key():
     res = geolocation.lookup(location='Sunnyvale, CA')
     latLng = res['results'][0]['locations'][0]['latLng']
-    assert latLng['lat'] == 37.36883, latLng
-    assert latLng['lng'] == -122.03635, latLng
+    assert latLng['lat'] == 37.37187, latLng
+    assert latLng['lng'] == -122.03749, latLng
 
 def test_lookup_with_invalid_location():
     res = geolocation.lookup(location='foobar dne')
     assert res is None, res
-
-def test_lookup_with_invalid_location():
-    res = geolocation.lookup(location='foobar dne')
-    assert res is None, res
-
-def test_lookup_with_valid_key():
-    res = geolocation.lookup(location='Sunnyvale, CA')
-    latLng = res['results'][0]['locations'][0]['latLng']
-    assert latLng['lat'] == 37.36883, latLng
-    assert latLng['lng'] == -122.03635, latLng
 
 @mock.patch('elodie.geolocation.__PREFER_ENGLISH_NAMES__', True)
 def test_lookup_with_prefer_english_names_true():
+    raise SkipTest("gh-425 MapQuest API no longer supports prefer_english_names.")
     res = geolocation.lookup(lat=55.66333, lon=37.61583)
     assert res['address']['city'] == 'Nagorny District', res
 
 @mock.patch('elodie.geolocation.__PREFER_ENGLISH_NAMES__', False)
 def test_lookup_with_prefer_english_names_false():
+    raise SkipTest("gh-425 MapQuest API no longer supports prefer_english_names.")
     res = geolocation.lookup(lat=55.66333, lon=37.61583)
     assert res['address']['city'] == u'\u041d\u0430\u0433\u043e\u0440\u043d\u044b\u0439 \u0440\u0430\u0439\u043e\u043d', res
 
@@ -172,65 +165,22 @@ def test_parse_result_with_error():
     assert res is None, res
 
 def test_parse_result_with_city():
-    # http://open.mapquestapi.com/nominatim/v1/reverse.php?lat=37.368&lon=-122.03&key=key_goes_here&format=json
-    results = {
-        "place_id": "60197412",
-        "osm_type": "way",
-        "osm_id": "30907961",
-        "lat": "37.36746105",
-        "lon": "-122.030237558742",
-        "display_name": "111, East El Camino Real, Sunnyvale, Santa Clara County, California, 94087, United States of America",
-        "address": {
-            "house_number": "111",
-            "road": "East El Camino Real",
-            "city": "Sunnyvale",
-            "county": "Santa Clara County",
-            "state": "California",
-            "postcode": "94087",
-            "country": "United States of America",
-            "country_code": "us"
-        }
-    }
+    # https://www.mapquestapi.com/geocoding/v1/reverse?location=37.37187,-122.03749&key=key_goes_here&format=json
+    results = {"info":{"statuscode":0,"copyright":{"text":"© 2022 MapQuest, Inc.","imageUrl":"http://api.mqcdn.com/res/mqlogo.gif","imageAltText":"© 2022 MapQuest, Inc."},"messages":[]},"options":{"maxResults":1,"ignoreLatLngInput":False},"results":[{"providedLocation":{"latLng":{"lat":37.368,"lng":-122.03}},"locations":[{"street":"312 Old San Francisco Rd","adminArea6":"Heritage District","adminArea6Type":"Neighborhood","adminArea5":"Sunnyvale","adminArea5Type":"City","adminArea4":"Santa Clara","adminArea4Type":"County","adminArea3":"CA","adminArea3Type":"State","adminArea1":"US","adminArea1Type":"Country","postalCode":"94086","geocodeQualityCode":"P1AAA","geocodeQuality":"POINT","dragPoint":False,"sideOfStreet":"R","linkId":"0","unknownInput":"","type":"s","latLng":{"lat":37.36798,"lng":-122.03018},"displayLatLng":{"lat":37.36785,"lng":-122.03021},"mapUrl":""}]}]}
 
     res = geolocation.parse_result(results)
     assert res == results, res
 
 def test_parse_result_with_lat_lon():
-    # http://open.mapquestapi.com/geocoding/v1/address?location=abcdefghijklmnopqrstuvwxyz&key=key_goes_here&format=json
-    results = {
-        "results": [
-            {
-               "locations": [
-                    {
-                        "latLng": {
-                            "lat": 123.00,
-                            "lng": -142.99
-                        }
-                    }
-                ]
-            }
-        ]
-    }
+    # https://www.mapquestapi.com/geocoding/v1/address?format=json&key=key_goes_here&locale=en_US&location=Sunnyvale,CA
+    results = {"info":{"statuscode":0,"copyright":{"text":"© 2022 MapQuest, Inc.","imageUrl":"http://api.mqcdn.com/res/mqlogo.gif","imageAltText":"© 2022 MapQuest, Inc."},"messages":[]},"options":{"maxResults":-1,"ignoreLatLngInput":False},"results":[{"providedLocation":{"location":"Sunnyvale,CA"},"locations":[{"street":"","adminArea6":"","adminArea6Type":"Neighborhood","adminArea5":"Sunnyvale","adminArea5Type":"City","adminArea4":"Santa Clara","adminArea4Type":"County","adminArea3":"CA","adminArea3Type":"State","adminArea1":"US","adminArea1Type":"Country","postalCode":"","geocodeQualityCode":"A5XAX","geocodeQuality":"CITY","dragPoint":False,"sideOfStreet":"N","linkId":"0","unknownInput":"","type":"s","latLng":{"lat":37.37187,"lng":-122.03749},"displayLatLng":{"lat":37.37187,"lng":-122.03749},"mapUrl":""}]}]}
 
     res = geolocation.parse_result(results)
     assert res == results, res
 
 def test_parse_result_with_unknown_lat_lon():
-    # http://open.mapquestapi.com/geocoding/v1/address?location=abcdefghijklmnopqrstuvwxyz&key=key_goes_here&format=json
-    results = {
-        "results": [
-            {
-               "locations": [
-                    {
-                        "latLng": {
-                            "lat": 39.78373,
-                            "lng": -100.445882
-                        }
-                    }
-                ]
-            }
-        ]
-    }
+    # https://www.mapquestapi.com/geocoding/v1/address?format=json&key=key_goes_here&locale=en_US&location=ABCDEFGHIJKLMNOPQRSTUVWXYZ
+    results = {"info":{"statuscode":0,"copyright":{"text":"© 2022 MapQuest, Inc.","imageUrl":"http://api.mqcdn.com/res/mqlogo.gif","imageAltText":"© 2022 MapQuest, Inc."},"messages":[]},"options":{"maxResults":-1,"ignoreLatLngInput":False},"results":[{"providedLocation":{"location":"ABCDEFGHIJKLMNOPQRSTUVWXYZ"},"locations":[{"street":"","adminArea6":"","adminArea5":"","adminArea4":"","adminArea3":"","adminArea1":"US","postalCode":"","geocodeQualityCode":"A1XAX","geocodeQuality":"COUNTRY","dragPoint":False,"sideOfStreet":"N","linkId":"0","unknownInput":"","type":"s","latLng":{"lat":38.89037,"lng":-77.03196},"displayLatLng":{"lat":38.89037,"lng":-77.03196},"mapUrl":""}]}]}
 
     res = geolocation.parse_result(results)
     assert res is None, res

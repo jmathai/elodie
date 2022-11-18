@@ -75,7 +75,7 @@ def test_exiftool_config():
     assert '{}/configs/ExifTool_config'.format(path) == constants.exiftool_config, constants.exiftool_config
 
 def test_mapquest_base_url_default():
-    assert constants.mapquest_base_url == 'https://open.mapquestapi.com', constants.mapquest_base_url
+    assert constants.mapquest_base_url == 'https://www.mapquestapi.com', constants.mapquest_base_url
 
 def test_mapquest_base_url_override():
     os.environ['ELODIE_MAPQUEST_BASE_URL'] = 'foobar'
