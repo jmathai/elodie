@@ -11,6 +11,7 @@ jobs:
           name: Install dependencies
           command: |
             export ELODIE_DIR=${PWD}
+            pip install --upgrade pip
             pip install -r elodie/tests/requirements.txt
             pip install -r elodie/plugins/googlephotos/requirements.txt
             pip install coveralls
