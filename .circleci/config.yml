@@ -25,7 +25,7 @@ jobs:
             cd ${ELODIE_DIR}
       - run:
           name: Run tests
-          command: ./elodie/tests/run_tests.py -w elodie/tests --with-coverage --cover-package=elodie
+          command: ./elodie/tests/run_tests.py elodie/tests
       - run:
           name: Generate coverage
           command: |
