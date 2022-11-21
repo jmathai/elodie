@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
+import nose
 import os
-import pytest
 import shutil
 import sys
 import tempfile
@@ -33,7 +33,7 @@ if __name__ == "__main__":
 
     test_argv = sys.argv
     test_argv.append('--verbosity=2')
-    result = pytest.main(test_argv)
+    result = nose.run(argv=test_argv)
     if(result):
         sys.exit(0)
     else:
