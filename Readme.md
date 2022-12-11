@@ -395,6 +395,16 @@ cp config.ini-sample ~/.elodie/config.ini
 
 If you're an english speaker then you will probably want to add `prefer_english_names=True` to the `[MapQuest]` section else you'll have cities named using the local language.
 
+## Developing
+
+Install requirements similar to installing as a user and then run tests. NOTE different requirement file(s):
+
+```
+python -m pip install -r elodie/tests/requirements.txt
+python -m pip install -r elodie/plugins/googlephotos/requirements.txt
+python elodie/tests/run_tests.py
+```
+
 ## Questions, comments or concerns?
 
 The best ways to provide feedback is by opening a [GitHub issue](https://github.com/jmathai/elodie/issues) or emailing me at [jaisen@jmathai.com](mailto:jaisen@jmathai.com).
