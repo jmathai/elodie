@@ -41,14 +41,15 @@ def test_sqlite_insert():
     sqlite_plugin.create_schema()
     sqlite_plugin.after('/some/source/path', '/folder/path', '/file/path.jpg', {})
     results = sqlite_plugin.run_query(
-        'SELECT * FROM `metadata` WHERE `pathOriginal`=:pathOriginal',
-        {'pathOriginal': '/folder/path/file/path.jpg'}
+        'SELECT * FROM `metadata` WHERE `path`=:path',
+        {'path': '/folder/path/file/path.jpg'}
     );
 
     if hasattr(load_config, 'config'):
         del load_config.config
 
     assert len(results) == 1, results
+    assert results[0]['path'] == '/folder/path/file/path.jpg', results[0]
 
 @mock.patch('elodie.config.config_file', '%s/config.ini-sqlite-insert-multiple' % gettempdir())
 def test_sqlite_insert_multiple():
@@ -70,9 +71,11 @@ def test_sqlite_insert_multiple():
         del load_config.config
 
     assert len(results) == 2, results
+    assert results[0]['path'] == '/folder/path/file/path.jpg', results[0]
+    assert results[1]['path'] == '/folder/path/file/path2.jpg', results[1]
 
 @mock.patch('elodie.config.config_file', '%s/config.ini-sqlite-update' % gettempdir())
-def test_sqlite_insert_multiple():
+def test_sqlite_update():
     with open('%s/config.ini-sqlite-update' % gettempdir(), 'w') as f:
         f.write(config_string_fmt)
     if hasattr(load_config, 'config'):
@@ -80,16 +83,44 @@ def test_sqlite_insert_multiple():
 
     sqlite_plugin = SQLite()
     sqlite_plugin.create_schema()
-    sqlite_plugin.after('/some/source/path', '/folder/path', '/file/path.jpg', {})
-    sqlite_plugin.after('/folder/path/file/path.jpg', '/new-folder/path', '/new-file/path.jpg', {})
+    # write to /folder/path/file/path.jpg and then update it
+    sqlite_plugin.after('/some/source/path', '/folder/path', '/file/path.jpg', {'foo':'bar'})
+    sqlite_plugin.after('/folder/path/file/path.jpg', '/new-folder/path', '/new-file/path.jpg', {'foo':'updated'})
     results = sqlite_plugin.run_query(
         'SELECT * FROM `metadata`',
         {}
     );
-    print(results)
 
     if hasattr(load_config, 'config'):
         del load_config.config
 
     assert len(results) == 1, results
-    assert results[0]['pathOriginal'] == '/new-folder/path/new-file/path.jpg', results
+    assert results[0]['path'] == '/new-folder/path/new-file/path.jpg', results
+    assert results[0]['metadata'] == '{"foo":"updated"}', results
+
+@mock.patch('elodie.config.config_file', '%s/config.ini-sqlite-update-multiple' % gettempdir())
+def test_sqlite_update_multiple():
+    with open('%s/config.ini-sqlite-update-multiple' % gettempdir(), 'w') as f:
+        f.write(config_string_fmt)
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    sqlite_plugin = SQLite()
+    sqlite_plugin.create_schema()
+    sqlite_plugin.after('/some/source/path', '/folder/path', '/file/path.jpg', {'foo':'bar'})
+    sqlite_plugin.after('/some/source/path', '/folder/path', '/file/path2.jpg', {'foo':'bar'})
+    sqlite_plugin.after('/folder/path/file/path.jpg', '/new-folder/path', '/new-file/path.jpg', {'foo':'updated'})
+    sqlite_plugin.after('/folder/path/file/path2.jpg', '/new-folder/path', '/new-file/path2.jpg', {'foo':'updated2'})
+    results = sqlite_plugin.run_query(
+        'SELECT * FROM `metadata`',
+        {}
+    );
+
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    assert len(results) == 2, results
+    assert results[0]['path'] == '/new-folder/path/new-file/path.jpg', results[0]
+    assert results[0]['metadata'] == '{"foo":"updated"}', results[0]
+    assert results[1]['path'] == '/new-folder/path/new-file/path2.jpg', results[1]
+    assert results[1]['metadata'] == '{"foo":"updated2"}', results[1]

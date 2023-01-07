@@ -533,6 +533,10 @@ class FileSystem(object):
                      _file)
             return
 
+        # Set the checksum and refresh metadata.
+        media.set_checksum(checksum)
+        metadata = media.get_metadata()
+
         # Run `before()` for every loaded plugin and if any of them raise an exception
         #  then we skip importing the file and log a message.
         plugins_run_before_status = self.plugins.run_all_before(_file, destination)

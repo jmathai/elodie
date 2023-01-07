@@ -13,8 +13,10 @@ database_file=/path/to/database.db
 """
 from __future__ import print_function
 
+import json
 import os
 import sqlite3
+import time
 #import json
 
 #from google_auth_oauthlib.flow import InstalledAppFlow
@@ -53,10 +55,10 @@ class SQLite(PluginBase):
         # We check if the source path exists in the database already.
         # If it does then we assume that this is an update operation.
         full_destination_path = '{}{}'.format(destination_folder, final_file_path)
-        self.cursor.execute("SELECT `pathOriginal` FROM `metadata` WHERE `pathOriginal`=:pathOriginal", {'pathOriginal': file_path})
+        self.cursor.execute("SELECT `path` FROM `metadata` WHERE `path`=:path", {'path': file_path})
         if(self.cursor.fetchone() is None):
             self.log(u'SQLite plugin inserting {}'.format(file_path))
-            sql_statement, sql_values = self._insert_row_sql(file_path, full_destination_path, metadata)
+            sql_statement, sql_values = self._insert_row_sql(full_destination_path, metadata)
         else:
             self.log(u'SQLite plugin updating {}'.format(file_path))
             sql_statement, sql_values = self._update_row_sql(file_path, full_destination_path, metadata)
@@ -80,14 +82,16 @@ class SQLite(PluginBase):
         self.cursor.execute(sql, values)
         return self.cursor.fetchall()
 
-    def _insert_row_sql(self, current_path, final_path, metadata):
+    def _insert_row_sql(self, final_path, metadata):
+        timestamp = int(time.time())
         return (
-            "INSERT INTO `metadata` (`pathOriginal`) VALUES(:pathOriginal)",
-            {'pathOriginal': final_path}
+                "INSERT INTO `metadata` (`path`, `metadata`, `created`, `modified`) VALUES(:path, :metadata, :created, :modified)",
+                {'path': final_path, 'metadata': json.dumps(metadata), 'created': timestamp, 'modified': timestamp}
         )
 
     def _update_row_sql(self, current_path, final_path, metadata):
+        timestamp = int(time.time())
         return (
-            "UPDATE `metadata` SET `pathOriginal`=:pathOriginal WHERE `pathOriginal`=:currentPathOriginal",
-            {'currentPathOriginal': current_path, 'pathOriginal': final_path}
+            "UPDATE `metadata` SET `path`=:path, `metadata`=json(:metadata), `modified`=:modified WHERE `path`=:currentPath",
+            {'currentPath': current_path, 'path': final_path, 'metadata': json.dumps(metadata), 'modified': timestamp}
         )
