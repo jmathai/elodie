@@ -59,6 +59,9 @@ class PluginBase(object):
             {self.__name__: msg}
         ))
 
+    def generate_db(self, hash_db):
+        pass
+
 class PluginDb(object):
     """A database module which provides a simple key/value database.
        The database is a JSON file located at %application_directory%/plugins/%pluginname.lower()%.json

@@ -71,12 +71,16 @@ class SQLite(PluginBase):
     def before(self, file_path, destination_folder):
         pass
 
-    def create_schema(self):
+    def generate_db(self, hash_db):
+        pass
+
+    """def create_schema(self):
         with open(self.database_schema, 'r') as fp_schema:
             sql_statement = fp_schema.read()
 
         with self.con:
             self.cursor.executescript(sql_statement)
+    """
 
     def run_query(self, sql, values):
         self.cursor.execute(sql, values)
