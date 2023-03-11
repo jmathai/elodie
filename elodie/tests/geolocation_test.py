@@ -12,6 +12,11 @@ import sys
 from mock import patch
 from tempfile import gettempdir
 
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
+
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))))
 
 from . import helper
@@ -114,6 +119,14 @@ def test_lookup_with_prefer_english_names_false():
     raise SkipTest("gh-425 MapQuest API no longer supports prefer_english_names.")
     res = geolocation.lookup(lat=55.66333, lon=37.61583)
     assert res['address']['city'] == u'\u041d\u0430\u0433\u043e\u0440\u043d\u044b\u0439 \u0440\u0430\u0439\u043e\u043d', res
+
+@mock.patch('elodie.constants.debug', True)
+def test_lookup_debug_mapquest_url():
+    out = StringIO()
+    sys.stdout = out
+    res = geolocation.lookup(location='Sunnyvale, CA')
+    output = out.getvalue()
+    assert 'MapQuest url:' in output, output
 
 @mock.patch('elodie.constants.location_db', '%s/location.json-cached' % gettempdir())
 def test_place_name_deprecated_string_cached():

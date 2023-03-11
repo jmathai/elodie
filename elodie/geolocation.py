@@ -211,6 +211,8 @@ def lookup(**kwargs):
                     path,
                     urllib.parse.urlencode(params)
               )
+        # log the MapQuest url gh-446
+        log.info('MapQuest url: %s' % (url))
         r = requests.get(url, headers=headers)
         return parse_result(r.json())
     except requests.exceptions.RequestException as e:
