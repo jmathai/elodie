@@ -145,15 +145,21 @@ class Text(Base):
         if source is None:
             return None
 
+        # FIXME  / TODO document why this is being done issue https://github.com/jmathai/elodie/issues/424
+        # Read first line of text file, check if it is valid json (i.e. utf-8)
         with open(source, 'r') as f:
-            first_line = f.readline().strip()
+            try:
+                first_line = f.readline().strip()
+            except UnicodeDecodeError:
+                log.error('Could not load JSON from first line of file %r' % source)
+                return None  # no valid meta data
 
         try:
             parsed_json = loads(first_line)
             if isinstance(parsed_json, dict):
                 self.metadata_line = parsed_json
         except ValueError:
-            log.error('Could not parse JSON from first line: %s' % first_line)
+            log.error('Could not parse JSON from file %r first line: %s' % (source, first_line))
             pass
 
     def write_metadata(self, **kwargs):
@@ -191,13 +197,13 @@ class Text(Base):
                     copyfileobj(f_read, f_write)
         else:
             # Prepend the metadata to the file
-            with open(source, 'r') as f_read:
+            with open(source, 'rb') as f_read:
                 original_contents = f_read.read()
-                with open(source, 'w') as f_write:
-                    f_write.write("{}\n{}".format(
-                        metadata_as_json,
-                        original_contents)
-                    )
+                with open(source, 'wb') as f_write:
+                    f_write.write(metadata_as_json.encode('utf8'))  # write first line json (utf-8 encoded) header
+                    f_write.write(b'\n')
+                    f_write.write(original_contents)  # what ever format was already there
+
 
         self.reset_cache()
         return True
