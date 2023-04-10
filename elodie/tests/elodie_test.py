@@ -237,6 +237,34 @@ def test_import_file_send_to_trash_true():
 
     assert dest_path1 is not None
 
+@mock.patch('elodie.config.config_file', '%s/config.ini-import-with-full-path' % gettempdir())
+def test_import_with_full_path():
+    with open('%s/config.ini-import-with-full-path' % gettempdir(), 'w') as f:
+        f.write("""
+[Directory]
+location=%city
+date=%Y-%m
+full_path=%date/%location
+        """)
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    temporary_folder, folder = helper.create_working_folder()
+    temporary_folder_destination, folder_destination = helper.create_working_folder()
+
+    origin = '%s/plain.jpg' % folder
+    shutil.copyfile(helper.get_file('plain.jpg'), origin)
+
+    dest_path = elodie.import_file(origin, folder_destination, False, True, False)
+
+    shutil.rmtree(folder)
+    shutil.rmtree(folder_destination)
+
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    assert '2015-12/Unknown Location/2015-12-05_00-59-26-plain.jpg' in dest_path, dest_path
+
 def test_import_destination_in_source():
     temporary_folder, folder = helper.create_working_folder()
     folder_destination = '{}/destination'.format(folder)
@@ -726,6 +754,38 @@ def test_verify_error():
 
     assert origin in result.output, result.output
     assert 'Error           1' in result.output, result.output
+
+@mock.patch('elodie.config.config_file', '%s/config.ini-cli-import-with-full-path' % gettempdir())
+def test_cli_import_with_full_path():
+    with open('%s/config.ini-cli-import-with-full-path' % gettempdir(), 'w') as f:
+        f.write("""
+[Directory]
+location=%city
+date=%Y-%m
+full_path=%date/%location
+        """)
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+
+    temporary_folder, folder = helper.create_working_folder()
+    temporary_folder_destination, folder_destination = helper.create_working_folder()
+
+    origin = '%s/plain.jpg' % folder
+    shutil.copyfile(helper.get_file('plain.jpg'), origin)
+
+    runner = CliRunner()
+    # import
+    result = runner.invoke(elodie._import, ['--destination', folder_destination, origin])
+
+
+    shutil.rmtree(folder)
+    shutil.rmtree(folder_destination)
+
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    assert '2015-12/Unknown Location/2015-12-05_00-59-26-plain.jpg' in result.output, result.output
 
 @mock.patch('elodie.config.config_file', '%s/config.ini-cli-batch-plugin-googlephotos' % gettempdir())
 def test_cli_batch_plugin_googlephotos():
