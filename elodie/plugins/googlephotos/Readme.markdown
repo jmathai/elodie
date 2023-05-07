@@ -1,7 +1,5 @@
 # Google Photos Plugin for Elodie
 
-[![Build Status](https://travis-ci.org/jmathai/elodie.svg?branch=master)](https://travis-ci.org/jmathai/elodie) [![Coverage Status](https://coveralls.io/repos/github/jmathai/elodie/badge.svg?branch=master)](https://coveralls.io/github/jmathai/elodie?branch=master) [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/jmathai/elodie/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/jmathai/elodie/?branch=master)
-
 This plugin uploads all photos imported using Elodie to Google Photos. It was created after [Google Photos and Google Drive synchronization was deprecated](https://www.blog.google/products/photos/simplifying-google-photos-and-google-drive/). It aims to replicate my [workflow using Google Photos, Google Drive and Elodie](https://artplusmarketing.com/one-year-of-using-an-automated-photo-organization-and-archiving-workflow-89cf9ad7bddf).
 
 I didn't intend on it, but it turned out that with this plugin you can use Google Photos with Google Drive, iCloud Drive, Dropbox or no cloud storage service while still using Google Photos for viewing and experiencing your photo library.
