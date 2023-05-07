@@ -27,6 +27,22 @@ config_string_fmt = config_string.format(
     ':memory:'
 )
 
+mock_metadata = {
+                    'checksum': 'checksum-val',
+                    'date_taken': 1234567890,
+                    'camera_make': 'camera_make-val',
+                    'camera_model': 'camera_model-val',
+                    'latitude': 0.1,
+                    'longitude': 0.2,
+                    'album': 'album-val',
+                    'title': 'title-val',
+                    'mime_type': 'mime_type-val',
+                    'original_name': 'original_name-val',
+                    'base_name': 'base_name-val',
+                    'extension': 'extension-val',
+                    'directory_path': 'directory_path-val'
+                }
+
 setup_module = helper.setup_module
 teardown_module = helper.teardown_module
 
@@ -38,9 +54,8 @@ def test_sqlite_insert():
         del load_config.config
 
     sqlite_plugin = SQLite()
-    sqlite_plugin.create_schema()
-    sqlite_plugin.after('/some/source/path', '/folder/path', '/file/path.jpg', {})
-    results = sqlite_plugin.run_query(
+    sqlite_plugin.after('/some/source/path.jpg', '/folder/path', '/file/path.jpg', mock_metadata)
+    results = sqlite_plugin._run_query(
         'SELECT * FROM `metadata` WHERE `path`=:path',
         {'path': '/folder/path/file/path.jpg'}
     );
@@ -59,10 +74,10 @@ def test_sqlite_insert_multiple():
         del load_config.config
 
     sqlite_plugin = SQLite()
-    sqlite_plugin.create_schema()
-    sqlite_plugin.after('/some/source/path', '/folder/path', '/file/path.jpg', {})
-    sqlite_plugin.after('/some/source/path', '/folder/path', '/file/path2.jpg', {})
-    results = sqlite_plugin.run_query(
+    sqlite_plugin.after('/some/source/path.jpg', '/folder/path', '/file/path.jpg', mock_metadata)
+    mock_metadata_2 = {**mock_metadata, **{'checksum': 'new-hash'}}
+    sqlite_plugin.after('/some/source/path.jpg', '/folder/path', '/file/path2.jpg', mock_metadata_2)
+    results = sqlite_plugin._run_query(
         'SELECT * FROM `metadata`',
         {}
     );
@@ -82,11 +97,11 @@ def test_sqlite_update():
         del load_config.config
 
     sqlite_plugin = SQLite()
-    sqlite_plugin.create_schema()
     # write to /folder/path/file/path.jpg and then update it
-    sqlite_plugin.after('/some/source/path', '/folder/path', '/file/path.jpg', {'foo':'bar'})
-    sqlite_plugin.after('/folder/path/file/path.jpg', '/new-folder/path', '/new-file/path.jpg', {'foo':'updated'})
-    results = sqlite_plugin.run_query(
+    sqlite_plugin.after('/some/source/path.jpg', '/folder/path', '/file/path.jpg', mock_metadata)
+    mock_metadata_2 = {**mock_metadata, **{'title': 'title-val-new'}}
+    sqlite_plugin.after('/folder/path/file/path.jpg', '/new-folder/path', '/new-file/path.jpg', mock_metadata_2)
+    results = sqlite_plugin._run_query(
         'SELECT * FROM `metadata`',
         {}
     );
@@ -96,7 +111,7 @@ def test_sqlite_update():
 
     assert len(results) == 1, results
     assert results[0]['path'] == '/new-folder/path/new-file/path.jpg', results
-    assert results[0]['metadata'] == '{"foo":"updated"}', results
+    assert results[0]['title'] == 'title-val-new', results
 
 @mock.patch('elodie.config.config_file', '%s/config.ini-sqlite-update-multiple' % gettempdir())
 def test_sqlite_update_multiple():
@@ -106,12 +121,16 @@ def test_sqlite_update_multiple():
         del load_config.config
 
     sqlite_plugin = SQLite()
-    sqlite_plugin.create_schema()
-    sqlite_plugin.after('/some/source/path', '/folder/path', '/file/path.jpg', {'foo':'bar'})
-    sqlite_plugin.after('/some/source/path', '/folder/path', '/file/path2.jpg', {'foo':'bar'})
-    sqlite_plugin.after('/folder/path/file/path.jpg', '/new-folder/path', '/new-file/path.jpg', {'foo':'updated'})
-    sqlite_plugin.after('/folder/path/file/path2.jpg', '/new-folder/path', '/new-file/path2.jpg', {'foo':'updated2'})
-    results = sqlite_plugin.run_query(
+    mock_metadata_1 = mock_metadata
+    mock_metadata_2 = {**mock_metadata, **{'checksum': 'checksum-val-2', 'title': 'title-val-2'}}
+    sqlite_plugin.after('/some/source/path.jpg', '/folder/path', '/file/path.jpg', mock_metadata)
+    sqlite_plugin.after('/some/source/path2.jpg', '/folder/path', '/file/path2.jpg', mock_metadata_2)
+    
+    mock_metadata_1_upd = {**mock_metadata_1, **{'title': 'title-val-upd'}}
+    mock_metadata_2_upd = {**mock_metadata_2, **{'title': 'title-val-2-upd'}}
+    sqlite_plugin.after('/folder/path/file/path.jpg', '/new-folder/path', '/new-file/path.jpg', mock_metadata_1_upd)
+    sqlite_plugin.after('/folder/path/file/path2.jpg', '/new-folder/path', '/new-file/path2.jpg', mock_metadata_2_upd)
+    results = sqlite_plugin._run_query(
         'SELECT * FROM `metadata`',
         {}
     );
@@ -121,6 +140,6 @@ def test_sqlite_update_multiple():
 
     assert len(results) == 2, results
     assert results[0]['path'] == '/new-folder/path/new-file/path.jpg', results[0]
-    assert results[0]['metadata'] == '{"foo":"updated"}', results[0]
+    assert results[0]['title'] == 'title-val-upd', results[0]
     assert results[1]['path'] == '/new-folder/path/new-file/path2.jpg', results[1]
-    assert results[1]['metadata'] == '{"foo":"updated2"}', results[1]
+    assert results[1]['title'] == 'title-val-2-upd', results[1]

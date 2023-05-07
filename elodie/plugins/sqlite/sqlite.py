@@ -2,8 +2,10 @@
 SQLite plugin object.
 This plugin stores metadata about all media in an sqlite database.
 
-You'll need to create a SQLite database using the schema.sql file and 
-    reference it in your configuration.
+You'll need to include [PluginSQLite] in your config file.
+By default, the sqlite database will be created in your application 
+    directory. If you want to specify a different path then 
+    specify a fully qualified `database_file` path.
 
 ```
 [PluginSQLite]
@@ -41,14 +43,20 @@ class SQLite(PluginBase):
     def __init__(self):
         super(SQLite, self).__init__()
         
-        self.database_schema = '{}{}{}'.format(os.path.dirname(os.path.realpath(__file__)), os.sep, 'schema.sql')
-        self.database_file = None
+        # Default the database file to be in the application plugin directory.
+        # Override with value from config file.
+        self.database_file = '{}/plugins/{}/elodie.db'.format(
+            self.application_directory,
+            __name__.lower()
+        )
         if('database_file' in self.config_for_plugin):
             self.database_file = self.config_for_plugin['database_file']
 
         self.con = sqlite3.connect(self.database_file)
         self.con.row_factory = sqlite3.Row
         self.cursor = self.con.cursor()
+        if(not self._validate_schema()):
+            self._create_schema()
 
     def after(self, file_path, destination_folder, final_file_path, metadata):
 
@@ -56,6 +64,7 @@ class SQLite(PluginBase):
         # If it does then we assume that this is an update operation.
         full_destination_path = '{}{}'.format(destination_folder, final_file_path)
         self.cursor.execute("SELECT `path` FROM `metadata` WHERE `path`=:path", {'path': file_path})
+
         if(self.cursor.fetchone() is None):
             self.log(u'SQLite plugin inserting {}'.format(file_path))
             sql_statement, sql_values = self._insert_row_sql(full_destination_path, metadata)
@@ -71,31 +80,71 @@ class SQLite(PluginBase):
     def before(self, file_path, destination_folder):
         pass
 
-    def generate_db(self, hash_db):
-        pass
+    def _create_schema(self):
+        self.database_schema = '{}{}{}'.format(
+            os.path.dirname(os.path.realpath(__file__)),
+            os.sep,
+            'schema.sql'
+        )
 
-    """def create_schema(self):
         with open(self.database_schema, 'r') as fp_schema:
             sql_statement = fp_schema.read()
-
-        with self.con:
+            print(sql_statement)
             self.cursor.executescript(sql_statement)
-    """
 
-    def run_query(self, sql, values):
+    def _insert_row_sql(self, final_path, metadata):
+        path = '{}/{}.{}'.format(
+                    metadata['directory_path'],
+                    metadata['base_name'],
+                    metadata['extension']
+                )
+        return (
+                """INSERT INTO `metadata` (
+                    `hash`, `path`, `album`, `camera_make`, `camera_model`,
+                    `date_taken`, `latitude`, `location_name`, `longitude`,
+                    `original_name`, `title`)
+                    VALUES (
+                    :hash, :path, :album, :camera_make, :camera_model,
+                    :date_taken, :latitude, :location_name, :longitude,
+                    :original_name, :title)""",
+                self._sql_values(final_path, metadata)
+        )
+
+    def _run_query(self, sql, values):
         self.cursor.execute(sql, values)
         return self.cursor.fetchall()
 
-    def _insert_row_sql(self, final_path, metadata):
+    def _sql_values(self, final_path, metadata, current_path=None):
         timestamp = int(time.time())
-        return (
-                "INSERT INTO `metadata` (`path`, `metadata`, `created`, `modified`) VALUES(:path, :metadata, :created, :modified)",
-                {'path': final_path, 'metadata': json.dumps(metadata), 'created': timestamp, 'modified': timestamp}
-        )
+        return {
+                    'hash': metadata['checksum'],
+                    'path': final_path,
+                    'album': metadata['album'],
+                    'camera_make': metadata['camera_make'],
+                    'camera_model': metadata['camera_model'],
+                    'date_taken': metadata['date_taken'],
+                    'latitude': metadata['latitude'],
+                    'location_name': None,
+                    'longitude': metadata['longitude'],
+                    'original_name': metadata['original_name'],
+                    'title': metadata['title'],
+                    'current_path': current_path,
+                    '_modified': timestamp
+                }
 
     def _update_row_sql(self, current_path, final_path, metadata):
         timestamp = int(time.time())
         return (
-            "UPDATE `metadata` SET `path`=:path, `metadata`=json(:metadata), `modified`=:modified WHERE `path`=:currentPath",
-            {'currentPath': current_path, 'path': final_path, 'metadata': json.dumps(metadata), 'modified': timestamp}
+            """UPDATE `metadata` SET `hash`=:hash, `path`=:path, `album`=:album, `camera_make`=:camera_make,
+                `camera_model`=:camera_model, `date_taken`=:date_taken, `latitude`=:latitude,
+                `longitude`=:longitude, `original_name`=:original_name, `title`=:title
+                WHERE `path`=:current_path""",
+            self._sql_values(final_path, metadata, current_path)
         )
+
+    def _validate_schema(self):
+        try:
+            self.cursor.execute('SELECT * FROM `metadata` LIMIT 1');
+            return True
+        except sqlite3.OperationalError:
+            return False
