@@ -11,6 +11,6 @@ CREATE TABLE "metadata" (
 	"longitude"	REAL,
 	"original_name"	TEXT,
 	"title"	TEXT,
-	"_modified"	INTEGER,
+	"_modified"	TEXT,
 	PRIMARY KEY("id" AUTOINCREMENT)
 );

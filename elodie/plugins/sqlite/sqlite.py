@@ -26,8 +26,8 @@ import time
 #from google.oauth2.credentials import Credentials
 
 from elodie.geolocation import place_name
-from elodie.media.photo import Photo
-from elodie.media.video import Video
+from elodie.localstorage import Db
+from elodie.media.base import Base, get_all_subclasses
 from elodie.plugins.plugins import PluginBase
 
 class SQLite(PluginBase):
@@ -60,26 +60,26 @@ class SQLite(PluginBase):
             self._create_schema()
 
     def after(self, file_path, destination_folder, final_file_path, metadata):
-
-        # We check if the source path exists in the database already.
-        # If it does then we assume that this is an update operation.
-        full_destination_path = '{}{}'.format(destination_folder, final_file_path)
-        self.cursor.execute("SELECT `path` FROM `metadata` WHERE `path`=:path", {'path': file_path})
-
-        if(self.cursor.fetchone() is None):
-            self.log(u'SQLite plugin inserting {}'.format(file_path))
-            sql_statement, sql_values = self._insert_row_sql(full_destination_path, metadata)
-        else:
-            self.log(u'SQLite plugin updating {}'.format(file_path))
-            sql_statement, sql_values = self._update_row_sql(file_path, full_destination_path, metadata)
-
-        self.cursor.execute(sql_statement, sql_values)
+        self._upsert(file_path, destination_folder, final_file_path, metadata)
 
     def batch(self):
         pass
 
     def before(self, file_path, destination_folder):
         pass
+
+    def generate_db(self):
+        db = Db()
+        for checksum, file_path in db.all():
+            subclasses = get_all_subclasses()
+            media = Base.get_class_by_file(file_path, get_all_subclasses())
+            media.set_checksum(
+                db.checksum(file_path)
+            )
+            metadata = media.get_metadata()
+            destination_folder = os.path.dirname(file_path)
+            final_file_path = '{}{}'.format(os.path.sep, os.path.basename(file_path))
+            self._upsert(file_path, destination_folder, final_file_path, metadata)
 
     def _create_schema(self):
         self.database_schema = '{}{}{}'.format(
@@ -90,7 +90,6 @@ class SQLite(PluginBase):
 
         with open(self.database_schema, 'r') as fp_schema:
             sql_statement = fp_schema.read()
-            print(sql_statement)
             self.cursor.executescript(sql_statement)
 
     def _insert_row_sql(self, final_path, metadata):
@@ -103,11 +102,11 @@ class SQLite(PluginBase):
                 """INSERT INTO `metadata` (
                     `hash`, `path`, `album`, `camera_make`, `camera_model`,
                     `date_taken`, `latitude`, `location_name`, `longitude`,
-                    `original_name`, `title`)
+                    `original_name`, `title`, `_modified`)
                     VALUES (
                     :hash, :path, :album, :camera_make, :camera_model,
                     :date_taken, :latitude, :location_name, :longitude,
-                    :original_name, :title)""",
+                    :original_name, :title, datetime('now'))""",
                 self._sql_values(final_path, metadata)
         )
 
@@ -123,14 +122,13 @@ class SQLite(PluginBase):
                     'album': metadata['album'],
                     'camera_make': metadata['camera_make'],
                     'camera_model': metadata['camera_model'],
-                    'date_taken': metadata['date_taken'],
+                    'date_taken': time.strftime('%Y-%m-%d %H:%M:%S', metadata['date_taken']),
                     'latitude': metadata['latitude'],
                     'location_name': place_name(metadata['latitude'], metadata['longitude'])['default'],
                     'longitude': metadata['longitude'],
                     'original_name': metadata['original_name'],
                     'title': metadata['title'],
-                    'current_path': current_path,
-                    '_modified': timestamp
+                    'current_path': current_path
                 }
 
     def _update_row_sql(self, current_path, final_path, metadata):
@@ -138,10 +136,25 @@ class SQLite(PluginBase):
         return (
             """UPDATE `metadata` SET `hash`=:hash, `path`=:path, `album`=:album, `camera_make`=:camera_make,
                 `camera_model`=:camera_model, `date_taken`=:date_taken, `latitude`=:latitude,
-                `longitude`=:longitude, `original_name`=:original_name, `title`=:title
+                `longitude`=:longitude, `original_name`=:original_name, `title`=:title, `_modified`=datetime('now')
                 WHERE `path`=:current_path""",
             self._sql_values(final_path, metadata, current_path)
         )
+
+    def _upsert(self, file_path, destination_folder, final_file_path, metadata):
+        # We check if the source path exists in the database already.
+        # If it does then we assume that this is an update operation.
+        full_destination_path = '{}{}'.format(destination_folder, final_file_path)
+        self.cursor.execute("SELECT `path` FROM `metadata` WHERE `path`=:path", {'path': file_path})
+
+        if(self.cursor.fetchone() is None):
+            self.log(u'SQLite plugin inserting {}'.format(file_path))
+            sql_statement, sql_values = self._insert_row_sql(full_destination_path, metadata)
+        else:
+            self.log(u'SQLite plugin updating {}'.format(file_path))
+            sql_statement, sql_values = self._update_row_sql(file_path, full_destination_path, metadata)
+
+        self.cursor.execute(sql_statement, sql_values)
 
     def _validate_schema(self):
         try:
