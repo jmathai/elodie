@@ -25,6 +25,7 @@ import time
 #from google.auth.transport.requests import AuthorizedSession
 #from google.oauth2.credentials import Credentials
 
+from elodie.geolocation import place_name
 from elodie.media.photo import Photo
 from elodie.media.video import Video
 from elodie.plugins.plugins import PluginBase
@@ -124,7 +125,7 @@ class SQLite(PluginBase):
                     'camera_model': metadata['camera_model'],
                     'date_taken': metadata['date_taken'],
                     'latitude': metadata['latitude'],
-                    'location_name': None,
+                    'location_name': place_name(metadata['latitude'], metadata['longitude'])['default'],
                     'longitude': metadata['longitude'],
                     'original_name': metadata['original_name'],
                     'title': metadata['title'],
