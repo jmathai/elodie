@@ -34,7 +34,7 @@ Metric                     Count
 -----------------------  -------
 Success                        2
 Error                          0
-Duplicate, not imported        0""" # FIXME this is not the case :(
+Duplicate, not imported        0"""
     result = Result()
     result.append(('id1', '/some/path/1'))
     result.append(('id2', '/some/path/2'))
@@ -71,7 +71,7 @@ Metric                     Count
 -----------------------  -------
 Success                        1
 Error                          1
-Duplicate, not imported        0""" # FIXME this is not the case :(
+Duplicate, not imported        0"""
     result = Result()
     result.append(('id1', False))
     result.append(('id2', '/some/path'))
