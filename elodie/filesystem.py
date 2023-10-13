@@ -487,9 +487,6 @@ class FileSystem(object):
     def process_checksum(self, _file, allow_duplicate):
         db = Db()
         checksum = db.checksum(_file)
-        if(checksum is None):
-            log.info('Could not get checksum for %s.' % _file)
-            return None
 
         # If duplicates are not allowed then we check if we've seen this file
         #  before via checksum. We also check that the file exists at the
