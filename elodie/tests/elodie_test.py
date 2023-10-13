@@ -328,7 +328,7 @@ def test_import_file_with_non_matching_exclude():
     runner = CliRunner()
     result = runner.invoke(elodie._import, ['--destination', folder_destination, '--exclude-regex', 'does not exist in path', '--allow-duplicates', origin_valid])
 
-    assert 'Success                        1' in result.output, result.output # FIXME this is not the case :(
+    assert 'Success                        1' in result.output, result.output
     assert 'Error                          0' in result.output, result.output
     assert 'Duplicate, not imported        0' in result.output, result.output
 
@@ -357,7 +357,7 @@ def test_import_directory_with_non_matching_exclude():
     runner = CliRunner()
     result = runner.invoke(elodie._import, ['--destination', folder_destination, '--source', folder, '--exclude-regex', 'non-matching', '--allow-duplicates'])
 
-    assert 'Success                        1' in result.output, result.output # FIXME this is not the case :(
+    assert 'Success                        1' in result.output, result.output
     assert 'Error                          0' in result.output, result.output
     assert 'Duplicate, not imported        0' in result.output, result.output
 
