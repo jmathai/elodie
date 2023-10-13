@@ -15,7 +15,7 @@ class Result(object):
         id, status = row
 
         # status can only be True, False, or None
-        if status is True:
+        if status:
             self.success += 1
         elif status is None: # status is only ever None if file checksum matched an existing file checksum and is therefore a duplicate file
             self.duplicate += 1
