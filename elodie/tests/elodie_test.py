@@ -300,8 +300,9 @@ def test_import_file_with_single_exclude():
     runner = CliRunner()
     result = runner.invoke(elodie._import, ['--destination', folder_destination, '--exclude-regex', origin_valid[0:5], '--allow-duplicates', origin_valid])
 
-    assert 'Success         0' in result.output, result.output
-    assert 'Error           0' in result.output, result.output
+    assert 'Success                        0' in result.output, result.output
+    assert 'Error                          0' in result.output, result.output
+    assert 'Duplicate, not imported        0' in result.output, result.output
 
 def test_import_file_with_multiple_exclude():
     temporary_folder, folder = helper.create_working_folder()
@@ -313,8 +314,9 @@ def test_import_file_with_multiple_exclude():
     runner = CliRunner()
     result = runner.invoke(elodie._import, ['--destination', folder_destination, '--exclude-regex', 'does not exist in path', '--exclude-regex', origin_valid[0:5], '--allow-duplicates', origin_valid])
 
-    assert 'Success         0' in result.output, result.output
-    assert 'Error           0' in result.output, result.output
+    assert 'Success                        0' in result.output, result.output
+    assert 'Error                          0' in result.output, result.output
+    assert 'Duplicate, not imported        0' in result.output, result.output
 
 def test_import_file_with_non_matching_exclude():
     temporary_folder, folder = helper.create_working_folder()
@@ -326,8 +328,10 @@ def test_import_file_with_non_matching_exclude():
     runner = CliRunner()
     result = runner.invoke(elodie._import, ['--destination', folder_destination, '--exclude-regex', 'does not exist in path', '--allow-duplicates', origin_valid])
 
-    assert 'Success         1' in result.output, result.output
-    assert 'Error           0' in result.output, result.output
+    assert 'Success                        1' in result.output, result.output # FIXME this is not the case :(
+    assert 'Error                          0' in result.output, result.output
+    assert 'Duplicate, not imported        0' in result.output, result.output
+
 
 def test_import_directory_with_matching_exclude():
     temporary_folder, folder = helper.create_working_folder()
@@ -339,8 +343,9 @@ def test_import_directory_with_matching_exclude():
     runner = CliRunner()
     result = runner.invoke(elodie._import, ['--destination', folder_destination, '--source', folder, '--exclude-regex', folder[1:5], '--allow-duplicates'])
 
-    assert 'Success         0' in result.output, result.output
-    assert 'Error           0' in result.output, result.output
+    assert 'Success                        0' in result.output, result.output
+    assert 'Error                          0' in result.output, result.output
+    assert 'Duplicate, not imported        0' in result.output, result.output
 
 def test_import_directory_with_non_matching_exclude():
     temporary_folder, folder = helper.create_working_folder()
@@ -352,8 +357,10 @@ def test_import_directory_with_non_matching_exclude():
     runner = CliRunner()
     result = runner.invoke(elodie._import, ['--destination', folder_destination, '--source', folder, '--exclude-regex', 'non-matching', '--allow-duplicates'])
 
-    assert 'Success         1' in result.output, result.output
-    assert 'Error           0' in result.output, result.output
+    assert 'Success                        1' in result.output, result.output # FIXME this is not the case :(
+    assert 'Error                          0' in result.output, result.output
+    assert 'Duplicate, not imported        0' in result.output, result.output
+
 
 @mock.patch('elodie.config.config_file', '%s/config.ini-import-file-with-single-config-exclude' % gettempdir())
 def test_import_file_with_single_config_exclude():
@@ -379,8 +386,9 @@ def test_import_file_with_single_config_exclude():
     if hasattr(load_config, 'config'):
         del load_config.config
 
-    assert 'Success         0' in result.output, result.output
-    assert 'Error           0' in result.output, result.output
+    assert 'Success                        0' in result.output, result.output
+    assert 'Error                          0' in result.output, result.output
+    assert 'Duplicate, not imported        0' in result.output, result.output
 
 @mock.patch('elodie.config.config_file', '%s/config.ini-import-file-with-multiple-config-exclude' % gettempdir())
 def test_import_file_with_multiple_config_exclude():
@@ -407,8 +415,9 @@ def test_import_file_with_multiple_config_exclude():
     if hasattr(load_config, 'config'):
         del load_config.config
 
-    assert 'Success         0' in result.output, result.output
-    assert 'Error           0' in result.output, result.output
+    assert 'Success                        0' in result.output, result.output
+    assert 'Error                          0' in result.output, result.output
+    assert 'Duplicate, not imported        0' in result.output, result.output
 
 def test_update_location_on_audio():
     temporary_folder, folder = helper.create_working_folder()
@@ -705,8 +714,9 @@ def test_verify_ok():
 
     shutil.rmtree(folder)
 
-    assert 'Success         1' in result.output, result.output
-    assert 'Error           0' in result.output, result.output
+    assert 'Success                        1' in result.output, result.output
+    assert 'Error                          0' in result.output, result.output
+    assert 'Duplicate, not imported        0' in result.output, result.output
 
 def test_verify_error():
     temporary_folder, folder = helper.create_working_folder()
@@ -725,7 +735,8 @@ def test_verify_error():
     shutil.rmtree(folder)
 
     assert origin in result.output, result.output
-    assert 'Error           1' in result.output, result.output
+    assert 'Error                          1' in result.output, result.output
+    assert 'Duplicate, not imported        0' in result.output, result.output
 
 @mock.patch('elodie.config.config_file', '%s/config.ini-cli-batch-plugin-googlephotos' % gettempdir())
 def test_cli_batch_plugin_googlephotos():
