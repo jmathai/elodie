@@ -76,3 +76,4 @@ Duplicate, not imported        0"""
     result.append(('id1', False))
     result.append(('id2', '/some/path'))
     call_result_and_assert(result, expected)
+ 
