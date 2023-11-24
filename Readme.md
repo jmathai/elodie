@@ -66,7 +66,7 @@ I only do 3 things.
 
 * Firstly I organize your existing collection of photos into a customizable folder structure.
 * Second I help make it easy for all the photos you haven't taken yet to flow into the exact location they belong.
-* Third but not least I promise to do all this without a yucky propietary database that some friends of mine use.
+* Third but not least I promise to do all this without a yucky proprietary database that some friends of mine use.
 
 *NOTE: make sure you've installed everything I need before running the commands below. [Instructions](#quickstart-guide) at the top of this page.*
 
@@ -193,7 +193,7 @@ You can add a custom folder structure by editing your `config.ini` file (which s
 
 #### Custom folder examples
 
-Sometimes examples are easier to understand than explainations so I'll start there. If you'd like to understand my magic I explain it in more detail below these examples. You customize your folder structure in the `Directory` section of your `config.ini`. For details of the supported formats see [strftime.org](http://strftime.org/)
+Sometimes examples are easier to understand than explanations so I'll start there. If you'd like to understand my magic I explain it in more detail below these examples. You customize your folder structure in the `Directory` section of your `config.ini`. For details of the supported formats see [strftime.org](http://strftime.org/)
 
 ```
 [Directory]
@@ -377,7 +377,7 @@ When I organize photos I look at the embedded metadata. Here are the details of 
 | Location (video, audio) | XMP:GPSLatitude, Composite:GPSLatitude, XMP:GPSLongitude, Composite:GPSLongitude | Composite tags are read-only |
 | Title (photo) | XMP:Title |   |
 | Title (video, audio) | XMP:DisplayName |   |
-| Album | XMP-xmpDM:Album, XMP:Album | XMP:Album is user defined in `configs/ExifTool_config` for backwards compatability |
+| Album | XMP-xmpDM:Album, XMP:Album | XMP:Album is user defined in `configs/ExifTool_config` for backwards compatibility |
 | Camera Make (photo, video) | EXIF:Make, QuickTime:Make |   |
 | Camera Model (photo, video) | EXIF:Model, QuickTime:Model |   |
 

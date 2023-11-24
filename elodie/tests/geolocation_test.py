@@ -130,7 +130,7 @@ def test_lookup_debug_mapquest_url():
 
 @mock.patch('elodie.constants.location_db', '%s/location.json-cached' % gettempdir())
 def test_place_name_deprecated_string_cached():
-    # See gh-160 for backwards compatability needed when a string is stored instead of a dict
+    # See gh-160 for backwards compatibility needed when a string is stored instead of a dict
     helper.reset_dbs()
     with open('%s/location.json-cached' % gettempdir(), 'w') as f:
         f.write("""
@@ -156,7 +156,7 @@ def test_place_name_cached():
     assert place_name['city'] == 'UNITTEST', place_name
 
 def test_place_name_no_default():
-    # See gh-160 for backwards compatability needed when a string is stored instead of a dict
+    # See gh-160 for backwards compatibility needed when a string is stored instead of a dict
     helper.reset_dbs()
     place_name = geolocation.place_name(123456.000, 123456.000)
     helper.restore_dbs()

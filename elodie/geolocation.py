@@ -48,7 +48,7 @@ def coordinates_by_name(name):
             #   geocodeQuality=city.
             geolocation_result = geolocation_info['results'][0]
             use_location = geolocation_result['locations'][0]['latLng']
-            # Loop over the locations to see if we come accross a
+            # Loop over the locations to see if we come across a
             #   geocodeQuality=city.
             # If we find a city we set that to the use_location and break
             for location in geolocation_result['locations']:
@@ -147,7 +147,7 @@ def place_name(lat, lon):
 
     # Try to get cached location first
     db = Db()
-    # 3km distace radious for a match
+    # 3km distance radious for a match
     cached_place_name = db.get_location_name(lat, lon, 3000)
     # We check that it's a dict to coerce an upgrade of the location
     #  db from a string location to a dictionary. See gh-160.
@@ -159,7 +159,7 @@ def place_name(lat, lon):
     if(geolocation_info is not None and 'address' in geolocation_info):
         address = geolocation_info['address']
         # gh-386 adds support for town
-        # taking precedence after city for backwards compatability
+        # taking precedence after city for backwards compatibility
         for loc in ['city', 'town', 'state', 'country']:
             if(loc in address):
                 lookup_place_name[loc] = address[loc]
@@ -246,7 +246,7 @@ def parse_result(result):
 def parse_result_address(result):
     # We want to store the city, state and country
     # The only way determined to identify an unfound address is 
-    #   that none of the indicies were found
+    #   that none of the indices were found
     if( 'results' not in result or
         len(result['results']) == 0 or
         'locations' not in result['results'][0] or
