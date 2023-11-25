@@ -84,7 +84,7 @@ class Media(Base):
 
         # The lat/lon _keys array has an order of precedence.
         # The first key is writable and we will give the writable
-        #   key precence when reading.
+        #   key presence when reading.
         direction_multiplier = 1.0
         for key in self.latitude_keys + self.longitude_keys:
             if key not in exif:
@@ -252,7 +252,7 @@ class Media(Base):
 
         # The lat/lon _keys array has an order of precedence.
         # The first key is writable and we will give the writable
-        #   key precence when reading.
+        #   key presence when reading.
         tags = {
             self.latitude_keys[0]: latitude,
             self.longitude_keys[0]: longitude,

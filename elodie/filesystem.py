@@ -11,7 +11,7 @@ import re
 import shutil
 import time
 
-from elodie import compatability
+from elodie import compatibility
 from elodie import geolocation
 from elodie import log
 from elodie.config import load_config
@@ -180,7 +180,7 @@ class FileSystem(object):
                         this_value = os.path.splitext(metadata['original_name'])[0]
                     else:
                         # We didn't always store original_name so this is 
-                        #  for backwards compatability.
+                        #  for backwards compatibility.
                         # We want to remove the hardcoded date prefix we used 
                         #  to add to the name.
                         # This helps when re-running the program on file 
@@ -583,7 +583,7 @@ class FileSystem(object):
                 # Move the exif _original back to the initial source file
                 shutil.move(exif_original_file, _file)
             else:
-                compatability._copyfile(_file, dest_path)
+                compatibility._copyfile(_file, dest_path)
 
             # Set the utime based on what the original file contained 
             #  before we made any changes.
