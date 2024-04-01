@@ -15,9 +15,9 @@ jobs:
             pip install -r elodie/plugins/googlephotos/requirements.txt
             pip install coveralls
             sed -i.bak 's/debug = False/debug = True/g' elodie/constants.py
-            wget https://exiftool.org/Image-ExifTool-12.50.tar.gz
-            gzip -dc Image-ExifTool-12.50.tar.gz  | tar -xf -
-            cd Image-ExifTool-12.50
+            wget https://exiftool.org/Image-ExifTool-12.81.tar.gz
+            gzip -dc Image-ExifTool-12.81.tar.gz  | tar -xf -
+            cd Image-ExifTool-12.81
             perl Makefile.PL
             sudo make install
             echo "which exiftool command"

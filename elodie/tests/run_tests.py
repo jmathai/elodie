@@ -27,7 +27,7 @@ if __name__ == "__main__":
         config_contents = f.read()
 
     # set the mapquest key in the temporary config file and write it to the temporary application directory
-    config_contents = config_contents.replace('your-api-key-goes-here', 'x8wQLqGhW7qK3sFpjYtVTogVtoMK0S8s')
+    config_contents = config_contents.replace('your-api-key-goes-here', os.environ['MAPQUEST_KEY'])
     with open(temporary_config_file, 'w+') as f:
         f.write(config_contents)
 
