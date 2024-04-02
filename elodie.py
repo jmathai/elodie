@@ -371,7 +371,9 @@ main.add_command(_batch)
 if __name__ == '__main__':
     #Initialize ExifTool Subprocess
     exiftool_addedargs = [
-       u'-config',
+        u'-api',
+        u'QuickTimeUTC',
+        u'-config',
         u'"{}"'.format(constants.exiftool_config)
     ]
     with ExifTool(executable_=get_exiftool(), addedargs=exiftool_addedargs) as et:
