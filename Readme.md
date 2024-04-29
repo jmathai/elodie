@@ -25,6 +25,9 @@ apt-get install libimage-exiftool-perl
 # Fedora / Redhat
 dnf install perl-Image-ExifTool
 
+# Windows (uses chocolatey, https://chocolatey.org/)
+choco install exiftool
+
 # Windows users can install the binary
 # http://www.sno.phy.queensu.ca/~phil/exiftool/install.html
 ```
