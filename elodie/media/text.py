@@ -179,7 +179,10 @@ class Text(Base):
         
         # Create an _original copy just as we do with exiftool
         # This is to keep all file processing logic in line with exiftool
-        copy2(source, source + '_original')
+        try:
+            copy2(source, source + '_original')
+        except:
+            return
 
         if has_metadata:
             # Update the first line of this file in place
