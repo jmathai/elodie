@@ -499,11 +499,11 @@ class FileSystem(object):
         checksum_file = db.get_hash(checksum)
         if(allow_duplicate is False and checksum_file is not None):
             if(os.path.isfile(checksum_file)):
-                log.info('%s already at %s.' % (
+                log.warn('%s already at %s.' % (
                     _file,
                     checksum_file
                 ))
-                return None
+                return -1
             else:
                 log.info('%s matched checksum but file not found at %s.' % (  # noqa
                     _file,
@@ -528,6 +528,8 @@ class FileSystem(object):
             return
 
         checksum = self.process_checksum(_file, allow_duplicate)
+        if(checksum == -1):
+            return
         if(checksum is None):
             log.info('Original checksum returned None for %s. Skipping...' %
                      _file)
