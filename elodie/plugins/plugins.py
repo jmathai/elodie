@@ -15,7 +15,7 @@ from os import mkdir
 from sys import exc_info
 from traceback import format_exc
 
-from elodie.compatability import _bytes
+from elodie.compatibility import _bytes
 from elodie.config import load_config_for_plugin, load_plugin_config
 from elodie.constants import application_directory
 from elodie import log

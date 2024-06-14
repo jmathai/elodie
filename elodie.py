@@ -18,7 +18,7 @@ if not verify_dependencies():
 from elodie import constants
 from elodie import geolocation
 from elodie import log
-from elodie.compatability import _decode
+from elodie.compatibility import _decode
 from elodie.config import load_config
 from elodie.filesystem import FileSystem
 from elodie.localstorage import Db

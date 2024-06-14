@@ -70,7 +70,7 @@ def _copyfile(src, dst):
             pass
 
 
-# If you want cross-platform overwriting of the destination, 
+# If you want cross-platform overwriting of the destination,
 # use os.replace() instead of rename().
 # https://docs.python.org/3/library/os.html#os.rename
 def _rename(src, dst):
