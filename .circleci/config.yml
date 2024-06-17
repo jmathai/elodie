@@ -11,13 +11,14 @@ jobs:
           name: Install dependencies
           command: |
             export ELODIE_DIR=${PWD}
+            export EXIFTOOL_VER="12.87"
             pip install -r elodie/tests/requirements.txt
             pip install -r elodie/plugins/googlephotos/requirements.txt
             pip install coveralls
             sed -i.bak 's/debug = False/debug = True/g' elodie/constants.py
-            wget https://exiftool.org/Image-ExifTool-12.81.tar.gz
-            gzip -dc Image-ExifTool-12.81.tar.gz  | tar -xf -
-            cd Image-ExifTool-12.81
+            wget https://exiftool.org/Image-ExifTool-$EXIFTOOL_VER.tar.gz
+            gzip -dc Image-ExifTool-$EXIFTOOL_VER.tar.gz  | tar -xf -
+            cd Image-ExifTool-$EXIFTOOL_VER
             perl Makefile.PL
             sudo make install
             echo "which exiftool command"
