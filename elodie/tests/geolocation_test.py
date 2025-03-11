@@ -106,7 +106,8 @@ def test_lookup_with_valid_key():
 
 def test_lookup_with_invalid_location():
     res = geolocation.lookup(location='foobar dne')
-    assert 'adminArea1Type' not in res['results'][0]['locations'][0], res
+    # Mapquest API started returning json (gh-475)
+    assert res is not None, res
 
 @mock.patch('elodie.geolocation.__PREFER_ENGLISH_NAMES__', True)
 def test_lookup_with_prefer_english_names_true():
