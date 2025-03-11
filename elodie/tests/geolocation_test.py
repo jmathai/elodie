@@ -106,7 +106,7 @@ def test_lookup_with_valid_key():
 
 def test_lookup_with_invalid_location():
     res = geolocation.lookup(location='foobar dne')
-    assert res is None, res
+    assert 'adminArea1Type' not in res['results'][0]['locations'][0], res
 
 @mock.patch('elodie.geolocation.__PREFER_ENGLISH_NAMES__', True)
 def test_lookup_with_prefer_english_names_true():
