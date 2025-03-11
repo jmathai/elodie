@@ -1167,6 +1167,28 @@ def test_should_exclude_with_complex_matching_regex():
     filesystem = FileSystem()
     result = filesystem.should_exclude('/var/folders/j9/h192v5v95gd_fhpv63qzyd1400d9ct/T/T497XPQH2R/UATR2GZZTX/2016-04-Apr/London/2016-04-07_11-15-26-valid-sample-title.txt', {re.compile('London.*\.txt$')})
     assert result == True, result
+    
+def test_get_file_name_with_integer_metadata():
+    """Test that the get_file_name method works properly when metadata contains integer values.
+    This tests the fix for GitHub issue #454.
+    """
+    filesystem = FileSystem()
+    
+    # Create metadata dict with an integer value for 'album'
+    metadata = {
+        'date_taken': time.gmtime(),
+        'album': 123456,  # Integer value instead of string
+        'title': 'some-title',
+        'extension': 'jpg',
+        'base_name': 'test',
+        'original_name': None
+    }
+    
+    # This should not raise an AttributeError
+    file_name = filesystem.get_file_name(metadata)
+    
+    # Verify the file name contains the integer album converted to string
+    assert '123456' in file_name, file_name
 
 @mock.patch('elodie.config.config_file', '%s/config.ini-does-not-exist' % gettempdir())
 def test_get_folder_path_definition_default():

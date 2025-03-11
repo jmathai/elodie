@@ -170,7 +170,9 @@ class FileSystem(object):
                     break
                 elif part in ('album', 'extension', 'title'):
                     if metadata[part]:
-                        this_value = re.sub(self.whitespace_regex, '-', metadata[part].strip())
+                        # Convert to string to handle cases where metadata[part] might be an integer
+                        # Fixes GitHub issue #454
+                        this_value = re.sub(self.whitespace_regex, '-', str(metadata[part]).strip())
                         break
                 elif part in ('original_name'):
                     # First we check if we have metadata['original_name'].
@@ -194,7 +196,9 @@ class FileSystem(object):
                             this_value = metadata['base_name']
 
                     # Lastly we want to sanitize the name
-                    this_value = re.sub(self.whitespace_regex, '-', this_value.strip())
+                    # Convert to string to handle cases where this_value might be an integer
+                    # Related to GitHub issue #454
+                    this_value = re.sub(self.whitespace_regex, '-', str(this_value).strip())
                 elif part.startswith('"') and part.endswith('"'):
                     this_value = part[1:-1]
                     break
