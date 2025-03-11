@@ -101,8 +101,8 @@ def test_reverse_lookup_with_invalid_key():
 def test_lookup_with_valid_key():
     res = geolocation.lookup(location='Sunnyvale, CA')
     latLng = res['results'][0]['locations'][0]['latLng']
-    assert latLng['lat'] == 37.37187, latLng
-    assert latLng['lng'] == -122.03749, latLng
+    assert latLng['lat'] == 37.37188, latLng
+    assert latLng['lng'] == -122.03751, latLng
 
 def test_lookup_with_invalid_location():
     res = geolocation.lookup(location='foobar dne')
@@ -178,7 +178,7 @@ def test_parse_result_with_error():
     assert res is None, res
 
 def test_parse_result_with_city():
-    # https://www.mapquestapi.com/geocoding/v1/reverse?location=37.37187,-122.03749&key=key_goes_here&format=json
+    # https://www.mapquestapi.com/geocoding/v1/reverse?location=37.37188,-122.03751&key=key_goes_here&format=json
     results = {"info":{"statuscode":0,"copyright":{"text":"© 2022 MapQuest, Inc.","imageUrl":"http://api.mqcdn.com/res/mqlogo.gif","imageAltText":"© 2022 MapQuest, Inc."},"messages":[]},"options":{"maxResults":1,"ignoreLatLngInput":False},"results":[{"providedLocation":{"latLng":{"lat":37.368,"lng":-122.03}},"locations":[{"street":"312 Old San Francisco Rd","adminArea6":"Heritage District","adminArea6Type":"Neighborhood","adminArea5":"Sunnyvale","adminArea5Type":"City","adminArea4":"Santa Clara","adminArea4Type":"County","adminArea3":"CA","adminArea3Type":"State","adminArea1":"US","adminArea1Type":"Country","postalCode":"94086","geocodeQualityCode":"P1AAA","geocodeQuality":"POINT","dragPoint":False,"sideOfStreet":"R","linkId":"0","unknownInput":"","type":"s","latLng":{"lat":37.36798,"lng":-122.03018},"displayLatLng":{"lat":37.36785,"lng":-122.03021},"mapUrl":""}]}]}
 
     res = geolocation.parse_result(results)
@@ -186,7 +186,7 @@ def test_parse_result_with_city():
 
 def test_parse_result_with_lat_lon():
     # https://www.mapquestapi.com/geocoding/v1/address?format=json&key=key_goes_here&locale=en_US&location=Sunnyvale,CA
-    results = {"info":{"statuscode":0,"copyright":{"text":"© 2022 MapQuest, Inc.","imageUrl":"http://api.mqcdn.com/res/mqlogo.gif","imageAltText":"© 2022 MapQuest, Inc."},"messages":[]},"options":{"maxResults":-1,"ignoreLatLngInput":False},"results":[{"providedLocation":{"location":"Sunnyvale,CA"},"locations":[{"street":"","adminArea6":"","adminArea6Type":"Neighborhood","adminArea5":"Sunnyvale","adminArea5Type":"City","adminArea4":"Santa Clara","adminArea4Type":"County","adminArea3":"CA","adminArea3Type":"State","adminArea1":"US","adminArea1Type":"Country","postalCode":"","geocodeQualityCode":"A5XAX","geocodeQuality":"CITY","dragPoint":False,"sideOfStreet":"N","linkId":"0","unknownInput":"","type":"s","latLng":{"lat":37.37187,"lng":-122.03749},"displayLatLng":{"lat":37.37187,"lng":-122.03749},"mapUrl":""}]}]}
+    results = {"info":{"statuscode":0,"copyright":{"text":"© 2022 MapQuest, Inc.","imageUrl":"http://api.mqcdn.com/res/mqlogo.gif","imageAltText":"© 2022 MapQuest, Inc."},"messages":[]},"options":{"maxResults":-1,"ignoreLatLngInput":False},"results":[{"providedLocation":{"location":"Sunnyvale,CA"},"locations":[{"street":"","adminArea6":"","adminArea6Type":"Neighborhood","adminArea5":"Sunnyvale","adminArea5Type":"City","adminArea4":"Santa Clara","adminArea4Type":"County","adminArea3":"CA","adminArea3Type":"State","adminArea1":"US","adminArea1Type":"Country","postalCode":"","geocodeQualityCode":"A5XAX","geocodeQuality":"CITY","dragPoint":False,"sideOfStreet":"N","linkId":"0","unknownInput":"","type":"s","latLng":{"lat":37.37188,"lng":-122.03751},"displayLatLng":{"lat":37.37188,"lng":-122.03751},"mapUrl":""}]}]}
 
     res = geolocation.parse_result(results)
     assert res == results, res
