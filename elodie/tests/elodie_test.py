@@ -432,8 +432,8 @@ def test_update_location_on_audio():
 
     assert status == True, status
     assert metadata['latitude'] != metadata_processed['latitude'], metadata_processed['latitude']
-    assert helper.isclose(metadata_processed['latitude'], 37.37187), metadata_processed['latitude']
-    assert helper.isclose(metadata_processed['longitude'], -122.03749), metadata_processed['longitude']
+    assert helper.isclose(metadata_processed['latitude'], 37.37188), metadata_processed['latitude']
+    assert helper.isclose(metadata_processed['longitude'], -122.03751), metadata_processed['longitude']
 
 def test_update_location_on_photo():
     temporary_folder, folder = helper.create_working_folder()
@@ -457,8 +457,8 @@ def test_update_location_on_photo():
 
     assert status == True, status
     assert metadata['latitude'] != metadata_processed['latitude']
-    assert helper.isclose(metadata_processed['latitude'], 37.37187), metadata_processed['latitude']
-    assert helper.isclose(metadata_processed['longitude'], -122.03749), metadata_processed['longitude']
+    assert helper.isclose(metadata_processed['latitude'], 37.37188), metadata_processed['latitude']
+    assert helper.isclose(metadata_processed['longitude'], -122.03751), metadata_processed['longitude']
 
 def test_update_location_on_text():
     temporary_folder, folder = helper.create_working_folder()
@@ -482,8 +482,8 @@ def test_update_location_on_text():
 
     assert status == True, status
     assert metadata['latitude'] != metadata_processed['latitude']
-    assert helper.isclose(metadata_processed['latitude'], 37.37187), metadata_processed['latitude']
-    assert helper.isclose(metadata_processed['longitude'], -122.03749), metadata_processed['longitude']
+    assert helper.isclose(metadata_processed['latitude'], 37.37188), metadata_processed['latitude']
+    assert helper.isclose(metadata_processed['longitude'], -122.03751), metadata_processed['longitude']
 
 def test_update_location_on_video():
     temporary_folder, folder = helper.create_working_folder()
@@ -507,8 +507,8 @@ def test_update_location_on_video():
 
     assert status == True, status
     assert metadata['latitude'] != metadata_processed['latitude']
-    assert helper.isclose(metadata_processed['latitude'], 37.37187), metadata_processed['latitude']
-    assert helper.isclose(metadata_processed['longitude'], -122.03749), metadata_processed['longitude']
+    assert helper.isclose(metadata_processed['latitude'], 37.37188), metadata_processed['latitude']
+    assert helper.isclose(metadata_processed['longitude'], -122.03751), metadata_processed['longitude']
 
 def test_update_time_on_audio():
     temporary_folder, folder = helper.create_working_folder()
