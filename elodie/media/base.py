@@ -74,6 +74,10 @@ class Base(object):
     def get_camera_model(self):
         return None
 
+    def get_checksum(self):
+        self.get_metadata()
+        return self.metadata['checksum']
+
     def get_metadata(self, update_cache=False):
         """Get a dictionary of metadata for any file.
 
@@ -90,6 +94,7 @@ class Base(object):
         source = self.source
 
         self.metadata = {
+            'checksum': None,
             'date_taken': self.get_date_taken(),
             'camera_make': self.get_camera_make(),
             'camera_model': self.get_camera_model(),
@@ -177,6 +182,16 @@ class Base(object):
 
         self.set_album(folder)
         return True
+
+    def set_checksum(self, new_checksum):
+        """Add the checksum to the metadata.
+
+        The checksum in `metadata` is passed in and not derived from the file itself.
+        It was added to pass in to plugins.
+        See gh-68.
+        """
+        self.get_metadata()
+        self.metadata['checksum'] = new_checksum
 
     def set_metadata_basename(self, new_basename):
         """Update the basename attribute in the metadata dict for this instance.

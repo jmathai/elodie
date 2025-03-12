@@ -34,8 +34,11 @@ class PluginBase(object):
     __name__ = 'PluginBase'
 
     def __init__(self):
+        # Initializes variables for the plugin
+        self.application_directory = application_directory
         # Loads the config for the plugin from config.ini
         self.config_for_plugin = load_config_for_plugin(self.__name__)
+        # Initializes a database for the plugin.
         self.db = PluginDb(self.__name__)
 
     def after(self, file_path, destination_folder, final_file_path, metadata):
@@ -58,6 +61,9 @@ class PluginBase(object):
         log.all(dumps(
             {self.__name__: msg}
         ))
+
+    def generate_db(self, hash_db):
+        pass
 
 class PluginDb(object):
     """A database module which provides a simple key/value database.

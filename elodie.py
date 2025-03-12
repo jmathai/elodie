@@ -174,6 +174,10 @@ def _generate_db(source, debug):
         log.progress()
     
     db.update_hash_db()
+
+    plugins = Plugins()
+    plugins.run_generate_db()
+
     log.progress('', True)
     result.write()
 

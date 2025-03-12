@@ -38,6 +38,19 @@ def test_get_class_by_file_without_extension():
     
     assert cls is None, cls
 
+def test_get_checksum():
+    temporary_folder, folder = helper.create_working_folder()
+
+    origin = '%s/%s' % (folder, 'with-original-name.jpg')
+    file = helper.get_file('with-original-name.jpg')
+    
+    shutil.copyfile(file, origin)
+
+    media = Media.get_class_by_file(origin, [Photo])
+    checksum = media.get_checksum()
+
+    assert checksum == None, checksum
+
 def test_get_original_name():
     temporary_folder, folder = helper.create_working_folder()
 
@@ -100,6 +113,20 @@ def test_set_album_from_folder():
     shutil.rmtree(folder)
 
     assert metadata_new['album'] == new_album_name, metadata_new['album']
+
+def test_get_checksum():
+    temporary_folder, folder = helper.create_working_folder()
+
+    origin = '%s/%s' % (folder, 'with-original-name.jpg')
+    file = helper.get_file('with-original-name.jpg')
+    
+    shutil.copyfile(file, origin)
+
+    media = Media.get_class_by_file(origin, [Photo])
+    media.set_checksum('foo')
+    checksum = media.get_checksum()
+
+    assert checksum == 'foo', checksum
 
 def test_set_metadata():
     temporary_folder, folder = helper.create_working_folder()
