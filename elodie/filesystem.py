@@ -42,7 +42,7 @@ class FileSystem(object):
         # It captures some additional characters like the unicode checkmark \u2713.
         # See build failures in Python3 here.
         #  https://travis-ci.org/jmathai/elodie/builds/483012902
-        self.whitespace_regex = '[ \t\n\r\f\v]+'
+        self.whitespace_regex = '[ \t\n\r\f\v,/]+'
 
         # Instantiate a plugins object
         self.plugins = Plugins()
@@ -168,7 +168,7 @@ class FileSystem(object):
                         place_name,
                     )
                     break
-                elif part in ('album', 'extension', 'title'):
+                elif part in ('album', 'extension', 'title', 'camera_make', 'camera_model'):
                     if metadata[part]:
                         this_value = re.sub(self.whitespace_regex, '-', metadata[part].strip())
                         break
@@ -217,6 +217,8 @@ class FileSystem(object):
                     this_value,
                     name,
                 )
+
+        name = re.sub('[\?\*\0:|<>]', '_', name)
 
         config = load_config()
 
@@ -588,7 +590,10 @@ class FileSystem(object):
             # Set the utime based on what the original file contained 
             #  before we made any changes.
             # Then set the utime on the destination file based on metadata.
-            os.utime(_file, (stat_info_original.st_atime, stat_info_original.st_mtime))
+            try:
+                os.utime(_file, (stat_info_original.st_atime, stat_info_original.st_mtime))
+            except OSError:
+                pass
             self.set_utime_from_metadata(metadata, dest_path)
 
         db = Db()
