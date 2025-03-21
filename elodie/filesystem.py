@@ -415,7 +415,7 @@ class FileSystem(object):
                 place_name,
             )
             return parsed_folder_name
-        elif part in ('album', 'camera_make', 'camera_model'):
+        elif part in ('album', 'camera_make', 'camera_model', 'extension'):
             if metadata[part]:
                 return metadata[part]
         elif part.startswith('"') and part.endswith('"'):
