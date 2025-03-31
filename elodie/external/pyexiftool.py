@@ -128,7 +128,7 @@ def strip_nl (s):
 
 
 # Error checking function
-# Note: They are quite fragile, beacsue teh just parse the output text from exiftool
+# Note: They are quite fragile, beacsue the just parse the output text from exiftool
 def check_ok (result):
     """Evaluates the output from a exiftool write operation (e.g. `set_tags`)
     
@@ -166,7 +166,7 @@ class ExifTool(object, with_metaclass(Singleton)):
     """Run the `exiftool` command-line tool and communicate to it.
 
     You can pass two arguments to the constructor:
-    - ``addedargs`` (list of strings): contains additional paramaters for
+    - ``addedargs`` (list of strings): contains additional parameters for
       the stay-open instance of exiftool
     - ``executable`` (string): file name of the ``exiftool`` executable.
       The default value ``exiftool`` will only work if the executable
@@ -193,7 +193,7 @@ class ExifTool(object, with_metaclass(Singleton)):
        options will be silently ignored by exiftool, so there's not
        much that can be done in that regard.  You should avoid passing
        non-existent files to any of the methods, since this will lead
-       to undefied behaviour.
+       to undefined behaviour.
 
     .. py:attribute:: running
 
