@@ -222,6 +222,13 @@ class FileSystem(object):
 
         if('File' in config and 'capitalization' in config['File'] and config['File']['capitalization'] == 'upper'):
             return name.upper()
+        elif('File' in config and 'capitalization' in config['File'] and config['File']['capitalization'] == 'title'):
+            # Mine is:
+            # date=%d-%H%M%S
+            # name=%date [%city] %original_name.%extension
+            # Since strings before "]" are quite stable, it ensures that they can be split properly by "]" no matter what the original name is.
+            # "]" is replaceable.
+            return name.split(']', maxsplit=1)[0].title() + ']' + name.split(']', maxsplit=1)[1]
         else:
             return name.lower()
 
