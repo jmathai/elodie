@@ -147,7 +147,7 @@ def place_name(lat, lon):
 
     # Try to get cached location first
     db = Db()
-    # 3km distace radious for a match
+    # 3km distance radius for a match
     cached_place_name = db.get_location_name(lat, lon, 3000)
     # We check that it's a dict to coerce an upgrade of the location
     #  db from a string location to a dictionary. See gh-160.
