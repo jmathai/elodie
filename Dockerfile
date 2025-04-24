@@ -17,10 +17,13 @@ ENV LANG C.UTF-8
 ENV LANGUAGE C.UTF-8
 ENV LC_ALL C.UTF-8
 
-RUN wget https://exiftool.org/Image-ExifTool-${EXIF_TOOL_VER}.tar.gz && \
-    gzip -dc Image-ExifTool-${EXIF_TOOL_VER}.tar.gz  | tar -xf - && \
+RUN cd /tmp && \
+    wget https://exiftool.org/Image-ExifTool-${EXIF_TOOL_VER}.tar.gz && \
+    gzip -dc /tmp/Image-ExifTool-${EXIF_TOOL_VER}.tar.gz  | tar -xf - && \
     cd Image-ExifTool-${EXIF_TOOL_VER} && perl Makefile.PL && \
-    make install && cd ../ && rm -r Image-ExifTool-${EXIF_TOOL_VER}
+    make install && \
+    cd ../ && rm -r Image-ExifTool-${EXIF_TOOL_VER} && \
+    rm -r Image-ExifTool-${EXIF_TOOL_VER}.tar.gz
 
 COPY requirements.txt /opt/elodie/requirements.txt
 COPY docs/requirements.txt /opt/elodie/docs/requirements.txt
