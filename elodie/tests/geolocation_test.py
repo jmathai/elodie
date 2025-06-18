@@ -198,3 +198,74 @@ def test_parse_result_with_unknown_lat_lon():
 
     res = geolocation.parse_result(results)
     assert res is None, res
+
+@mock.patch('elodie.geolocation.ExifTool')
+def test_exiftool_geolocation_success(mock_exiftool_class):
+    # Mock ExifTool response for Sunnyvale coordinates
+    mock_et = mock_exiftool_class.return_value.__enter__.return_value
+    mock_et.execute.return_value = b"Geolocation database:\nCity,Region,Subregion,CountryCode,Country,TimeZone,FeatureCode,Population,Latitude,Longitude\nCupertino,California,Santa Clara County,US,United States,America/Los_Angeles,PPL,60000,37.3229,-122.0322\nSunnyvale,California,Santa Clara County,US,United States,America/Los_Angeles,PPL,152000,37.3688,-122.0363"
+    
+    result = geolocation.exiftool_geolocation(37.368, -122.03)
+    
+    assert result is not None, "ExifTool geolocation should return result"
+    assert 'city' in result, "Result should contain city"
+    assert 'default' in result, "Result should contain default location"
+    assert result['city'] in ['Cupertino', 'Sunnyvale'], f"City should be Cupertino or Sunnyvale, got {result['city']}"
+
+@mock.patch('elodie.geolocation.ExifTool')
+def test_exiftool_geolocation_no_match(mock_exiftool_class):
+    # Mock ExifTool response with no nearby cities
+    mock_et = mock_exiftool_class.return_value.__enter__.return_value
+    mock_et.execute.return_value = b"Geolocation database:\nCity,Region,Subregion,CountryCode,Country,TimeZone,FeatureCode,Population,Latitude,Longitude\nNew York,New York,New York County,US,United States,America/New_York,PPL,8000000,40.7128,-74.0060"
+    
+    result = geolocation.exiftool_geolocation(37.368, -122.03)
+    
+    # Should return None since New York is too far from Sunnyvale coordinates
+    assert result is None, "ExifTool geolocation should return None for distant coordinates"
+
+@mock.patch('elodie.geolocation.ExifTool')
+def test_exiftool_geolocation_exception(mock_exiftool_class):
+    # Mock ExifTool to raise an exception
+    mock_exiftool_class.return_value.__enter__.side_effect = Exception("ExifTool error")
+    
+    result = geolocation.exiftool_geolocation(37.368, -122.03)
+    
+    assert result is None, "ExifTool geolocation should return None on exception"
+
+def test_exiftool_geolocation_invalid_coordinates():
+    result = geolocation.exiftool_geolocation(None, None)
+    assert result is None, "ExifTool geolocation should return None for None coordinates"
+    
+    result = geolocation.exiftool_geolocation(37.368, None)
+    assert result is None, "ExifTool geolocation should return None for partial coordinates"
+
+@mock.patch('elodie.geolocation.exiftool_geolocation')
+@mock.patch('elodie.geolocation.get_key')
+def test_place_name_uses_mapquest_when_key_available(mock_get_key, mock_exiftool_geo):
+    # Mock MapQuest key to be available
+    mock_get_key.return_value = 'test_key'
+    
+    # This will test that when MapQuest key is available, it uses MapQuest (not ExifTool)
+    result = geolocation.place_name(37.368, -122.03)
+    
+    # Should have checked for MapQuest key first
+    mock_get_key.assert_called_once()
+    # Should NOT have called ExifTool since MapQuest key is available
+    mock_exiftool_geo.assert_not_called()
+
+@mock.patch('elodie.geolocation.exiftool_geolocation')
+@mock.patch('elodie.geolocation.get_key')
+def test_place_name_uses_exiftool_when_no_mapquest_key(mock_get_key, mock_exiftool_geo):
+    # Mock no MapQuest key available
+    mock_get_key.return_value = None
+    # Mock ExifTool to return a successful result
+    mock_exiftool_geo.return_value = {'city': 'Cupertino', 'default': 'Cupertino', 'country': 'United States'}
+    
+    result = geolocation.place_name(37.368, -122.03)
+    
+    # Should have checked for MapQuest key first
+    mock_get_key.assert_called_once()
+    # Should have called ExifTool since no MapQuest key
+    mock_exiftool_geo.assert_called_once_with(37.368, -122.03)
+    # Should return the ExifTool result
+    assert result['city'] == 'Cupertino', f"Expected Cupertino, got {result.get('city')}"

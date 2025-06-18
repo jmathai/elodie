@@ -17,6 +17,7 @@ from elodie.config import load_config
 from elodie import constants
 from elodie import log
 from elodie.localstorage import Db
+from elodie.external.pyexiftool import ExifTool
 
 __KEY__ = None
 __DEFAULT_LOCATION__ = 'Unknown Location'
@@ -134,6 +135,101 @@ def get_prefer_english_names():
     __PREFER_ENGLISH_NAMES__ = bool(config['MapQuest']['prefer_english_names'])
     return __PREFER_ENGLISH_NAMES__
 
+def exiftool_geolocation(lat, lon):
+    """Use ExifTool's geolocation database to look up place name from coordinates.
+    
+    :param float lat: Latitude coordinate
+    :param float lon: Longitude coordinate
+    :returns: dict with location information or None if not found
+    """
+    if lat is None or lon is None:
+        return None
+    
+    # Convert lat/lon to floats
+    if not isinstance(lat, float):
+        lat = float(lat)
+    if not isinstance(lon, float):
+        lon = float(lon)
+    
+    try:
+        with ExifTool() as et:
+            # Query the geolocation database directly using -listgeo and find nearest match
+            # Format: City,Region,Subregion,CountryCode,Country,TimeZone,FeatureCode,Population,Latitude,Longitude
+            geo_data = et.execute(b"-listgeo", b"-csv").decode('utf-8')
+            
+            if not geo_data:
+                return None
+            
+            lines = geo_data.strip().split('\n')
+            if len(lines) < 2:  # Header + at least one data line
+                return None
+            
+            # Skip header line
+            best_match = None
+            min_distance = float('inf')
+            
+            for line in lines[1:]:  # Skip header
+                try:
+                    parts = line.split(',')
+                    if len(parts) >= 10 and parts[8] != 'Latitude':  # Skip header if it appears again
+                        city = parts[0]
+                        region = parts[1] 
+                        subregion = parts[2]
+                        country_code = parts[3]
+                        country = parts[4]
+                        db_lat = float(parts[8])
+                        db_lon = float(parts[9])
+                        
+                        # Calculate simple distance (not exact but good enough for nearest city)
+                        distance = ((lat - db_lat) ** 2 + (lon - db_lon) ** 2) ** 0.5
+                        
+                        if distance < min_distance:
+                            min_distance = distance
+                            best_match = {
+                                'city': city,
+                                'region': region,
+                                'subregion': subregion,
+                                'country': country,
+                                'country_code': country_code
+                            }
+                            
+                            # If we found a very close match (within ~0.1 degrees), use it
+                            if distance < 0.1:
+                                break
+                                
+                except (ValueError, IndexError):
+                    continue
+            
+            if best_match and min_distance < 2.0:  # Within reasonable distance
+                lookup_place_name = {}
+                
+                # Priority order: City > Region > Subregion > Country
+                if best_match['city'] and best_match['city'].strip():
+                    lookup_place_name['city'] = best_match['city']
+                    lookup_place_name['default'] = best_match['city']
+                elif best_match['region'] and best_match['region'].strip():
+                    lookup_place_name['state'] = best_match['region']
+                    if 'default' not in lookup_place_name:
+                        lookup_place_name['default'] = best_match['region']
+                elif best_match['subregion'] and best_match['subregion'].strip():
+                    lookup_place_name['state'] = best_match['subregion']
+                    if 'default' not in lookup_place_name:
+                        lookup_place_name['default'] = best_match['subregion']
+                
+                if best_match['country'] and best_match['country'].strip():
+                    lookup_place_name['country'] = best_match['country']
+                    if 'default' not in lookup_place_name:
+                        lookup_place_name['default'] = best_match['country']
+                
+                return lookup_place_name if lookup_place_name else None
+                
+    except Exception as e:
+        log.error("ExifTool geolocation failed: {}".format(e))
+        return None
+    
+    return None
+
+
 def place_name(lat, lon):
     lookup_place_name_default = {'default': __DEFAULT_LOCATION__}
     if(lat is None or lon is None):
@@ -155,18 +251,28 @@ def place_name(lat, lon):
         return cached_place_name
 
     lookup_place_name = {}
-    geolocation_info = lookup(lat=lat, lon=lon)
-    if(geolocation_info is not None and 'address' in geolocation_info):
-        address = geolocation_info['address']
-        # gh-386 adds support for town
-        # taking precedence after city for backwards compatability
-        for loc in ['city', 'town', 'state', 'country']:
-            if(loc in address):
-                lookup_place_name[loc] = address[loc]
-                # In many cases the desired key is not available so we
-                #  set the most specific as the default.
-                if('default' not in lookup_place_name):
-                    lookup_place_name['default'] = address[loc]
+    
+    # Check if MapQuest key is configured
+    key = get_key()
+    if key is not None:
+        # Use MapQuest if key is available
+        geolocation_info = lookup(lat=lat, lon=lon)
+        if(geolocation_info is not None and 'address' in geolocation_info):
+            address = geolocation_info['address']
+            # gh-386 adds support for town
+            # taking precedence after city for backwards compatability
+            for loc in ['city', 'town', 'state', 'country']:
+                if(loc in address):
+                    lookup_place_name[loc] = address[loc]
+                    # In many cases the desired key is not available so we
+                    #  set the most specific as the default.
+                    if('default' not in lookup_place_name):
+                        lookup_place_name['default'] = address[loc]
+    else:
+        # Use ExifTool geolocation if no MapQuest key is configured
+        lookup_place_name = exiftool_geolocation(lat, lon)
+        if not lookup_place_name:
+            lookup_place_name = {}
 
     if(lookup_place_name):
         db.add_location(lat, lon, lookup_place_name)
