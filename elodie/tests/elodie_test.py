@@ -1,13 +1,12 @@
 # Project imports
-from imp import load_source
+import importlib.util
 import mock
 import os
 import sys
 import shutil
 
 from click.testing import CliRunner
-from nose.plugins.skip import SkipTest
-from nose.tools import assert_raises
+import pytest
 from six import text_type, unichr as six_unichr
 from tempfile import gettempdir
 
@@ -15,7 +14,12 @@ sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirna
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))))
 
 import helper
-elodie = load_source('elodie', os.path.abspath('{}/../../elodie.py'.format(os.path.dirname(os.path.realpath(__file__)))))
+
+# Load elodie module using modern importlib
+elodie_path = os.path.abspath('{}/../../elodie.py'.format(os.path.dirname(os.path.realpath(__file__))))
+spec = importlib.util.spec_from_file_location("elodie", elodie_path)
+elodie = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(elodie)
 
 from elodie.config import load_config
 from elodie.localstorage import Db
@@ -219,7 +223,7 @@ def test_import_file_send_to_trash_false():
     assert dest_path1 is not None
 
 def test_import_file_send_to_trash_true():
-    raise SkipTest("Temporarily disable send2trash test gh-230")
+    pytest.skip("Temporarily disable send2trash test gh-230")
 
     temporary_folder, folder = helper.create_working_folder()
     temporary_folder_destination, folder_destination = helper.create_working_folder()

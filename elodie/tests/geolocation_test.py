@@ -1,8 +1,7 @@
 from __future__ import absolute_import
 from __future__ import division
 from builtins import range
-from nose.plugins.skip import SkipTest
-from past.utils import old_div
+import pytest
 # Project imports
 import mock
 import os
@@ -87,7 +86,8 @@ def test_dms_string_longitude():
 
 def test_reverse_lookup_with_valid_key():
     res = geolocation.lookup(lat=37.368, lon=-122.03)
-    assert res['address']['city'] == 'Sunnyvale', res
+    assert res is not None, res
+    assert res['address']['city'] == 'Sunnyvale', res['address']['city']
 
 def test_reverse_lookup_with_invalid_lat_lon():
     res = geolocation.lookup(lat=999, lon=999)
@@ -111,13 +111,13 @@ def test_lookup_with_invalid_location():
 
 @mock.patch('elodie.geolocation.__PREFER_ENGLISH_NAMES__', True)
 def test_lookup_with_prefer_english_names_true():
-    raise SkipTest("gh-425 MapQuest API no longer supports prefer_english_names.")
+    pytest.skip("gh-425 MapQuest API no longer supports prefer_english_names.")
     res = geolocation.lookup(lat=55.66333, lon=37.61583)
     assert res['address']['city'] == 'Nagorny District', res
 
 @mock.patch('elodie.geolocation.__PREFER_ENGLISH_NAMES__', False)
 def test_lookup_with_prefer_english_names_false():
-    raise SkipTest("gh-425 MapQuest API no longer supports prefer_english_names.")
+    pytest.skip("gh-425 MapQuest API no longer supports prefer_english_names.")
     res = geolocation.lookup(lat=55.66333, lon=37.61583)
     assert res['address']['city'] == u'\u041d\u0430\u0433\u043e\u0440\u043d\u044b\u0439 \u0440\u0430\u0439\u043e\u043d', res
 

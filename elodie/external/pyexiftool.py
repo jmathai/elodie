@@ -226,8 +226,13 @@ class ExifTool(object, with_metaclass(Singleton)):
         in every command you run with :py:meth:`execute()`.
         """
         if self.running:
-            warnings.warn("ExifTool already running; doing nothing.")
-            return
+            # Check if the process is actually alive
+            if hasattr(self, '_process') and self._process.poll() is None:
+                warnings.warn("ExifTool already running; doing nothing.")
+                return
+            else:
+                # Process is dead but self.running is True, reset state
+                self.running = False
         with open(os.devnull, "w") as devnull:
             procargs = [self.executable, "-stay_open", "True",  "-@", "-",
                  "-common_args", "-G", "-n"];
@@ -246,11 +251,21 @@ class ExifTool(object, with_metaclass(Singleton)):
         """
         if not self.running:
             return
-        self._process.stdin.write(b"-stay_open\nFalse\n")
-        self._process.stdin.flush()
-        self._process.communicate()
-        del self._process
-        self.running = False
+        
+        try:
+            # Check if process is still alive before trying to terminate
+            if hasattr(self, '_process') and self._process.poll() is None:
+                self._process.stdin.write(b"-stay_open\nFalse\n")
+                self._process.stdin.flush()
+                self._process.communicate()
+            
+            if hasattr(self, '_process'):
+                del self._process
+        except (OSError, IOError, AttributeError):
+            # Process might already be dead or stdin closed
+            pass
+        finally:
+            self.running = False
 
     def __enter__(self):
         self.start()
@@ -283,6 +298,12 @@ class ExifTool(object, with_metaclass(Singleton)):
         """
         if not self.running:
             raise ValueError("ExifTool instance not running.")
+        
+        # Double-check that the process is actually alive
+        if hasattr(self, '_process') and self._process.poll() is not None:
+            # Process died, reset state and raise error
+            self.running = False
+            raise ValueError("ExifTool process died unexpectedly.")
         self._process.stdin.write(b"\n".join(params + (b"-execute\n",)))
         self._process.stdin.flush()
         output = b""
@@ -313,6 +334,8 @@ class ExifTool(object, with_metaclass(Singleton)):
         respective Python version – as raw strings in Python 2.x and
         as Unicode strings in Python 3.x.
         """
+        if not self.running:
+            self.start()
         params = map(fsencode, params)
         # Some latin bytes won't decode to utf-8.
         # Try utf-8 and fallback to latin.
@@ -329,6 +352,8 @@ class ExifTool(object, with_metaclass(Singleton)):
         The return value will have the format described in the
         documentation of :py:meth:`execute_json()`.
         """
+        if not self.running:
+            self.start()
         return self.execute_json(*filenames)
 
     def get_metadata(self, filename):
@@ -337,6 +362,8 @@ class ExifTool(object, with_metaclass(Singleton)):
         The returned dictionary has the format described in the
         documentation of :py:meth:`execute_json()`.
         """
+        if not self.running:
+            self.start()
         return self.execute_json(filename)[0]
 
     def get_tags_batch(self, tags, filenames):

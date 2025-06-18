@@ -7,7 +7,6 @@ image objects (JPG, DNG, etc.).
 from __future__ import print_function
 from __future__ import absolute_import
 
-import imghdr
 import os
 import re
 import time
@@ -72,7 +71,7 @@ class Photo(Media):
         for key in self.exif_map['date_taken']:
             try:
                 if(key in exif):
-                    if(re.match('\d{4}(-|:)\d{2}(-|:)\d{2}', exif[key]) is not None):  # noqa
+                    if(re.match(r'\d{4}(-|:)\d{2}(-|:)\d{2}', exif[key]) is not None):  # noqa
                         dt, tm = exif[key].split(' ')
                         dt_list = compile(r'-|:').split(dt)
                         dt_list = dt_list + compile(r'-|:').split(tm)
@@ -88,6 +87,25 @@ class Photo(Media):
             return None
 
         return time.gmtime(seconds_since_epoch)
+
+    def is_image_file(self, file_path):
+        """
+        Check if a file is an image using Pillow (replacement for deprecated imghdr).
+        
+        :param str file_path: Path to the file to check
+        :returns: bool True if file is an image, False otherwise
+        """
+        if self.pillow is None:
+            # If Pillow is not available, fall back to extension check using Photo.extensions
+            extension = os.path.splitext(file_path)[1][1:].lower()
+            return extension in self.extensions
+        
+        try:
+            with self.pillow.open(file_path) as im:
+                # Pillow will throw an exception if it can't identify the image
+                return im.format is not None
+        except (IOError, OSError):
+            return False
 
     def is_valid(self):
         """Check the file extension against valid file extensions.
@@ -105,28 +123,8 @@ class Photo(Media):
         if(extension != 'heic'):
             # gh-4 This checks if the source file is an image.
             # It doesn't validate against the list of supported types.
-            # We check with imghdr and pillow.
-            if(imghdr.what(source) is None):
-                # Pillow is used as a fallback and if it's not available we trust
-                #   what imghdr returned.
-                if(self.pillow is None):
-                    return False
-                else:
-                    # imghdr won't detect all variants of images (https://bugs.python.org/issue28591)
-                    # see https://github.com/jmathai/elodie/issues/281
-                    # before giving up, we use `pillow` imaging library to detect file type
-                    #
-                    # It is important to note that the library doesn't decode or load the
-                    # raster data unless it really has to. When you open a file,
-                    # the file header is read to determine the file format and extract
-                    # things like mode, size, and other properties required to decode the file,
-                    # but the rest of the file is not processed until later.
-                    try:
-                        im = self.pillow.open(source)
-                    except IOError:
-                        return False
-
-                    if(im.format is None):
-                        return False
+            # We use Pillow (replacement for deprecated imghdr in Python 3.13+)
+            if not self.is_image_file(source):
+                return False
         
         return extension in self.extensions

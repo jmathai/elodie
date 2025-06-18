@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 
-import nose
 import os
 import shutil
 import sys
 import tempfile
+import pytest
 
 if __name__ == "__main__":
-    # test_directory is what we pass nose.run for where to find tests
+    # test_directory is what we pass pytest for where to find tests
     test_directory = os.path.dirname(os.path.abspath(__file__))
 
     # create a temporary directory to use for the application directory while running tests
@@ -31,10 +31,13 @@ if __name__ == "__main__":
     with open(temporary_config_file, 'w+') as f:
         f.write(config_contents)
 
-    test_argv = sys.argv
-    test_argv.append('--verbosity=2')
-    result = nose.run(argv=test_argv)
-    if(result):
-        sys.exit(0)
-    else:
-        sys.exit(1)
+    # Build pytest arguments
+    pytest_args = [test_directory, '-v', '--tb=short']
+    
+    # Add any additional arguments from command line (excluding script name)
+    if len(sys.argv) > 1:
+        pytest_args.extend(sys.argv[1:])
+    
+    # Run pytest and exit with appropriate code
+    exit_code = pytest.main(pytest_args)
+    sys.exit(exit_code)

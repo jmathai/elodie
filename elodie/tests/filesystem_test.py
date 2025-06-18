@@ -19,7 +19,7 @@ from elodie.media.text import Text
 from elodie.media.media import Media
 from elodie.media.photo import Photo
 from elodie.media.video import Video
-from nose.plugins.skip import SkipTest
+import pytest
 from elodie.external.pyexiftool import ExifTool
 from elodie.dependencies import get_exiftool
 from elodie import constants
