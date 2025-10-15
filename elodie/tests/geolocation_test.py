@@ -9,7 +9,7 @@ import os
 import random
 import re
 import sys
-from mock import patch
+from unittest.mock import patch
 from tempfile import gettempdir
 
 try:
