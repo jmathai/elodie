@@ -91,7 +91,7 @@ def test_mapquest_base_url_override():
 
 def test_mapquest_key_default():
     if('ELODIE_MAPQUEST_KEY' in os.environ):
-        os.environ['ELODIE_MAPQUEST_KEY'] = None
+        del os.environ['ELODIE_MAPQUEST_KEY']
     reload(constants)
     assert constants.mapquest_key == None, constants.mapquest_key
 

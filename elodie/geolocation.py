@@ -234,6 +234,16 @@ def parse_result(result):
        ):
         return None
 
+    if( 'results' in result and
+        len(result['results']) > 0 and
+        'locations' in result['results'][0] and
+        len(result['results'][0]['locations']) > 0 and
+        # Return None if source is FALLBACK (invalid location)
+        'source' in result['results'][0]['locations'][0] and
+        result['results'][0]['locations'][0]['source'] == 'FALLBACK'
+       ):
+        return None
+
     address = parse_result_address(result)
     if(address is None):
         return None
