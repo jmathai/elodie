@@ -15,8 +15,8 @@ os.environ['TZ'] = 'GMT'
 def test_init_writes_files():
     db = Db()
 
-    assert os.path.isfile(constants.hash_db) == True
-    assert os.path.isfile(constants.location_db) == True
+    assert os.path.isfile(constants.hash_db()) == True
+    assert os.path.isfile(constants.location_db()) == True
 
 def test_add_hash_default_do_not_write():
     db = Db()

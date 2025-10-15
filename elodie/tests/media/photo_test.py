@@ -9,7 +9,7 @@ import shutil
 import tempfile
 import time
 
-from nose.plugins.skip import SkipTest
+import pytest
 
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))))
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
@@ -375,7 +375,7 @@ def _test_photo_type_get(type, date):
     if not photo_file:
         photo_file = helper.download_file(photo_name, folder)
         if not photo_file or not os.path.isfile(photo_file):
-            raise SkipTest('{} file not downlaoded'.format(type))
+            pytest.skip('{} file not downlaoded'.format(type))
 
         # downloading for each test is costly so we save it in the working directory
         file_path_save_as = helper.get_file_path(photo_name)
@@ -401,7 +401,7 @@ def _test_photo_type_set(type, date):
     if not photo_file:
         photo_file = helper.download_file(photo_name, folder)
         if not photo_file or not os.path.isfile(photo_file):
-            raise SkipTest('{} file not downlaoded'.format(type))
+            pytest.skip('{} file not downlaoded'.format(type))
 
     shutil.copyfile(photo_file, origin)
 

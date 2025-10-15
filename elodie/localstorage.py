@@ -23,20 +23,20 @@ class Db(object):
     def __init__(self):
         # verify that the application directory (~/.elodie) exists,
         #   else create it
-        if not os.path.exists(constants.application_directory):
-            os.makedirs(constants.application_directory)
+        if not os.path.exists(constants.application_directory()):
+            os.makedirs(constants.application_directory())
 
         # If the hash db doesn't exist we create it.
         # Otherwise we only open for reading
-        if not os.path.isfile(constants.hash_db):
-            with open(constants.hash_db, 'a'):
-                os.utime(constants.hash_db, None)
+        if not os.path.isfile(constants.hash_db()):
+            with open(constants.hash_db(), 'a'):
+                os.utime(constants.hash_db(), None)
 
         self.hash_db = {}
 
         # We know from above that this file exists so we open it
         #   for reading only.
-        with open(constants.hash_db, 'r') as f:
+        with open(constants.hash_db(), 'r') as f:
             try:
                 self.hash_db = json.load(f)
             except ValueError:
@@ -44,15 +44,15 @@ class Db(object):
 
         # If the location db doesn't exist we create it.
         # Otherwise we only open for reading
-        if not os.path.isfile(constants.location_db):
-            with open(constants.location_db, 'a'):
-                os.utime(constants.location_db, None)
+        if not os.path.isfile(constants.location_db()):
+            with open(constants.location_db(), 'a'):
+                os.utime(constants.location_db(), None)
 
         self.location_db = []
 
         # We know from above that this file exists so we open it
         #   for reading only.
-        with open(constants.location_db, 'r') as f:
+        with open(constants.location_db(), 'r') as f:
             try:
                 self.location_db = json.load(f)
             except ValueError:
@@ -95,10 +95,10 @@ class Db(object):
 
     def backup_hash_db(self):
         """Backs up the hash db."""
-        if os.path.isfile(constants.hash_db):
+        if os.path.isfile(constants.hash_db()):
             mask = strftime('%Y-%m-%d_%H-%M-%S')
-            backup_file_name = '%s-%s' % (constants.hash_db, mask)
-            copyfile(constants.hash_db, backup_file_name)
+            backup_file_name = '%s-%s' % (constants.hash_db(), mask)
+            copyfile(constants.hash_db(), backup_file_name)
             return backup_file_name
 
     def check_hash(self, key):
@@ -196,10 +196,10 @@ class Db(object):
 
     def update_hash_db(self):
         """Write the hash db to disk."""
-        with open(constants.hash_db, 'w') as f:
+        with open(constants.hash_db(), 'w') as f:
             json.dump(self.hash_db, f)
 
     def update_location_db(self):
         """Write the location db to disk."""
-        with open(constants.location_db, 'w') as f:
+        with open(constants.location_db(), 'w') as f:
             json.dump(self.location_db, f)

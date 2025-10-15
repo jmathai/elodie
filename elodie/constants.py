@@ -9,18 +9,25 @@ from sys import version_info
 debug = False
 
 #: Directory in which to store Elodie settings.
-application_directory = '{}/.elodie'.format(path.expanduser('~'))
-if (
-        'ELODIE_APPLICATION_DIRECTORY' in environ and
-        path.isdir(environ['ELODIE_APPLICATION_DIRECTORY'])
-   ):
-    application_directory = environ['ELODIE_APPLICATION_DIRECTORY']
+def application_directory():
+    """Get the application directory, checking environment variable each time."""
+    default_dir = '{}/.elodie'.format(path.expanduser('~'))
+    if (
+            'ELODIE_APPLICATION_DIRECTORY' in environ and
+            path.isdir(environ['ELODIE_APPLICATION_DIRECTORY'])
+       ):
+        return environ['ELODIE_APPLICATION_DIRECTORY']
+    return default_dir
 
 #: File in which to store details about media Elodie has seen.
-hash_db = '{}/hash.json'.format(application_directory)
+def hash_db():
+    """Get the hash database path."""
+    return '{}/hash.json'.format(application_directory())
 
 #: File in which to store geolocation details about media Elodie has seen.
-location_db = '{}/location.json'.format(application_directory)
+def location_db():
+    """Get the location database path."""
+    return '{}/location.json'.format(application_directory())
 
 #: Elodie installation directory.
 script_directory = path.dirname(path.dirname(path.abspath(__file__)))

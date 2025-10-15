@@ -65,7 +65,7 @@ class PluginDb(object):
     """
     def __init__(self, plugin_name):
         self.db_file = '{}/plugins/{}.json'.format(
-            application_directory,
+            application_directory(),
             plugin_name.lower()
         )
 

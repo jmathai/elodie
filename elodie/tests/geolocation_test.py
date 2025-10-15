@@ -1,10 +1,10 @@
 from __future__ import absolute_import
 from __future__ import division
 from builtins import range
-from nose.plugins.skip import SkipTest
+import pytest
 from past.utils import old_div
 # Project imports
-import mock
+import unittest.mock as mock
 import os
 import random
 import re
@@ -111,13 +111,13 @@ def test_lookup_with_invalid_location():
 
 @mock.patch('elodie.geolocation.__PREFER_ENGLISH_NAMES__', True)
 def test_lookup_with_prefer_english_names_true():
-    raise SkipTest("gh-425 MapQuest API no longer supports prefer_english_names.")
+    pytest.skip("gh-425 MapQuest API no longer supports prefer_english_names.")
     res = geolocation.lookup(lat=55.66333, lon=37.61583)
     assert res['address']['city'] == 'Nagorny District', res
 
 @mock.patch('elodie.geolocation.__PREFER_ENGLISH_NAMES__', False)
 def test_lookup_with_prefer_english_names_false():
-    raise SkipTest("gh-425 MapQuest API no longer supports prefer_english_names.")
+    pytest.skip("gh-425 MapQuest API no longer supports prefer_english_names.")
     res = geolocation.lookup(lat=55.66333, lon=37.61583)
     assert res['address']['city'] == u'\u041d\u0430\u0433\u043e\u0440\u043d\u044b\u0439 \u0440\u0430\u0439\u043e\u043d', res
 
@@ -129,11 +129,11 @@ def test_lookup_debug_mapquest_url():
     output = out.getvalue()
     assert 'MapQuest url:' in output, output
 
-@mock.patch('elodie.constants.location_db', '%s/location.json-cached' % gettempdir())
-def test_place_name_deprecated_string_cached():
+@mock.patch('elodie.constants.location_db', return_value='%s/location.json-cached' % gettempdir())
+def test_place_name_deprecated_string_cached(mock_location_db):
     # See gh-160 for backwards compatability needed when a string is stored instead of a dict
     helper.reset_dbs()
-    with open('%s/location.json-cached' % gettempdir(), 'w') as f:
+    with open(mock_location_db.return_value, 'w') as f:
         f.write("""
 [{"lat": 37.3667027222222, "long": -122.033383611111, "name": "OLDVALUE"}]
 """
@@ -143,10 +143,10 @@ def test_place_name_deprecated_string_cached():
 
     assert place_name['city'] == 'Sunnyvale', place_name
 
-@mock.patch('elodie.constants.location_db', '%s/location.json-cached' % gettempdir())
-def test_place_name_cached():
+@mock.patch('elodie.constants.location_db', return_value='%s/location.json-cached' % gettempdir())
+def test_place_name_cached(mock_location_db):
     helper.reset_dbs()
-    with open('%s/location.json-cached' % gettempdir(), 'w') as f:
+    with open(mock_location_db.return_value, 'w') as f:
         f.write("""
 [{"lat": 37.3667027222222, "long": -122.033383611111, "name": {"city": "UNITTEST"}}]
 """

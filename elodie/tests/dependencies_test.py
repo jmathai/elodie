@@ -1,4 +1,4 @@
-import mock
+import unittest.mock as mock
 
 from elodie.dependencies import get_exiftool
 

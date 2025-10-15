@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 # Project imports
-import mock
+import unittest.mock as mock
 import os
 import re
 import shutil
@@ -19,7 +19,7 @@ from elodie.media.text import Text
 from elodie.media.media import Media
 from elodie.media.photo import Photo
 from elodie.media.video import Video
-from nose.plugins.skip import SkipTest
+import pytest
 from elodie.external.pyexiftool import ExifTool
 from elodie.dependencies import get_exiftool
 from elodie import constants
@@ -69,7 +69,7 @@ def test_create_directory_recursive_success():
 @mock.patch('elodie.filesystem.os.makedirs')
 def test_create_directory_invalid_permissions(mock_makedirs):
     if os.name == 'nt':
-       raise SkipTest("It isn't implemented on Windows")
+       pytest.skip("It isn't implemented on Windows")
 
     # Mock the case where makedirs raises an OSError because the user does
     # not have permission to create the given directory.
@@ -196,9 +196,9 @@ def test_get_file_name_definition_default():
     assert name_template == '%date-%original_name-%title.%extension', name_template
     assert definition == [[('date', '%Y-%m-%d_%H-%M-%S')], [('original_name', '')], [('title', '')], [('extension', '')]], definition #noqa
 
-@mock.patch('elodie.config.config_file', '%s/config.ini-custom-filename' % gettempdir())
-def test_get_file_name_definition_custom():
-    with open('%s/config.ini-custom-filename' % gettempdir(), 'w') as f:
+@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-custom-filename' % gettempdir())
+def test_get_file_name_definition_custom(mock_get_config_file):
+    with open(mock_get_config_file.return_value, 'w') as f:
         f.write("""
 [File]
 date=%Y-%m-%b
@@ -251,9 +251,9 @@ def test_get_file_name_with_uppercase_and_spaces():
 
     assert file_name == helper.path_tz_fix('2015-12-05_00-59-26-plain-with-spaces-and-uppercase-123.jpg'), file_name
 
-@mock.patch('elodie.config.config_file', '%s/config.ini-filename-custom' % gettempdir())
-def test_get_file_name_custom():
-    with open('%s/config.ini-filename-custom' % gettempdir(), 'w') as f:
+@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-filename-custom' % gettempdir())
+def test_get_file_name_custom(mock_get_config_file):
+    with open(mock_get_config_file.return_value, 'w') as f:
         f.write("""
 [File]
 date=%Y-%m-%b
@@ -271,9 +271,9 @@ name=%date-%original_name.%extension
 
     assert file_name == helper.path_tz_fix('2015-12-dec-plain.jpg'), file_name
 
-@mock.patch('elodie.config.config_file', '%s/config.ini-filename-custom-with-title' % gettempdir())
-def test_get_file_name_custom_with_title():
-    with open('%s/config.ini-filename-custom-with-title' % gettempdir(), 'w') as f:
+@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-filename-custom-with-title' % gettempdir())
+def test_get_file_name_custom_with_title(mock_get_config_file):
+    with open(mock_get_config_file.return_value, 'w') as f:
         f.write("""
 [File]
 date=%Y-%m-%d
@@ -291,9 +291,9 @@ name=%date-%original_name-%title.%extension
 
     assert file_name == helper.path_tz_fix('2015-12-05-with-title-some-title.jpg'), file_name
 
-@mock.patch('elodie.config.config_file', '%s/config.ini-filename-custom-with-empty-value' % gettempdir())
-def test_get_file_name_custom_with_empty_value():
-    with open('%s/config.ini-filename-custom-with-empty-value' % gettempdir(), 'w') as f:
+@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-filename-custom-with-empty-value' % gettempdir())
+def test_get_file_name_custom_with_empty_value(mock_get_config_file):
+    with open(mock_get_config_file.return_value, 'w') as f:
         f.write("""
 [File]
 date=%Y-%m-%d
@@ -311,9 +311,9 @@ name=%date-%original_name-%title.%extension
 
     assert file_name == helper.path_tz_fix('2015-12-05-plain.jpg'), file_name
 
-@mock.patch('elodie.config.config_file', '%s/config.ini-filename-custom-with-lowercase' % gettempdir())
-def test_get_file_name_custom_with_lower_capitalization():
-    with open('%s/config.ini-filename-custom-with-lowercase' % gettempdir(), 'w') as f:
+@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-filename-custom-with-lowercase' % gettempdir())
+def test_get_file_name_custom_with_lower_capitalization(mock_get_config_file):
+    with open(mock_get_config_file.return_value, 'w') as f:
         f.write("""
 [File]
 date=%Y-%m-%d
@@ -332,9 +332,9 @@ capitalization=lower
 
     assert file_name == helper.path_tz_fix('2015-12-05-plain.jpg'), file_name
 
-@mock.patch('elodie.config.config_file', '%s/config.ini-filename-custom-with-invalidcase' % gettempdir())
-def test_get_file_name_custom_with_invalid_capitalization():
-    with open('%s/config.ini-filename-custom-with-invalidcase' % gettempdir(), 'w') as f:
+@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-filename-custom-with-invalidcase' % gettempdir())
+def test_get_file_name_custom_with_invalid_capitalization(mock_get_config_file):
+    with open(mock_get_config_file.return_value, 'w') as f:
         f.write("""
 [File]
 date=%Y-%m-%d
@@ -353,9 +353,9 @@ capitalization=garabage
 
     assert file_name == helper.path_tz_fix('2015-12-05-plain.jpg'), file_name
 
-@mock.patch('elodie.config.config_file', '%s/config.ini-filename-custom-with-uppercase' % gettempdir())
-def test_get_file_name_custom_with_upper_capitalization():
-    with open('%s/config.ini-filename-custom-with-uppercase' % gettempdir(), 'w') as f:
+@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-filename-custom-with-uppercase' % gettempdir())
+def test_get_file_name_custom_with_upper_capitalization(mock_get_config_file):
+    with open(mock_get_config_file.return_value, 'w') as f:
         f.write("""
 [File]
 date=%Y-%m-%d
@@ -395,9 +395,9 @@ def test_get_folder_path_with_location():
 
     assert path == os.path.join('2015-12-Dec','Sunnyvale'), path
 
-@mock.patch('elodie.config.config_file', '%s/config.ini-original-with-camera-make-and-model' % gettempdir())
-def test_get_folder_path_with_camera_make_and_model():
-    with open('%s/config.ini-original-with-camera-make-and-model' % gettempdir(), 'w') as f:
+@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-original-with-camera-make-and-model' % gettempdir())
+def test_get_folder_path_with_camera_make_and_model(mock_get_config_file):
+    with open(mock_get_config_file.return_value, 'w') as f:
         f.write("""
 [Directory]
 full_path=%camera_make/%camera_model
@@ -412,9 +412,9 @@ full_path=%camera_make/%camera_model
 
     assert path == os.path.join('Canon', 'Canon EOS REBEL T2i'), path
 
-@mock.patch('elodie.config.config_file', '%s/config.ini-original-with-camera-make-and-model-fallback' % gettempdir())
-def test_get_folder_path_with_camera_make_and_model_fallback():
-    with open('%s/config.ini-original-with-camera-make-and-model-fallback' % gettempdir(), 'w') as f:
+@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-original-with-camera-make-and-model-fallback' % gettempdir())
+def test_get_folder_path_with_camera_make_and_model_fallback(mock_get_config_file):
+    with open(mock_get_config_file.return_value, 'w') as f:
         f.write("""
 [Directory]
 full_path=%camera_make|"nomake"/%camera_model|"nomodel"
@@ -429,10 +429,10 @@ full_path=%camera_make|"nomake"/%camera_model|"nomodel"
 
     assert path == os.path.join('nomake', 'nomodel'), path
 
-@mock.patch('elodie.config.config_file', '%s/config.ini-int-in-component-path' % gettempdir())
-def test_get_folder_path_with_int_in_config_component():
+@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-int-in-component-path' % gettempdir())
+def test_get_folder_path_with_int_in_config_component(mock_get_config_file):
     # gh-239
-    with open('%s/config.ini-int-in-component-path' % gettempdir(), 'w') as f:
+    with open(mock_get_config_file.return_value, 'w') as f:
         f.write("""
 [Directory]
 date=%Y
@@ -448,10 +448,10 @@ full_path=%date
 
     assert path == os.path.join('2015'), path
 
-@mock.patch('elodie.config.config_file', '%s/config.ini-combined-date-and-album' % gettempdir())
-def test_get_folder_path_with_combined_date_and_album():
+@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-combined-date-and-album' % gettempdir())
+def test_get_folder_path_with_combined_date_and_album(mock_get_config_file):
     # gh-239
-    with open('%s/config.ini-combined-date-and-album' % gettempdir(), 'w') as f:
+    with open(mock_get_config_file.return_value, 'w') as f:
         f.write("""
 [Directory]
 date=%Y-%m-%b
@@ -468,10 +468,10 @@ full_path=%custom
 
     assert path == '2015-12-Dec Test Album', path
 
-@mock.patch('elodie.config.config_file', '%s/config.ini-combined-date-album-location-fallback' % gettempdir())
-def test_get_folder_path_with_album_and_location_fallback():
+@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-combined-date-album-location-fallback' % gettempdir())
+def test_get_folder_path_with_album_and_location_fallback(mock_get_config_file):
     # gh-279
-    with open('%s/config.ini-combined-date-album-location-fallback' % gettempdir(), 'w') as f:
+    with open(mock_get_config_file.return_value, 'w') as f:
         f.write("""
 [Directory]
 date=%Y-%m-%b
@@ -509,9 +509,9 @@ def test_get_folder_path_with_int_in_source_path():
 
     assert path == os.path.join('2015-12-Dec','Unknown Location'), path
 
-@mock.patch('elodie.config.config_file', '%s/config.ini-original-default-unknown-location' % gettempdir())
-def test_get_folder_path_with_original_default_unknown_location():
-    with open('%s/config.ini-original-default-with-unknown-location' % gettempdir(), 'w') as f:
+@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-original-default-unknown-location' % gettempdir())
+def test_get_folder_path_with_original_default_unknown_location(mock_get_config_file):
+    with open(mock_get_config_file.return_value, 'w') as f:
         f.write('')
     if hasattr(load_config, 'config'):
         del load_config.config
@@ -523,9 +523,9 @@ def test_get_folder_path_with_original_default_unknown_location():
 
     assert path == os.path.join('2015-12-Dec','Unknown Location'), path
 
-@mock.patch('elodie.config.config_file', '%s/config.ini-custom-path' % gettempdir())
-def test_get_folder_path_with_custom_path():
-    with open('%s/config.ini-custom-path' % gettempdir(), 'w') as f:
+@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-custom-path' % gettempdir())
+def test_get_folder_path_with_custom_path(mock_get_config_file):
+    with open(mock_get_config_file.return_value, 'w') as f:
         f.write("""
 [MapQuest]
 key=czjNKTtFjLydLteUBwdgKAIC8OAbGLUx
@@ -545,9 +545,9 @@ full_path=%date/%location
 
     assert path == os.path.join('2015-12-05','US-CA-Sunnyvale'), path
 
-@mock.patch('elodie.config.config_file', '%s/config.ini-fallback' % gettempdir())
-def test_get_folder_path_with_fallback_folder():
-    with open('%s/config.ini-fallback' % gettempdir(), 'w') as f:
+@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-fallback' % gettempdir())
+def test_get_folder_path_with_fallback_folder(mock_get_config_file):
+    with open(mock_get_config_file.return_value, 'w') as f:
         f.write("""
 [Directory]
 year=%Y
@@ -565,9 +565,9 @@ full_path=%year/%month/%album|%"No Album Fool"/%month
 
     assert path == os.path.join('2015','12','No Album Fool','12'), path
 
-@mock.patch('elodie.config.config_file', '%s/config.ini-location-date' % gettempdir())
-def test_get_folder_path_with_with_more_than_two_levels():
-    with open('%s/config.ini-location-date' % gettempdir(), 'w') as f:
+@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-location-date' % gettempdir())
+def test_get_folder_path_with_with_more_than_two_levels(mock_get_config_file):
+    with open(mock_get_config_file.return_value, 'w') as f:
         f.write("""
 [MapQuest]
 key=czjNKTtFjLydLteUBwdgKAIC8OAbGLUx
@@ -590,9 +590,9 @@ full_path=%year/%month/%location
         
     assert path == os.path.join('2015','12','Sunnyvale, CA'), path
 
-@mock.patch('elodie.config.config_file', '%s/config.ini-location-date' % gettempdir())
-def test_get_folder_path_with_with_only_one_level():
-    with open('%s/config.ini-location-date' % gettempdir(), 'w') as f:
+@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-location-date' % gettempdir())
+def test_get_folder_path_with_with_only_one_level(mock_get_config_file):
+    with open(mock_get_config_file.return_value, 'w') as f:
         f.write("""
 [Directory]
 year=%Y
@@ -941,9 +941,9 @@ def test_process_video_with_album_then_title():
     assert origin_checksum_preprocess == origin_checksum
     assert helper.path_tz_fix(os.path.join('2015-01-Jan','test_album','2015-01-19_12-45-11-movie-test_title.mov')) in destination, destination
 
-@mock.patch('elodie.config.config_file', '%s/config.ini-fallback-folder' % gettempdir())
-def test_process_file_fallback_folder():
-    with open('%s/config.ini-fallback-folder' % gettempdir(), 'w') as f:
+@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-fallback-folder' % gettempdir())
+def test_process_file_fallback_folder(mock_get_config_file):
+    with open(mock_get_config_file.return_value, 'w') as f:
         f.write("""
 [Directory]
 date=%Y-%m
@@ -968,9 +968,9 @@ full_path=%date/%album|"fallback"
     shutil.rmtree(folder)
     shutil.rmtree(os.path.dirname(os.path.dirname(destination)))
 
-@mock.patch('elodie.config.config_file', '%s/config.ini-multiple-directories' % gettempdir())
-def test_process_twice_more_than_two_levels_of_directories():
-    with open('%s/config.ini-multiple-directories' % gettempdir(), 'w') as f:
+@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-multiple-directories' % gettempdir())
+def test_process_twice_more_than_two_levels_of_directories(mock_get_config_file):
+    with open(mock_get_config_file.return_value, 'w') as f:
         f.write("""
 [Directory]
 year=%Y
@@ -1031,9 +1031,9 @@ def test_process_existing_file_without_changes():
     shutil.rmtree(folder)
     shutil.rmtree(os.path.dirname(os.path.dirname(destination)))
 
-@mock.patch('elodie.config.config_file', '%s/config.ini-plugin-throw-error' % gettempdir())
-def test_process_file_with_plugin_throw_error():
-    with open('%s/config.ini-plugin-throw-error' % gettempdir(), 'w') as f:
+@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-plugin-throw-error' % gettempdir())
+def test_process_file_with_plugin_throw_error(mock_get_config_file):
+    with open(mock_get_config_file.return_value, 'w') as f:
         f.write("""
 [Plugins]
 plugins=ThrowError
@@ -1056,9 +1056,9 @@ plugins=ThrowError
 
     assert destination is None, destination
 
-@mock.patch('elodie.config.config_file', '%s/config.ini-plugin-runtime-error' % gettempdir())
-def test_process_file_with_plugin_runtime_error():
-    with open('%s/config.ini-plugin-runtime-error' % gettempdir(), 'w') as f:
+@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-plugin-runtime-error' % gettempdir())
+def test_process_file_with_plugin_runtime_error(mock_get_config_file):
+    with open(mock_get_config_file.return_value, 'w') as f:
         f.write("""
 [Plugins]
 plugins=RuntimeError
@@ -1168,8 +1168,8 @@ def test_should_exclude_with_complex_matching_regex():
     result = filesystem.should_exclude('/var/folders/j9/h192v5v95gd_fhpv63qzyd1400d9ct/T/T497XPQH2R/UATR2GZZTX/2016-04-Apr/London/2016-04-07_11-15-26-valid-sample-title.txt', {re.compile('London.*\.txt$')})
     assert result == True, result
 
-@mock.patch('elodie.config.config_file', '%s/config.ini-does-not-exist' % gettempdir())
-def test_get_folder_path_definition_default():
+@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-does-not-exist' % gettempdir())
+def test_get_folder_path_definition_default(mock_get_config_file):
     if hasattr(load_config, 'config'):
         del load_config.config
     filesystem = FileSystem()
@@ -1179,9 +1179,9 @@ def test_get_folder_path_definition_default():
 
     assert path_definition == [[('date', '%Y-%m-%b')], [('album', ''), ('location', '%city'), ('"Unknown Location"', '')]], path_definition
 
-@mock.patch('elodie.config.config_file', '%s/config.ini-date-location' % gettempdir())
-def test_get_folder_path_definition_date_location():
-    with open('%s/config.ini-date-location' % gettempdir(), 'w') as f:
+@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-date-location' % gettempdir())
+def test_get_folder_path_definition_date_location(mock_get_config_file):
+    with open(mock_get_config_file.return_value, 'w') as f:
         f.write("""
 [Directory]
 date=%Y-%m-%d
@@ -1201,9 +1201,9 @@ full_path=%date/%location
 
     assert path_definition == expected, path_definition
 
-@mock.patch('elodie.config.config_file', '%s/config.ini-location-date' % gettempdir())
-def test_get_folder_path_definition_location_date():
-    with open('%s/config.ini-location-date' % gettempdir(), 'w') as f:
+@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-location-date' % gettempdir())
+def test_get_folder_path_definition_location_date(mock_get_config_file):
+    with open(mock_get_config_file.return_value, 'w') as f:
         f.write("""
 [Directory]
 date=%Y-%m-%d
@@ -1223,9 +1223,9 @@ full_path=%location/%date
 
     assert path_definition == expected, path_definition
 
-@mock.patch('elodie.config.config_file', '%s/config.ini-cached' % gettempdir())
-def test_get_folder_path_definition_cached():
-    with open('%s/config.ini-cached' % gettempdir(), 'w') as f:
+@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-cached' % gettempdir())
+def test_get_folder_path_definition_cached(mock_get_config_file):
+    with open(mock_get_config_file.return_value, 'w') as f:
         f.write("""
 [Directory]
 date=%Y-%m-%d
@@ -1243,7 +1243,7 @@ full_path=%date/%location
 
     assert path_definition == expected, path_definition
 
-    with open('%s/config.ini-cached' % gettempdir(), 'w') as f:
+    with open(mock_get_config_file.return_value, 'w') as f:
         f.write("""
 [Directory]
 date=%uncached
@@ -1260,9 +1260,9 @@ full_path=%date/%location
     if hasattr(load_config, 'config'):
         del load_config.config
 
-@mock.patch('elodie.config.config_file', '%s/config.ini-location-date' % gettempdir())
-def test_get_folder_path_definition_with_more_than_two_levels():
-    with open('%s/config.ini-location-date' % gettempdir(), 'w') as f:
+@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-location-date' % gettempdir())
+def test_get_folder_path_definition_with_more_than_two_levels(mock_get_config_file):
+    with open(mock_get_config_file.return_value, 'w') as f:
         f.write("""
 [Directory]
 year=%Y
@@ -1283,9 +1283,9 @@ full_path=%year/%month/%day
 
     assert path_definition == expected, path_definition
 
-@mock.patch('elodie.config.config_file', '%s/config.ini-location-date' % gettempdir())
-def test_get_folder_path_definition_with_only_one_level():
-    with open('%s/config.ini-location-date' % gettempdir(), 'w') as f:
+@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-location-date' % gettempdir())
+def test_get_folder_path_definition_with_only_one_level(mock_get_config_file):
+    with open(mock_get_config_file.return_value, 'w') as f:
         f.write("""
 [Directory]
 year=%Y
@@ -1304,9 +1304,9 @@ full_path=%year
 
     assert path_definition == expected, path_definition
 
-@mock.patch('elodie.config.config_file', '%s/config.ini-multi-level-custom' % gettempdir())
-def test_get_folder_path_definition_multi_level_custom():
-    with open('%s/config.ini-multi-level-custom' % gettempdir(), 'w') as f:
+@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-multi-level-custom' % gettempdir())
+def test_get_folder_path_definition_multi_level_custom(mock_get_config_file):
+    with open(mock_get_config_file.return_value, 'w') as f:
         f.write("""
 [Directory]
 year=%Y

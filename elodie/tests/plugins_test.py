@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 # Project imports
-import mock
+import unittest.mock as mock
 import os
 import sys
 from tempfile import gettempdir
@@ -11,9 +11,9 @@ from . import helper
 from elodie.config import load_config
 from elodie.plugins.plugins import Plugins, PluginBase, PluginDb
 
-@mock.patch('elodie.config.config_file', '%s/config.ini-load-plugins-unset-backwards-compat' % gettempdir())
-def test_load_plugins_unset_backwards_compat():
-    with open('%s/config.ini-load-plugins-unset-backwards-compat' % gettempdir(), 'w') as f:
+@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-load-plugins-unset-backwards-compat' % gettempdir())
+def test_load_plugins_unset_backwards_compat(mock_get_config_file):
+    with open(mock_get_config_file.return_value, 'w') as f:
         f.write("""
         """)
     if hasattr(load_config, 'config'):
@@ -27,9 +27,9 @@ def test_load_plugins_unset_backwards_compat():
 
     assert plugins.plugins == [], plugins.plugins
 
-@mock.patch('elodie.config.config_file', '%s/config.ini-load-plugins-exists-not-set' % gettempdir())
-def test_load_plugins_exists_not_set():
-    with open('%s/config.ini-load-plugins-exists-not-set' % gettempdir(), 'w') as f:
+@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-load-plugins-exists-not-set' % gettempdir())
+def test_load_plugins_exists_not_set(mock_get_config_file):
+    with open(mock_get_config_file.return_value, 'w') as f:
         f.write("""
 [Plugins]
         """)
@@ -44,9 +44,9 @@ def test_load_plugins_exists_not_set():
 
     assert plugins.plugins == [], plugins.plugins
 
-@mock.patch('elodie.config.config_file', '%s/config.ini-load-plugins-one' % gettempdir())
-def test_load_plugins_one():
-    with open('%s/config.ini-load-plugins-one' % gettempdir(), 'w') as f:
+@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-load-plugins-one' % gettempdir())
+def test_load_plugins_one(mock_get_config_file):
+    with open(mock_get_config_file.return_value, 'w') as f:
         f.write("""
 [Plugins]
 plugins=Dummy
@@ -63,9 +63,9 @@ plugins=Dummy
     assert plugins.plugins == ['Dummy'], plugins.plugins
     assert len(plugins.classes) == 1, len(plugins.classes)
 
-@mock.patch('elodie.config.config_file', '%s/config.ini-load-plugins-one-with-invalid' % gettempdir())
-def test_load_plugins_one_with_invalid():
-    with open('%s/config.ini-load-plugins-one' % gettempdir(), 'w') as f:
+@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-load-plugins-one-with-invalid' % gettempdir())
+def test_load_plugins_one_with_invalid(mock_get_config_file):
+    with open(mock_get_config_file.return_value, 'w') as f:
         f.write("""
 [Plugins]
 plugins=DNE
@@ -82,9 +82,9 @@ plugins=DNE
     assert plugins.plugins == [], plugins.plugins
     assert len(plugins.classes) == 0, len(plugins.classes)
 
-@mock.patch('elodie.config.config_file', '%s/config.ini-load-plugins-many' % gettempdir())
-def test_load_plugins_many():
-    with open('%s/config.ini-load-plugins-many' % gettempdir(), 'w') as f:
+@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-load-plugins-many' % gettempdir())
+def test_load_plugins_many(mock_get_config_file):
+    with open(mock_get_config_file.return_value, 'w') as f:
         f.write("""
 [Plugins]
 plugins=ThrowError,Dummy
@@ -103,9 +103,9 @@ plugins=ThrowError,Dummy
     assert plugins.classes['Dummy'].__name__ == 'Dummy', plugins.classes['Dummy'].__name__
     assert len(plugins.classes) == 2, len(plugins.classes)
 
-@mock.patch('elodie.config.config_file', '%s/config.ini-load-plugins-many-with-invalid' % gettempdir())
-def test_load_plugins_set_many_with_invalid():
-    with open('%s/config.ini-load-plugins-many-with-invalid' % gettempdir(), 'w') as f:
+@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-load-plugins-many-with-invalid' % gettempdir())
+def test_load_plugins_set_many_with_invalid(mock_get_config_file):
+    with open(mock_get_config_file.return_value, 'w') as f:
         f.write("""
 [Plugins]
 plugins=ThrowError,Dummy,DNE
@@ -121,9 +121,9 @@ plugins=ThrowError,Dummy,DNE
 
     assert plugins.plugins == ['ThrowError','Dummy'], plugins.plugins
 
-@mock.patch('elodie.config.config_file', '%s/config.ini-run-before' % gettempdir())
-def test_run_before():
-    with open('%s/config.ini-run-before' % gettempdir(), 'w') as f:
+@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-run-before' % gettempdir())
+def test_run_before(mock_get_config_file):
+    with open(mock_get_config_file.return_value, 'w') as f:
         f.write("""
 [Plugins]
 plugins=Dummy
@@ -143,9 +143,9 @@ plugins=Dummy
     assert before_ran_1 == False, before_ran_1
     assert before_ran_2 == True, before_ran_2
 
-@mock.patch('elodie.config.config_file', '%s/config.ini-throw-error' % gettempdir())
-def test_throw_error():
-    with open('%s/config.ini-throw-error' % gettempdir(), 'w') as f:
+@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-throw-error' % gettempdir())
+def test_throw_error(mock_get_config_file):
+    with open(mock_get_config_file.return_value, 'w') as f:
         f.write("""
 [Plugins]
 plugins=ThrowError
@@ -166,9 +166,9 @@ plugins=ThrowError
     assert status_batch == False, status_batch
     assert status_before == False, status_before
 
-@mock.patch('elodie.config.config_file', '%s/config.ini-throw-error-one-of-many' % gettempdir())
-def test_throw_error_one_of_many():
-    with open('%s/config.ini-throw-error-one-of-many' % gettempdir(), 'w') as f:
+@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-throw-error-one-of-many' % gettempdir())
+def test_throw_error_one_of_many(mock_get_config_file):
+    with open(mock_get_config_file.return_value, 'w') as f:
         f.write("""
 [Plugins]
 plugins=Dummy,ThrowError
@@ -189,9 +189,9 @@ plugins=Dummy,ThrowError
     assert status_batch == False, status_batch
     assert status_before == False, status_before
 
-@mock.patch('elodie.config.config_file', '%s/config.ini-throw-runtime-error' % gettempdir())
-def test_throw_error_runtime_error():
-    with open('%s/config.ini-throw-runtime-error' % gettempdir(), 'w') as f:
+@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-throw-runtime-error' % gettempdir())
+def test_throw_error_runtime_error(mock_get_config_file):
+    with open(mock_get_config_file.return_value, 'w') as f:
         f.write("""
 [Plugins]
 plugins=RuntimeError

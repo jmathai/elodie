@@ -4,13 +4,16 @@ from os import path
 
 from elodie import constants
 
-config_file = '%s/config.ini' % constants.application_directory
+def get_config_file():
+    """Get the config file path."""
+    return '%s/config.ini' % constants.application_directory()
 
 
 def load_config():
     if hasattr(load_config, "config"):
         return load_config.config
 
+    config_file = get_config_file()
     if not path.exists(config_file):
         return {}
 

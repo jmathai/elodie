@@ -120,7 +120,7 @@ def get_prefer_english_names():
     if __PREFER_ENGLISH_NAMES__ is not None:
         return __PREFER_ENGLISH_NAMES__
 
-    config_file = '%s/config.ini' % constants.application_directory
+    config_file = '%s/config.ini' % constants.application_directory()
     if not path.exists(config_file):
         return False
 

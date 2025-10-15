@@ -1,13 +1,13 @@
 # Project imports
 from imp import load_source
-import mock
+import unittest.mock as mock
 import os
 import sys
 import shutil
 
 from click.testing import CliRunner
-from nose.plugins.skip import SkipTest
-from nose.tools import assert_raises
+import pytest
+# assert_raises replaced with pytest.raises
 from six import text_type, unichr as six_unichr
 from tempfile import gettempdir
 
@@ -219,7 +219,7 @@ def test_import_file_send_to_trash_false():
     assert dest_path1 is not None
 
 def test_import_file_send_to_trash_true():
-    raise SkipTest("Temporarily disable send2trash test gh-230")
+    pytest.skip("Temporarily disable send2trash test gh-230")
 
     temporary_folder, folder = helper.create_working_folder()
     temporary_folder_destination, folder_destination = helper.create_working_folder()
@@ -355,13 +355,13 @@ def test_import_directory_with_non_matching_exclude():
     assert 'Success         1' in result.output, result.output
     assert 'Error           0' in result.output, result.output
 
-@mock.patch('elodie.config.config_file', '%s/config.ini-import-file-with-single-config-exclude' % gettempdir())
-def test_import_file_with_single_config_exclude():
+@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-import-file-with-single-config-exclude' % gettempdir())
+def test_import_file_with_single_config_exclude(mock_get_config_file):
     config_string = """
     [Exclusions]
     name1=valid
             """
-    with open('%s/config.ini-import-file-with-single-config-exclude' % gettempdir(), 'w') as f:
+    with open(mock_get_config_file.return_value, 'w') as f:
         f.write(config_string)
 
     if hasattr(load_config, 'config'):
@@ -382,14 +382,14 @@ def test_import_file_with_single_config_exclude():
     assert 'Success         0' in result.output, result.output
     assert 'Error           0' in result.output, result.output
 
-@mock.patch('elodie.config.config_file', '%s/config.ini-import-file-with-multiple-config-exclude' % gettempdir())
-def test_import_file_with_multiple_config_exclude():
+@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-import-file-with-multiple-config-exclude' % gettempdir())
+def test_import_file_with_multiple_config_exclude(mock_get_config_file):
     config_string = """
     [Exclusions]
     name1=notvalidatall
     name2=valid
             """
-    with open('%s/config.ini-import-file-with-multiple-config-exclude' % gettempdir(), 'w') as f:
+    with open(mock_get_config_file.return_value, 'w') as f:
         f.write(config_string)
 
     if hasattr(load_config, 'config'):
@@ -727,8 +727,8 @@ def test_verify_error():
     assert origin in result.output, result.output
     assert 'Error           1' in result.output, result.output
 
-@mock.patch('elodie.config.config_file', '%s/config.ini-cli-batch-plugin-googlephotos' % gettempdir())
-def test_cli_batch_plugin_googlephotos():
+@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-cli-batch-plugin-googlephotos' % gettempdir())
+def test_cli_batch_plugin_googlephotos(mock_get_config_file):
     auth_file = helper.get_file('plugins/googlephotos/auth_file.json')
     secrets_file = helper.get_file('plugins/googlephotos/secrets_file.json')
     config_string = """
@@ -743,7 +743,7 @@ def test_cli_batch_plugin_googlephotos():
         auth_file,
         secrets_file
     )
-    with open('%s/config.ini-cli-batch-plugin-googlephotos' % gettempdir(), 'w') as f:
+    with open(mock_get_config_file.return_value, 'w') as f:
         f.write(config_string_fmt)
 
     if hasattr(load_config, 'config'):
