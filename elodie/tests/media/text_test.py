@@ -316,3 +316,16 @@ def test_set_original_name_with_arg():
 
     assert metadata['original_name'] is None, metadata['original_name']
     assert metadata_updated['original_name'] == new_name, metadata_updated['original_name']
+
+def test_parse_metadata_line_with_non_utf8_encoding():
+    # Test for gh-440: Crash on text file NOT containing us-ascii or utf-8 in first line
+    text = Text(helper.get_file('cp1252.txt'))
+    
+    # This should not raise a UnicodeDecodeError
+    # The method should handle non-UTF-8 files gracefully
+    text.parse_metadata_line()
+    
+    # Should be able to get metadata without crashing
+    metadata = text.get_metadata()
+    assert metadata is not None
+    assert metadata['mime_type'] == 'text/plain'

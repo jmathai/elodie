@@ -145,8 +145,13 @@ class Text(Base):
         if source is None:
             return None
 
-        with open(source, 'r') as f:
-            first_line = f.readline().strip()
+        try:
+            with open(source, 'r') as f:
+                first_line = f.readline().strip()
+        except UnicodeDecodeError:
+            # Handle non-UTF-8 files by reading with error handling
+            with open(source, 'r', encoding='utf-8', errors='ignore') as f:
+                first_line = f.readline().strip()
 
         try:
             parsed_json = loads(first_line)
