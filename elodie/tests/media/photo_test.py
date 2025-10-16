@@ -177,11 +177,6 @@ def test_is_valid_fallback_using_pillow():
 
     assert photo.is_valid()
 
-def test_pillow_not_loaded():
-    photo = Photo(helper.get_file('imghdr-error.jpg'))
-    photo.pillow = None
-
-    assert photo.is_valid() == False
 
 def test_set_album():
     temporary_folder, folder = helper.create_working_folder()

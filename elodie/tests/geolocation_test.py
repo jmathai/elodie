@@ -2,7 +2,6 @@ from __future__ import absolute_import
 from __future__ import division
 from builtins import range
 import pytest
-from past.utils import old_div
 # Project imports
 import unittest.mock as mock
 import os

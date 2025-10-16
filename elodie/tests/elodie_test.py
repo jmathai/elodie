@@ -1,5 +1,5 @@
 # Project imports
-from imp import load_source
+import importlib.util
 import unittest.mock as mock
 import os
 import sys
@@ -15,7 +15,10 @@ sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirna
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))))
 
 import helper
-elodie = load_source('elodie', os.path.abspath('{}/../../elodie.py'.format(os.path.dirname(os.path.realpath(__file__)))))
+elodie_path = os.path.abspath('{}/../../elodie.py'.format(os.path.dirname(os.path.realpath(__file__))))
+spec = importlib.util.spec_from_file_location('elodie', elodie_path)
+elodie = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(elodie)
 
 from elodie.config import load_config
 from elodie.localstorage import Db
