@@ -84,6 +84,63 @@ def test_dms_string_longitude():
         assert check_value in dms_string, '%s not in %s' % (check_value, dms_string)
         assert str(dms[0]) in dms_string, '%s not in %s' % (dms[0], dms_string)
 
+def test_exiftool_coordinates_by_name_sunnyvale():
+    """Test ExifTool coordinates lookup for Sunnyvale, California."""
+    result = geolocation.exiftool_coordinates_by_name("Sunnyvale, California")
+    
+    assert result is not None, "Should find coordinates for Sunnyvale, California"
+    assert 'latitude' in result and 'longitude' in result, "Should include lat/lon"
+    assert abs(result['latitude'] - 37.3688) < 0.01, f"Latitude should be ~37.3688, got {result['latitude']}"
+    assert abs(result['longitude'] - (-122.0365)) < 0.01, f"Longitude should be ~-122.0365, got {result['longitude']}"
+
+def test_exiftool_coordinates_by_name_invalid():
+    """Test ExifTool coordinates lookup with invalid location name."""
+    result = geolocation.exiftool_coordinates_by_name("INVALIDLOCATIONNAME12345")
+    assert result is None, "Should return None for invalid location names"
+
+@mock.patch('elodie.geolocation.is_exiftool_available')
+def test_exiftool_coordinates_unavailable(mock_available):
+    """Test ExifTool coordinates when ExifTool is not available."""
+    mock_available.return_value = False
+    
+    result = geolocation.exiftool_coordinates_by_name("Sunnyvale, California")
+    assert result is None, "Should return None when ExifTool is unavailable"
+
+def test_exiftool_is_available():
+    """Test if ExifTool geolocation is available."""
+    available = geolocation.is_exiftool_available()
+    assert available == True, "ExifTool geolocation should be available"
+
+def test_exiftool_place_name_sunnyvale():
+    """Test ExifTool place name lookup with known Sunnyvale coordinates."""
+    lat, lon = 37.3688, -122.0365
+    result = geolocation.exiftool_place_name(lat, lon)
+    
+    assert result is not None, "Should find a location for Sunnyvale coordinates"
+    assert 'city' in result, "Should include city information"
+    assert 'default' in result, "Should include default location"
+    assert result['city'] == 'Sunnyvale', f"City should be Sunnyvale, got {result['city']}"
+    assert result['state'] == 'California', f"State should be California, got {result['state']}"
+    assert result['country'] == 'United States', f"Country should be United States, got {result['country']}"
+
+@mock.patch('elodie.geolocation.is_exiftool_available')
+def test_exiftool_place_name_unavailable(mock_available):
+    """Test ExifTool place name when ExifTool is not available."""
+    mock_available.return_value = False
+    
+    result = geolocation.exiftool_place_name(37.3688, -122.0365)
+    assert result is None, "Should return None when ExifTool is unavailable"
+
+@mock.patch('elodie.geolocation.__KEY__', None)
+def test_coordinates_by_name_fallback_to_exiftool():
+    """Test that coordinates_by_name falls back to ExifTool when MapQuest key is not available."""
+    result = geolocation.coordinates_by_name("Sunnyvale, California")
+    
+    assert result is not None, "Should return coordinates using ExifTool fallback"
+    assert 'latitude' in result and 'longitude' in result, "Should include lat/lon"
+    assert abs(result['latitude'] - 37.3688) < 0.01, f"Should get correct latitude from ExifTool"
+    assert abs(result['longitude'] - (-122.0365)) < 0.01, f"Should get correct longitude from ExifTool"
+
 def test_reverse_lookup_with_valid_key():
     res = geolocation.lookup(lat=37.368, lon=-122.03)
     assert res['address']['city'] == 'Sunnyvale', res
@@ -162,6 +219,19 @@ def test_place_name_no_default():
     helper.restore_dbs()
 
     assert place_name['default'] == 'Unknown Location', place_name
+
+@mock.patch('elodie.geolocation.__KEY__', None)
+def test_place_name_fallback_to_exiftool():
+    """Test that place_name falls back to ExifTool when MapQuest key is not available."""
+    # Test with known coordinates for Sunnyvale
+    lat, lon = 37.3688, -122.0365
+    result = geolocation.place_name(lat, lon)
+    
+    assert result is not None, "Should return a result using ExifTool fallback"
+    assert 'default' in result, "Should have default location"
+    # Should get results from ExifTool, not the default "Unknown Location"
+    assert result['default'] != 'Unknown Location', f"Should not return Unknown Location, got {result}"
+    assert 'city' in result, "Should include city from ExifTool"
 
 @mock.patch('elodie.geolocation.__KEY__', 'invalid_key')
 def test_lookup_with_invalid_key():

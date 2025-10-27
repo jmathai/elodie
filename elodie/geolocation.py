@@ -13,10 +13,12 @@ from elodie.config import load_config
 from elodie import constants
 from elodie import log
 from elodie.localstorage import Db
+from elodie.external.pyexiftool import ExifTool
 
 __KEY__ = None
 __DEFAULT_LOCATION__ = 'Unknown Location'
 __PREFER_ENGLISH_NAMES__ = None
+__EXIFTOOL_AVAILABLE__ = None
 
 
 def coordinates_by_name(name):
@@ -29,38 +31,46 @@ def coordinates_by_name(name):
             'longitude': cached_coordinates[1]
         }
 
-    # If the name is not cached then we go ahead with an API lookup
-    geolocation_info = lookup(location=name)
+    # Use MapQuest if key is available, otherwise use ExifTool
+    key = get_key()
+    if key is not None:
+        # Use MapQuest
+        geolocation_info = lookup(location=name)
 
-    if(geolocation_info is not None):
-        if(
-            'results' in geolocation_info and
-            len(geolocation_info['results']) != 0 and
-            'locations' in geolocation_info['results'][0] and
-            len(geolocation_info['results'][0]['locations']) != 0
-        ):
+        if(geolocation_info is not None):
+            if(
+                'results' in geolocation_info and
+                len(geolocation_info['results']) != 0 and
+                'locations' in geolocation_info['results'][0] and
+                len(geolocation_info['results'][0]['locations']) != 0
+            ):
 
-            # By default we use the first entry unless we find one with
-            #   geocodeQuality=city.
-            geolocation_result = geolocation_info['results'][0]
-            use_location = geolocation_result['locations'][0]['latLng']
-            # Loop over the locations to see if we come accross a
-            #   geocodeQuality=city.
-            # If we find a city we set that to the use_location and break
-            for location in geolocation_result['locations']:
-                if(
-                    'latLng' in location and
-                    'lat' in location['latLng'] and
-                    'lng' in location['latLng'] and
-                    location['geocodeQuality'].lower() == 'city'
-                ):
-                    use_location = location['latLng']
-                    break
+                # By default we use the first entry unless we find one with
+                #   geocodeQuality=city.
+                geolocation_result = geolocation_info['results'][0]
+                use_location = geolocation_result['locations'][0]['latLng']
+                # Loop over the locations to see if we come accross a
+                #   geocodeQuality=city.
+                # If we find a city we set that to the use_location and break
+                for location in geolocation_result['locations']:
+                    if(
+                        'latLng' in location and
+                        'lat' in location['latLng'] and
+                        'lng' in location['latLng'] and
+                        location['geocodeQuality'].lower() == 'city'
+                    ):
+                        use_location = location['latLng']
+                        break
 
-            return {
-                'latitude': use_location['lat'],
-                'longitude': use_location['lng']
-            }
+                return {
+                    'latitude': use_location['lat'],
+                    'longitude': use_location['lng']
+                }
+    else:
+        # Use ExifTool as alternative when MapQuest key is not configured
+        exiftool_result = exiftool_coordinates_by_name(name)
+        if exiftool_result is not None:
+            return exiftool_result
 
     return None
 
@@ -93,6 +103,83 @@ def dms_string(decimal, type='latitude'):
     elif type == 'longitude':
         direction = 'E' if decimal >= 0 else 'W'
     return '{} deg {}\' {}" {}'.format(dms[0], dms[1], dms[2], direction)
+
+
+def is_exiftool_available():
+    """Check if ExifTool geolocation functionality is available."""
+    global __EXIFTOOL_AVAILABLE__
+    if __EXIFTOOL_AVAILABLE__ is not None:
+        return __EXIFTOOL_AVAILABLE__
+    
+    try:
+        with ExifTool() as et:
+            # Test if geolocation database is available by doing a simple lookup
+            result = et.execute_json(b"-api", b"geolocation=40.7128,-74.0060")  # NYC coordinates
+            __EXIFTOOL_AVAILABLE__ = result and len(result) > 0 and 'ExifTool:GeolocationCity' in result[0]
+    except Exception:
+        __EXIFTOOL_AVAILABLE__ = False
+    
+    return __EXIFTOOL_AVAILABLE__
+
+
+def exiftool_coordinates_by_name(name):
+    """Look up coordinates for a location name using ExifTool's geolocation API."""
+    if not is_exiftool_available():
+        return None
+    
+    try:
+        with ExifTool() as et:
+            result = et.execute_json(b"-api", f"geolocation={name}".encode('utf-8'))
+            if result and len(result) > 0 and 'ExifTool:GeolocationPosition' in result[0]:
+                position = result[0]['ExifTool:GeolocationPosition']
+                # Position format is "lat lon"
+                lat, lon = position.split()
+                return {
+                    'latitude': float(lat),
+                    'longitude': float(lon)
+                }
+    except Exception as e:
+        log.error(f"ExifTool geolocation lookup failed: {e}")
+    
+    return None
+
+
+def exiftool_place_name(lat, lon):
+    """Look up place name for coordinates using ExifTool's geolocation API."""
+    if not is_exiftool_available():
+        return None
+    
+    try:
+        with ExifTool() as et:
+            # Use ExifTool's reverse geolocation API
+            result = et.execute_json(b"-api", f"geolocation={lat},{lon}".encode('utf-8'))
+            if result and len(result) > 0:
+                data = result[0]
+                location_data = {}
+                
+                # Build location data following the priority: City, Region, Subregion, Country
+                if 'ExifTool:GeolocationCity' in data and data['ExifTool:GeolocationCity'].strip():
+                    location_data['city'] = data['ExifTool:GeolocationCity']
+                    if 'default' not in location_data:
+                        location_data['default'] = data['ExifTool:GeolocationCity']
+                
+                if 'ExifTool:GeolocationRegion' in data and data['ExifTool:GeolocationRegion'].strip():
+                    location_data['state'] = data['ExifTool:GeolocationRegion']
+                    if 'default' not in location_data:
+                        location_data['default'] = data['ExifTool:GeolocationRegion']
+                
+                if 'ExifTool:GeolocationCountry' in data and data['ExifTool:GeolocationCountry'].strip():
+                    location_data['country'] = data['ExifTool:GeolocationCountry']
+                    if 'default' not in location_data:
+                        location_data['default'] = data['ExifTool:GeolocationCountry']
+                
+                if location_data:
+                    return location_data
+                    
+    except Exception as e:
+        log.error(f"ExifTool place name lookup failed: {e}")
+    
+    return None
 
 
 def get_key():
@@ -151,18 +238,28 @@ def place_name(lat, lon):
         return cached_place_name
 
     lookup_place_name = {}
-    geolocation_info = lookup(lat=lat, lon=lon)
-    if(geolocation_info is not None and 'address' in geolocation_info):
-        address = geolocation_info['address']
-        # gh-386 adds support for town
-        # taking precedence after city for backwards compatability
-        for loc in ['city', 'town', 'state', 'country']:
-            if(loc in address):
-                lookup_place_name[loc] = address[loc]
-                # In many cases the desired key is not available so we
-                #  set the most specific as the default.
-                if('default' not in lookup_place_name):
-                    lookup_place_name['default'] = address[loc]
+    
+    # Use MapQuest if key is available, otherwise use ExifTool
+    key = get_key()
+    if key is not None:
+        # Use MapQuest
+        geolocation_info = lookup(lat=lat, lon=lon)
+        if(geolocation_info is not None and 'address' in geolocation_info):
+            address = geolocation_info['address']
+            # gh-386 adds support for town
+            # taking precedence after city for backwards compatability
+            for loc in ['city', 'town', 'state', 'country']:
+                if(loc in address):
+                    lookup_place_name[loc] = address[loc]
+                    # In many cases the desired key is not available so we
+                    #  set the most specific as the default.
+                    if('default' not in lookup_place_name):
+                        lookup_place_name['default'] = address[loc]
+    else:
+        # Use ExifTool as alternative when MapQuest key is not configured
+        exiftool_result = exiftool_place_name(lat, lon)
+        if exiftool_result is not None:
+            lookup_place_name = exiftool_result
 
     if(lookup_place_name):
         db.add_location(lat, lon, lookup_place_name)
@@ -189,6 +286,7 @@ def lookup(**kwargs):
     key = get_key()
     prefer_english_names = get_prefer_english_names()
 
+    # Only proceed with MapQuest if key is available
     if(key is None):
         return None
 

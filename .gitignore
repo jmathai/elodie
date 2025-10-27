@@ -1,7 +1,9 @@
+.env
 **/.DS_Store
 **/*.pyc
 **/config.ini
 **/node_modules/**
+**/CLAUDE.md
 dist/**
 docs/_build
 build/**
