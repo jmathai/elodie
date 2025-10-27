@@ -112,10 +112,10 @@ def is_exiftool_available():
         return __EXIFTOOL_AVAILABLE__
     
     try:
-        with ExifTool() as et:
-            # Test if geolocation database is available by doing a simple lookup
-            result = et.execute_json(b"-api", b"geolocation=40.7128,-74.0060")  # NYC coordinates
-            __EXIFTOOL_AVAILABLE__ = result and len(result) > 0 and 'ExifTool:GeolocationCity' in result[0]
+        et = ExifTool()
+        # Test if geolocation database is available by doing a simple lookup
+        result = et.execute_json(b"-api", b"geolocation=40.7128,-74.0060")  # NYC coordinates
+        __EXIFTOOL_AVAILABLE__ = result and len(result) > 0 and 'ExifTool:GeolocationCity' in result[0]
     except Exception:
         __EXIFTOOL_AVAILABLE__ = False
     
@@ -128,16 +128,16 @@ def exiftool_coordinates_by_name(name):
         return None
     
     try:
-        with ExifTool() as et:
-            result = et.execute_json(b"-api", f"geolocation={name}".encode('utf-8'))
-            if result and len(result) > 0 and 'ExifTool:GeolocationPosition' in result[0]:
-                position = result[0]['ExifTool:GeolocationPosition']
-                # Position format is "lat lon"
-                lat, lon = position.split()
-                return {
-                    'latitude': float(lat),
-                    'longitude': float(lon)
-                }
+        et = ExifTool()
+        result = et.execute_json(b"-api", f"geolocation={name}".encode('utf-8'))
+        if result and len(result) > 0 and 'ExifTool:GeolocationPosition' in result[0]:
+            position = result[0]['ExifTool:GeolocationPosition']
+            # Position format is "lat lon"
+            lat, lon = position.split()
+            return {
+                'latitude': float(lat),
+                'longitude': float(lon)
+            }
     except Exception as e:
         log.error(f"ExifTool geolocation lookup failed: {e}")
     
@@ -150,32 +150,32 @@ def exiftool_place_name(lat, lon):
         return None
     
     try:
-        with ExifTool() as et:
-            # Use ExifTool's reverse geolocation API
-            result = et.execute_json(b"-api", f"geolocation={lat},{lon}".encode('utf-8'))
-            if result and len(result) > 0:
-                data = result[0]
-                location_data = {}
+        et = ExifTool()
+        # Use ExifTool's reverse geolocation API
+        result = et.execute_json(b"-api", f"geolocation={lat},{lon}".encode('utf-8'))
+        if result and len(result) > 0:
+            data = result[0]
+            location_data = {}
+            
+            # Build location data following the priority: City, Region, Subregion, Country
+            if 'ExifTool:GeolocationCity' in data and data['ExifTool:GeolocationCity'].strip():
+                location_data['city'] = data['ExifTool:GeolocationCity']
+                if 'default' not in location_data:
+                    location_data['default'] = data['ExifTool:GeolocationCity']
+            
+            if 'ExifTool:GeolocationRegion' in data and data['ExifTool:GeolocationRegion'].strip():
+                location_data['state'] = data['ExifTool:GeolocationRegion']
+                if 'default' not in location_data:
+                    location_data['default'] = data['ExifTool:GeolocationRegion']
+            
+            if 'ExifTool:GeolocationCountry' in data and data['ExifTool:GeolocationCountry'].strip():
+                location_data['country'] = data['ExifTool:GeolocationCountry']
+                if 'default' not in location_data:
+                    location_data['default'] = data['ExifTool:GeolocationCountry']
+            
+            if location_data:
+                return location_data
                 
-                # Build location data following the priority: City, Region, Subregion, Country
-                if 'ExifTool:GeolocationCity' in data and data['ExifTool:GeolocationCity'].strip():
-                    location_data['city'] = data['ExifTool:GeolocationCity']
-                    if 'default' not in location_data:
-                        location_data['default'] = data['ExifTool:GeolocationCity']
-                
-                if 'ExifTool:GeolocationRegion' in data and data['ExifTool:GeolocationRegion'].strip():
-                    location_data['state'] = data['ExifTool:GeolocationRegion']
-                    if 'default' not in location_data:
-                        location_data['default'] = data['ExifTool:GeolocationRegion']
-                
-                if 'ExifTool:GeolocationCountry' in data and data['ExifTool:GeolocationCountry'].strip():
-                    location_data['country'] = data['ExifTool:GeolocationCountry']
-                    if 'default' not in location_data:
-                        location_data['default'] = data['ExifTool:GeolocationCountry']
-                
-                if location_data:
-                    return location_data
-                    
     except Exception as e:
         log.error(f"ExifTool place name lookup failed: {e}")
     

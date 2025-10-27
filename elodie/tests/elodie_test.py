@@ -513,6 +513,36 @@ def test_update_location_on_video():
     assert helper.isclose(metadata_processed['latitude'], 37.37188), metadata_processed['latitude']
     assert helper.isclose(metadata_processed['longitude'], -122.03751), metadata_processed['longitude']
 
+def test_update_location_with_exiftool_fallback():
+    """Test update_location uses ExifTool when MapQuest key is not available."""
+    temporary_folder, folder = helper.create_working_folder()
+
+    origin = '%s/photo.jpg' % folder
+    shutil.copyfile(helper.get_file('plain.jpg'), origin)
+
+    photo = Photo(origin)
+    metadata = photo.get_metadata()
+
+    helper.reset_dbs()
+    
+    # Mock MapQuest key as None to force ExifTool usage
+    with mock.patch('elodie.geolocation.get_key', return_value=None):
+        status = elodie.update_location(photo, origin, 'Sunnyvale, California')
+    
+    helper.restore_dbs()
+
+    photo_processed = Photo(origin)
+    metadata_processed = photo_processed.get_metadata()
+
+    shutil.rmtree(folder)
+
+    assert status == True, status
+    assert metadata['latitude'] != metadata_processed['latitude']
+    # ExifTool returns 37.3688, -122.0365 for Sunnyvale, California
+    # This is different from MapQuest which returns 37.37188, -122.03751
+    assert helper.isclose(metadata_processed['latitude'], 37.3688), metadata_processed['latitude']
+    assert helper.isclose(metadata_processed['longitude'], -122.0365), metadata_processed['longitude']
+
 def test_update_time_on_audio():
     temporary_folder, folder = helper.create_working_folder()
     temporary_folder_destination, folder_destination = helper.create_working_folder()
