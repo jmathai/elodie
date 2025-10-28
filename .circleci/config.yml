@@ -34,5 +34,5 @@ jobs:
 workflows:
   ci:
     jobs:
-      - build_and_test
+      - build_and_test:
           context: Environment
