@@ -13,7 +13,7 @@ except NameError:
     except ImportError:
         from imp import reload  # Python 3.0 - 3.3
 
-from mock import patch
+from unittest.mock import patch
 
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))))
 
@@ -30,12 +30,12 @@ def test_application_directory_default():
         del os.environ['ELODIE_APPLICATION_DIRECTORY']
     reload(constants)
     expected_path = '{}/.elodie'.format(os.path.expanduser('~'))
-    assert constants.application_directory == expected_path, constants.application_directory
+    assert constants.application_directory() == expected_path, constants.application_directory()
 
 def test_application_directory_override_invalid():
     os.environ['ELODIE_APPLICATION_DIRECTORY'] = '/foo/bar'
     reload(constants)
-    directory_to_check = constants.application_directory
+    directory_to_check = constants.application_directory()
 
     # reset
     if('ELODIE_APPLICATION_DIRECTORY' in os.environ):
@@ -43,28 +43,28 @@ def test_application_directory_override_invalid():
     reload(constants)
 
     expected_path = '{}/.elodie'.format(os.path.expanduser('~'))
-    assert directory_to_check == expected_path, constants.application_directory
+    assert directory_to_check == expected_path, constants.application_directory()
 
 def test_application_directory_override_valid():
     cwd = os.getcwd()
     os.environ['ELODIE_APPLICATION_DIRECTORY'] = cwd
     reload(constants)
-    directory_to_check = constants.application_directory
-    hash_db_to_check = constants.hash_db
+    directory_to_check = constants.application_directory()
+    hash_db_to_check = constants.hash_db()
 
     # reset
     if('ELODIE_APPLICATION_DIRECTORY' in os.environ):
         del os.environ['ELODIE_APPLICATION_DIRECTORY']
     reload(constants)
 
-    assert directory_to_check == cwd, constants.application_directory
-    assert cwd in hash_db_to_check, constants.hash_db
+    assert directory_to_check == cwd, constants.application_directory()
+    assert cwd in hash_db_to_check, constants.hash_db()
 
 def test_hash_db():
-    assert constants.hash_db == '{}/hash.json'.format(constants.application_directory), constants.hash_db
+    assert constants.hash_db() == '{}/hash.json'.format(constants.application_directory()), constants.hash_db()
 
 def test_location_db():
-    assert constants.location_db == '{}/location.json'.format(constants.application_directory), constants.location_db
+    assert constants.location_db() == '{}/location.json'.format(constants.application_directory()), constants.location_db()
 
 def test_script_directory():
     path = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
@@ -91,7 +91,7 @@ def test_mapquest_base_url_override():
 
 def test_mapquest_key_default():
     if('ELODIE_MAPQUEST_KEY' in os.environ):
-        os.environ['ELODIE_MAPQUEST_KEY'] = None
+        del os.environ['ELODIE_MAPQUEST_KEY']
     reload(constants)
     assert constants.mapquest_key == None, constants.mapquest_key
 

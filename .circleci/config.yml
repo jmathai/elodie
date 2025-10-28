@@ -4,7 +4,8 @@ orbs:
 
 jobs:
   build_and_test:
-    executor: python/default
+    docker:
+      - image: cimg/python:3.13
     steps:
       - checkout
       - run:
@@ -13,11 +14,11 @@ jobs:
             export ELODIE_DIR=${PWD}
             pip install -r elodie/tests/requirements.txt
             pip install -r elodie/plugins/googlephotos/requirements.txt
-            pip install coveralls
+            pip install coveralls pytest-cov
             sed -i.bak 's/debug = False/debug = True/g' elodie/constants.py
-            wget https://exiftool.org/Image-ExifTool-12.50.tar.gz
-            gzip -dc Image-ExifTool-12.50.tar.gz  | tar -xf -
-            cd Image-ExifTool-12.50
+            wget https://jmathai.s3.us-east-1.amazonaws.com/github/elodie/Image-ExifTool-13.19.tar.gz
+            gzip -dc Image-ExifTool-13.19.tar.gz  | tar -xf -
+            cd Image-ExifTool-13.19
             perl Makefile.PL
             sudo make install
             echo "which exiftool command"
@@ -25,7 +26,7 @@ jobs:
             cd ${ELODIE_DIR}
       - run:
           name: Run tests
-          command: ./elodie/tests/run_tests.py -w elodie/tests --with-coverage --cover-package=elodie
+          command: pytest elodie/tests -v --cov=elodie --cov-report=xml
       - run:
           name: Generate coverage
           command: |

@@ -1,0 +1,2 @@
+{"title":"Test ’ file"}
+This is a CP1252 encoded file with special character ’

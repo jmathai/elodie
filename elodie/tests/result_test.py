@@ -6,7 +6,7 @@ import sys
 import unittest 
 
 from json import dumps
-from mock import patch
+from unittest.mock import patch
 try:
     from StringIO import StringIO
 except ImportError:

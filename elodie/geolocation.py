@@ -1,10 +1,6 @@
 """Look up geolocation information for media objects."""
 from __future__ import print_function
 from __future__ import division
-from future import standard_library
-from past.utils import old_div
-
-standard_library.install_aliases()  # noqa
 
 from os import path
 
@@ -84,8 +80,8 @@ def dms_to_decimal(degrees, minutes, seconds, direction=' '):
     if(direction[0] in 'WSws'):
         sign = -1
     return (
-        float(degrees) + old_div(float(minutes), 60) +
-        old_div(float(seconds), 3600)
+        float(degrees) + (float(minutes) / 60) +
+        (float(seconds) / 3600)
     ) * sign
 
 
@@ -120,7 +116,7 @@ def get_prefer_english_names():
     if __PREFER_ENGLISH_NAMES__ is not None:
         return __PREFER_ENGLISH_NAMES__
 
-    config_file = '%s/config.ini' % constants.application_directory
+    config_file = '%s/config.ini' % constants.application_directory()
     if not path.exists(config_file):
         return False
 
@@ -211,6 +207,8 @@ def lookup(**kwargs):
                     path,
                     urllib.parse.urlencode(params)
               )
+        # log the MapQuest url gh-446
+        log.info('MapQuest url: %s' % (url))
         r = requests.get(url, headers=headers)
         return parse_result(r.json())
     except requests.exceptions.RequestException as e:
@@ -229,6 +227,16 @@ def parse_result(result):
     if( 'info' not in result or
         'statuscode' not in result['info'] or
         result['info']['statuscode'] != 0
+       ):
+        return None
+
+    if( 'results' in result and
+        len(result['results']) > 0 and
+        'locations' in result['results'][0] and
+        len(result['results'][0]['locations']) > 0 and
+        # Return None if source is FALLBACK (invalid location)
+        'source' in result['results'][0]['locations'][0] and
+        result['results'][0]['locations'][0]['source'] == 'FALLBACK'
        ):
         return None
 

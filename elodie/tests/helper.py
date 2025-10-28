@@ -1,7 +1,6 @@
 from __future__ import division
 from __future__ import unicode_literals
 from builtins import range
-from past.utils import old_div
 import hashlib
 import os
 import random
@@ -98,7 +97,7 @@ def random_decimal():
 
 def random_coordinate(coordinate, precision):
     # Here we add to the decimal section of the coordinate by a given precision
-    return coordinate + ((old_div(10.0, (10.0**precision))) * random_decimal())
+    return coordinate + (((10.0 / (10.0**precision))) * random_decimal())
 
 def temp_dir():
     return tempfile.gettempdir()
@@ -116,13 +115,13 @@ def is_windows():
 def path_tz_fix(file_name):
   if is_windows():
       # Calculate the offset between UTC and local time
-      tz_shift = old_div((datetime.fromtimestamp(0) -
-                  datetime.utcfromtimestamp(0)).seconds,3600)
+      tz_shift = (datetime.fromtimestamp(0) -
+                  datetime.utcfromtimestamp(0)).seconds / 3600
       # replace timestamp in file_name
-      m = re.search('(\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2})',file_name)
+      m = re.search(r'(\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2})',file_name)
       t_date = datetime.fromtimestamp(time.mktime(time.strptime(m.group(0), '%Y-%m-%d_%H-%M-%S')))
       s_date_fix = (t_date-timedelta(hours=tz_shift)).strftime('%Y-%m-%d_%H-%M-%S')
-      return re.sub('\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}',s_date_fix,file_name)
+      return re.sub(r'\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}',s_date_fix,file_name)
   else:
       return file_name
 
@@ -140,9 +139,8 @@ def time_convert(s_time):
 
 # isclose(a,b,rel_tol)
 # To compare float coordinates a and b
-# with relative tolerance c
-
-def isclose(a, b, rel_tol = 1e-8):
+# with relative tolerance, default 13-4 which is ≈30ft depending on location
+def isclose(a, b, rel_tol = 1e-4):
     if not isinstance(a, (int, float)) or not isinstance(b, (int, float)):
         return False
 
