@@ -2,6 +2,13 @@ version: 2.1
 orbs:
   python: circleci/python@2.0.3
 
+workflows:
+  my-workflow:
+    jobs:
+      - build_and_test:
+          context:
+            - Environment
+
 jobs:
   build_and_test:
     docker:
@@ -29,9 +36,7 @@ jobs:
           command: pytest elodie/tests -v --cov=elodie --cov-report=xml
       - run:
           name: Generate coverage
-          command: |
-            export COVERALLS_REPO_TOKEN=ID8gtfMwF9LYAukhtZHft0f9uo5Dg6TnU
-            coveralls
+          command: coveralls
 
 workflows:
   ci:
