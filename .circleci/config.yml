@@ -2,13 +2,6 @@ version: 2.1
 orbs:
   python: circleci/python@2.0.3
 
-workflows:
-  my-workflow:
-    jobs:
-      - build_and_test:
-          context:
-            - Environment
-
 jobs:
   build_and_test:
     docker:
@@ -42,3 +35,4 @@ workflows:
   ci:
     jobs:
       - build_and_test
+          context: Environment
