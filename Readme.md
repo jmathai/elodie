@@ -398,3 +398,17 @@ If you're an english speaker then you will probably want to add `prefer_english_
 ## Questions, comments or concerns?
 
 The best ways to provide feedback is by opening a [GitHub issue](https://github.com/jmathai/elodie/issues) or emailing me at [jaisen@jmathai.com](mailto:jaisen@jmathai.com).
+
+## Using with docker
+
+To avoid dealing with python versions and other requirements you can build docker image locally and tag it as `elodie`:
+
+```
+docker build . -t elodie
+```
+
+Then run `elodie` container:
+
+```
+docker run -v /path-to-destination:/dest -v /path-to-source:/src -v /path-to-config:/config -u $(id -u):$(id -g) -e ELODIE_APPLICATION_DIRECTORY=/config elodie import --debug --trash --destination=/dest /src
+```

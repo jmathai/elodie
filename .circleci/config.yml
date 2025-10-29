@@ -4,7 +4,8 @@ orbs:
 
 jobs:
   build_and_test:
-    executor: python/default
+    docker:
+      - image: cimg/python:3.13
     steps:
       - checkout
       - run:
@@ -28,11 +29,10 @@ jobs:
           command: pytest elodie/tests -v --cov=elodie --cov-report=xml
       - run:
           name: Generate coverage
-          command: |
-            export COVERALLS_REPO_TOKEN=ID8gtfMwF9LYAukhtZHft0f9uo5Dg6TnU
-            coveralls
+          command: coveralls
 
 workflows:
   ci:
     jobs:
-      - build_and_test
+      - build_and_test:
+          context: Environment

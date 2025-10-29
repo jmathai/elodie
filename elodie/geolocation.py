@@ -1,10 +1,6 @@
 """Look up geolocation information for media objects."""
 from __future__ import print_function
 from __future__ import division
-from future import standard_library
-from past.utils import old_div
-
-standard_library.install_aliases()  # noqa
 
 from os import path
 
@@ -84,8 +80,8 @@ def dms_to_decimal(degrees, minutes, seconds, direction=' '):
     if(direction[0] in 'WSws'):
         sign = -1
     return (
-        float(degrees) + old_div(float(minutes), 60) +
-        old_div(float(seconds), 3600)
+        float(degrees) + (float(minutes) / 60) +
+        (float(seconds) / 3600)
     ) * sign
 
 

@@ -6,7 +6,7 @@ from __future__ import print_function
 
 import os
 import sys
-from distutils.spawn import find_executable
+import shutil
 
 
 #: Error to print when exiftool can't be found.
@@ -25,7 +25,7 @@ def get_exiftool():
 
     :returns: str or None
     """
-    path = find_executable('exiftool')
+    path = shutil.which('exiftool')
     # If exiftool wasn't found we try to brute force the homebrew location
     if path is None:
         path = '/usr/local/bin/exiftool'

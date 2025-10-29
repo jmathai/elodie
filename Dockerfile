@@ -1,12 +1,10 @@
-FROM debian:jessie
+FROM python:3.9-slim
 
-ENV DEBIAN_FRONTEND=noninteractive
+ARG EXIF_TOOL_VER="13.27"
 
-RUN apt-get update -y && \
-    apt-get install -y --no-install-recommends ca-certificates libimage-exiftool-perl python2.7 python-pip python-pyexiv2 wget make && \
-    pip install --upgrade pip setuptools && \
-    apt-get autoremove -y && \
-    rm -rf /var/lib/apt/lists/*
+RUN apt-get update -y
+RUN apt-get install -y --no-install-recommends ca-certificates libimage-exiftool-perl wget make
+RUN rm -rf /var/lib/apt/lists/*
 
 RUN apt-get update -qq && \
     apt-get install -y locales -qq && \
@@ -19,10 +17,13 @@ ENV LANG C.UTF-8
 ENV LANGUAGE C.UTF-8
 ENV LC_ALL C.UTF-8
 
-RUN wget http://www.sno.phy.queensu.ca/~phil/exiftool/Image-ExifTool-10.20.tar.gz && \
-    gzip -dc Image-ExifTool-10.20.tar.gz  | tar -xf - && \
-    cd Image-ExifTool-10.20 && perl Makefile.PL && \
-    make install && cd ../ && rm -r Image-ExifTool-10.20
+RUN cd /tmp && \
+    wget https://exiftool.org/Image-ExifTool-${EXIF_TOOL_VER}.tar.gz && \
+    gzip -dc /tmp/Image-ExifTool-${EXIF_TOOL_VER}.tar.gz  | tar -xf - && \
+    cd Image-ExifTool-${EXIF_TOOL_VER} && perl Makefile.PL && \
+    make install && \
+    cd ../ && rm -r Image-ExifTool-${EXIF_TOOL_VER} && \
+    rm -r Image-ExifTool-${EXIF_TOOL_VER}.tar.gz
 
 COPY requirements.txt /opt/elodie/requirements.txt
 COPY docs/requirements.txt /opt/elodie/docs/requirements.txt
@@ -34,4 +35,4 @@ RUN pip install -r docs/requirements.txt && \
 
 COPY . /opt/elodie
 
-CMD ["/bin/bash"]
+ENTRYPOINT [ "/opt/elodie/elodie.py" ]
