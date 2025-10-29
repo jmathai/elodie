@@ -127,6 +127,7 @@ class Db(object):
                 hasher.update(buf)
                 buf = f.read(blocksize)
             return hasher.hexdigest()
+        return None
 
     def get_hash(self, key):
         """Get the hash value for a given key.
