@@ -358,6 +358,61 @@ def test_import_directory_with_non_matching_exclude():
     assert 'Success                        1' in result.output, result.output
     assert 'Error                          0' in result.output, result.output
 
+def test_import_file_with_location():
+    temporary_folder, folder = helper.create_working_folder()
+    temporary_folder_destination, folder_destination = helper.create_working_folder()
+
+    origin = '%s/no-exif.jpg' % folder
+    shutil.copyfile(helper.get_file('no-exif.jpg'), origin)
+
+    helper.reset_dbs()
+    dest_path = elodie.import_file(origin, folder_destination, False, False, False, 'New York, NY', None)
+    helper.restore_dbs()
+
+    shutil.rmtree(folder)
+    shutil.rmtree(folder_destination)
+
+    # Should be organized under New York instead of Unknown Location
+    assert 'New York' in dest_path, dest_path
+    assert 'Unknown Location' not in dest_path, dest_path
+
+def test_import_file_with_location_and_time():
+    temporary_folder, folder = helper.create_working_folder()
+    temporary_folder_destination, folder_destination = helper.create_working_folder()
+
+    origin = '%s/no-exif.jpg' % folder
+    shutil.copyfile(helper.get_file('no-exif.jpg'), origin)
+
+    helper.reset_dbs()
+    dest_path = elodie.import_file(origin, folder_destination, False, False, False, 'San Francisco, CA', '2022-12-25 10:00:00')
+    helper.restore_dbs()
+
+    shutil.rmtree(folder)
+    shutil.rmtree(folder_destination)
+
+    # Should be organized under San Francisco and 2022-12-Dec
+    assert '2022-12-Dec' in dest_path, dest_path
+    assert 'San Francisco' in dest_path, dest_path
+    assert '2022-12-25_10-00-00' in dest_path, dest_path
+
+def test_import_file_with_time():
+    temporary_folder, folder = helper.create_working_folder()
+    temporary_folder_destination, folder_destination = helper.create_working_folder()
+
+    origin = '%s/no-exif.jpg' % folder
+    shutil.copyfile(helper.get_file('no-exif.jpg'), origin)
+
+    helper.reset_dbs()
+    dest_path = elodie.import_file(origin, folder_destination, False, False, False, None, '2023-07-15 14:30:00')
+    helper.restore_dbs()
+
+    shutil.rmtree(folder)
+    shutil.rmtree(folder_destination)
+
+    # Should be organized under 2023-07-Jul based on specified time
+    assert '2023-07-Jul' in dest_path, dest_path
+    assert '2023-07-15_14-30-00' in dest_path, dest_path
+
 @mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-import-file-with-single-config-exclude' % gettempdir())
 def test_import_file_with_single_config_exclude(mock_get_config_file):
     config_string = """

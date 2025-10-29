@@ -36,7 +36,7 @@ from elodie import constants
 
 FILESYSTEM = FileSystem()
 
-def import_file(_file, destination, album_from_folder, trash, allow_duplicates):
+def import_file(_file, destination, album_from_folder, trash, allow_duplicates, location=None, time=None):
     
     _file = _decode(_file)
     destination = _decode(destination)
@@ -63,6 +63,12 @@ def import_file(_file, destination, album_from_folder, trash, allow_duplicates):
 
     if album_from_folder:
         media.set_album_from_folder()
+
+    # Apply location and time updates if provided
+    if location:
+        update_location(media, _file, location)
+    if time:
+        update_time(media, _file, time)
 
     dest_path = FILESYSTEM.process_file(_file, destination,
         media, allowDuplicate=allow_duplicates, move=False)
@@ -97,12 +103,17 @@ def _batch(debug):
               help='After copying files, move the old files to the trash.')
 @click.option('--allow-duplicates', default=False, is_flag=True,
               help='Import the file even if it\'s already been imported.')
+@click.option('--location', help=('Update the image location. Location '
+                                  'should be the name of a place, like "Las '
+                                  'Vegas, NV".'))
+@click.option('--time', help=('Update the image time. Time should be in '
+                              'YYYY-mm-dd hh:ii:ss or YYYY-mm-dd format.'))
 @click.option('--debug', default=False, is_flag=True,
               help='Override the value in constants.py with True.')
 @click.option('--exclude-regex', default=set(), multiple=True,
               help='Regular expression for directories or files to exclude.')
 @click.argument('paths', nargs=-1, type=click.Path())
-def _import(destination, source, file, album_from_folder, trash, allow_duplicates, debug, exclude_regex, paths):
+def _import(destination, source, file, album_from_folder, trash, allow_duplicates, location, time, debug, exclude_regex, paths):
     """Import files or directories by reading their EXIF and organizing them accordingly.
     """
     constants.debug = debug
@@ -138,7 +149,7 @@ def _import(destination, source, file, album_from_folder, trash, allow_duplicate
 
     for current_file in files:
         dest_path = import_file(current_file, destination, album_from_folder,
-                    trash, allow_duplicates)
+                    trash, allow_duplicates, location, time)
         if dest_path:
             result.append((current_file, True))
         elif not allow_duplicates:

@@ -105,7 +105,19 @@ Back to your photos. When I'm done you should see something like this. Notice th
     │   └── 2015-09-27_01-41-38-_dsc8705.nef
 ```
 
-Not too bad, eh? Wait a second, what's *Unknown Location*? If I'm not able to figure out where a photo was taken I'll place it into a folder named *Unknown Location*. This typically happens when photos do not have GPS information in their EXIF. You shouldn't see this for photos taken on a smartphone but it's often the case with digital cameras and SLRs. I can help you add GPS information to those photos and get them organized better. Let me show you how.
+Not too bad, eh? Wait a second, what's *Unknown Location*? If I'm not able to figure out where a photo was taken I'll place it into a folder named *Unknown Location*. This typically happens when photos do not have GPS information in their EXIF. You shouldn't see this for photos taken on a smartphone but it's often the case with digital cameras and SLRs. 
+
+**Important:** If you're importing photos that are missing location or time information in their EXIF, you can specify these during import using `--location` and `--time` options. Note that `--location` will overwrite any existing location data and `--time` will overwrite any existing time data, so only use them when the photos lack this information or when you know the existing EXIF data is incorrect.
+
+```
+# For photos missing location data
+./elodie.py import --destination="/where/i/want/my/photos/to/go" --location="Las Vegas, NV" /where/my/photos/are
+
+# For photos with incorrect or missing timestamps
+./elodie.py import --destination="/where/i/want/my/photos/to/go" --time="2015-06-29 16:30:00" /where/my/photos/are
+```
+
+Alternatively, I can help you add GPS information to those photos after importing and get them organized better. Let me show you how.
 
 ### Usage Instructions
 
@@ -128,6 +140,10 @@ Options:
   --trash                  After copying files, move the old files to the
                            trash.
   --allow-duplicates       Import the file even if it's already been imported.
+  --location TEXT          Update the image location. Location should be the
+                           name of a place, like "Las Vegas, NV".
+  --time TEXT              Update the image time. Time should be in YYYY-mm-dd
+                           hh:ii:ss or YYYY-mm-dd format.
   --debug                  Override the value in constants.py with True.
   --exclude-regex TEXT     Regular expression for directories or files to
                            exclude.
