@@ -111,11 +111,19 @@ def _fscodec():
         Encode filename to the filesystem encoding with 'surrogateescape' error
         handler, return bytes unchanged. On Windows, use 'strict' error handler if
         the file system encoding is 'mbcs' (which is the default encoding).
+        
+        If encoding fails, try UTF-8 as a fallback to handle non-ASCII characters.
         """
         if isinstance(filename, bytes):
             return filename
         else:
-            return filename.encode(encoding, errors)
+            try:
+                return filename.encode(encoding, errors)
+            except UnicodeEncodeError:
+                # Fallback to UTF-8 encoding for non-ASCII characters
+                # This handles cases where filesystem encoding can't represent
+                # the characters in the filename (issue #379)
+                return filename.encode('utf-8', 'surrogateescape')
 
     return fsencode
 
