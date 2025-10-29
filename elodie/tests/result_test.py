@@ -30,13 +30,14 @@ def call_result_and_assert(result, expected):
 
 def test_add_multiple_rows_with_success():
     expected = """****** SUMMARY ******
-Metric      Count
---------  -------
-Success         2
-Error           0"""
+Metric                     Count
+-----------------------  -------
+Success                        2
+Error                          0
+Duplicate, not imported        0"""
     result = Result()
-    result.append(('id1', '/some/path/1'))
-    result.append(('id2', '/some/path/2'))
+    result.append(('id1', True))
+    result.append(('id2', True))
     call_result_and_assert(result, expected)
 
 def test_add_multiple_rows_with_failure():
@@ -48,10 +49,11 @@ id2
 
 
 ****** SUMMARY ******
-Metric      Count
---------  -------
-Success         0
-Error           2"""
+Metric                     Count
+-----------------------  -------
+Success                        0
+Error                          2
+Duplicate, not imported        0"""
     result = Result()
     result.append(('id1', False))
     result.append(('id2', False))
@@ -65,11 +67,56 @@ id1
 
 
 ****** SUMMARY ******
-Metric      Count
---------  -------
-Success         1
-Error           1"""
+Metric                     Count
+-----------------------  -------
+Success                        1
+Error                          1
+Duplicate, not imported        0"""
     result = Result()
     result.append(('id1', False))
-    result.append(('id2', '/some/path'))
+    result.append(('id2', True))
+    call_result_and_assert(result, expected)
+
+def test_add_multiple_rows_with_duplicates():
+    expected = """****** DUPLICATE (NOT IMPORTED) DETAILS ******
+File
+------
+id1
+id2
+
+
+****** SUMMARY ******
+Metric                     Count
+-----------------------  -------
+Success                        0
+Error                          0
+Duplicate, not imported        2"""
+    result = Result()
+    result.append(('id1', None))
+    result.append(('id2', None))
+    call_result_and_assert(result, expected)
+
+def test_add_multiple_rows_with_success_error_and_duplicate():
+    expected = """****** ERROR DETAILS ******
+File
+------
+id2
+
+
+****** DUPLICATE (NOT IMPORTED) DETAILS ******
+File
+------
+id3
+
+
+****** SUMMARY ******
+Metric                     Count
+-----------------------  -------
+Success                        1
+Error                          1
+Duplicate, not imported        1"""
+    result = Result()
+    result.append(('id1', True))
+    result.append(('id2', False))
+    result.append(('id3', None))
     call_result_and_assert(result, expected)
