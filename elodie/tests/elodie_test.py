@@ -410,6 +410,7 @@ def test_import_file_with_time():
     shutil.rmtree(folder_destination)
 
     # Should be organized under 2023-07-Jul based on specified time
+    # Expected: 2023-07-Jul/Unknown Location/2023-07-15_14-30-00-no-exif.jpg
     assert '2023-07-Jul' in dest_path, dest_path
     assert '2023-07-15_14-30-00' in dest_path, dest_path
 
