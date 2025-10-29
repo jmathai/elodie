@@ -13,6 +13,8 @@ import time
 from datetime import datetime
 from re import compile
 
+from PIL import Image
+
 from elodie import log
 from .media import Media
 
@@ -35,14 +37,8 @@ class Photo(Media):
         # We only want to parse EXIF once so we store it here
         self.exif = None
 
-        # Optionally import Pillow - see gh-325
-        # https://github.com/jmathai/elodie/issues/325
-        self.pillow = None
-        try:
-            from PIL import Image
-            self.pillow = Image
-        except ImportError:
-            pass
+        # Use Pillow (required dependency)
+        self.pillow = Image
 
     def get_date_taken(self):
         """Get the date which the photo was taken.
@@ -103,14 +99,15 @@ class Photo(Media):
         extension = os.path.splitext(source)[1][1:].lower()
         if(extension != 'heic'):
             # gh-4 This checks if the source file is an image.
-            # It doesn't validate against the list of supported types.
-            # We use pillow imaging library to detect file type
-            try:
-                im = self.pillow.open(source)
-            except IOError:
+            # Use Pillow to validate the image format.
+            if(self.pillow is None):
                 return False
 
-            if(im.format is None):
+            try:
+                im = self.pillow.open(source)
+                if(im.format is None):
+                    return False
+            except IOError:
                 return False
         
         return extension in self.extensions

@@ -139,7 +139,12 @@ def _import(destination, source, file, album_from_folder, trash, allow_duplicate
     for current_file in files:
         dest_path = import_file(current_file, destination, album_from_folder,
                     trash, allow_duplicates)
-        result.append((current_file, dest_path))
+        if dest_path:
+            result.append((current_file, True))
+        elif not allow_duplicates:
+            result.append((current_file, None))  # duplicate
+        else:
+            result.append((current_file, False))  # error
         has_errors = has_errors is True or not dest_path
 
     result.write()
@@ -343,7 +348,7 @@ def _update(album, location, time, title, paths, debug):
             FILESYSTEM.delete_directory_if_empty(os.path.dirname(current_file))
             FILESYSTEM.delete_directory_if_empty(
                 os.path.dirname(os.path.dirname(current_file)))
-            result.append((current_file, dest_path))
+            result.append((current_file, bool(dest_path)))
             # Trip has_errors to False if it's already False or dest_path is.
             has_errors = has_errors is True or not dest_path
         else:
