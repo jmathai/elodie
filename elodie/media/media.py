@@ -49,6 +49,7 @@ class Media(Base):
         self.latitude_ref_key = 'EXIF:GPSLatitudeRef'
         self.longitude_ref_key = 'EXIF:GPSLongitudeRef'
         self.original_name_key = 'XMP:OriginalFileName'
+        self.rating_key = 'XMP:Rating'
         self.set_gps_ref = True
         self.exif_metadata = None
 
@@ -311,6 +312,40 @@ class Media(Base):
         status = self.__set_tags(tags)
         self.reset_cache()
 
+        return status
+
+    def get_rating(self):
+        """Get rating from EXIF
+
+        :returns: int or None if file invalid or no exif data
+        """
+        if(not self.is_valid()):
+            return None
+
+        exiftool_attributes = self.get_exiftool_attributes()
+        if exiftool_attributes is None:
+            return None
+
+        if(self.rating_key not in exiftool_attributes):
+            return None
+
+        try:
+            return int(exiftool_attributes[self.rating_key])
+        except (ValueError, TypeError):
+            return None
+
+    def set_rating(self, rating):
+        """Set rating for a photo
+        
+        :param rating: Rating value or empty string to remove rating
+        :returns: bool
+        """
+        if(not self.is_valid()):
+            return None
+
+        tags = {self.rating_key: rating}
+        status = self.__set_tags(tags)
+        self.reset_cache()
         return status
 
     def __set_tags(self, tags):
