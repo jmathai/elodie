@@ -1,16 +1,16 @@
 # Immich Plugin (experimental)
 
-This plugin enables albums, descriptions and favorites to be managed through Immich's UI while ensuring:
+This plugin enables albums, descriptions, location and favorites to be managed through Immich's UI while ensuring:
 
 * All metadata is **persisted in the photo itself**
 * Elodie remains the **canonical organizer**
 * File moves do not break album or favorite state
 
-Immich is treated as both an **intent source** (albums, favorites) and a **materialized view target** (albums rebuilt from metadata).
+Immich is treated as both an **intent source** (albums, descriptions, location favorites) and a **materialized view target** (albums rebuilt from metadata).
 
 ## Requirements
 
-The Immich plugin requires the `requests` library. Install it using:
+Install the plugin's requirements.
 
 ```bash
 pip install -r elodie/plugins/immich/requirements.txt
@@ -100,11 +100,11 @@ Maps Immich favorites to XMP ratings:
 
 ### Description
 
-Description is stored in `XMP:Description` and will populate the description field in Immich.
+Description is stored in `XMP:Description` and maps the description field in Immich.
 
-### Description
+### Location
 
-Location 
+Location is stored in `XMP:GPSLatitude` and `XMP:GPSLongitude` and maps to the latitude and longitude fields in Immich.
 
 ## Error Handling
 
@@ -123,16 +123,16 @@ Summary output includes:
 ## Limitations
 
 * Immich asset IDs are not preserved across file moves
-* Only supports single album per photo
 * No real-time or webhook-based sync
-* Requires manual `./elodie.py batch` execution
+* Requires scheduled `./elodie.py batch` execution
 
 ## API Endpoints Used
 
 The plugin uses the following Immich API endpoints:
-* `GET /assets` - Get all assets (with optional updatedSince filter)
 * `GET /albums` - Get all albums ([docs](https://api.immich.app/endpoints/albums/getAllAlbums))
-* `POST /search/metadata` - Search assets by originalFileName and originalPath ([docs](https://api.immich.app/endpoints/search/searchAssets))
-* `POST /albums` - Create new album
-* `PUT /albums/{id}/assets` - Add assets to album
-* `PUT /assets/{id}` - Update asset (set favorite status)
+* `GET /albums/{id}` - Get album details with assets ([docs](https://api.immich.app/endpoints/albums/getAlbumInfo))
+* `POST /albums` - Create new album ([docs](https://api.immich.app/endpoints/albums/createAlbum))
+* `PUT /albums/{id}/assets` - Add assets to album ([docs](https://api.immich.app/endpoints/albums/addAssetsToAlbum))
+* `POST /search/metadata` - Search assets by metadata ([docs](https://api.immich.app/endpoints/search/searchAssets))
+* `GET /assets/{id}` - Get detailed asset information ([docs](https://api.immich.app/endpoints/assets/getAssetInfo))
+* `PUT /assets/{id}` - Update asset (favorite status, description, location) ([docs](https://api.immich.app/endpoints/assets/updateAsset))
