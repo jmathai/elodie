@@ -15,6 +15,7 @@ import requests
 import time
 from datetime import datetime, timedelta
 from os.path import basename, dirname, isfile
+from typing import Dict, List, Optional, Set, Tuple
 
 from elodie.media.photo import Photo
 from elodie.media.video import Video  
@@ -22,119 +23,111 @@ from elodie.media.base import Base, get_all_subclasses
 from elodie.plugins.plugins import PluginBase
 from elodie.filesystem import FileSystem
 
-class ImmichApiClient(object):
-    """Client for interacting with Immich API"""
+class ImmichApiClient:
+    """Client for interacting with Immich API.
+    
+    Provides methods for album management, asset search, and metadata operations.
+    All methods handle authentication and error handling consistently.
+    """
+    
+    # API endpoints
+    ENDPOINTS = {
+        'albums': '/albums',
+        'search_metadata': '/search/metadata',
+        'assets': '/assets'
+    }
     
     def __init__(self, api_url, api_key):
         self.api_url = api_url.rstrip('/')
         self.api_key = api_key
-        self.session = requests.Session()
-        self.session.headers.update({
+        self.session = self._create_session(api_key)
+    
+    def _create_session(self, api_key):
+        """Create and configure HTTP session"""
+        session = requests.Session()
+        session.headers.update({
             'X-API-Key': api_key,
             'Content-Type': 'application/json'
         })
+        return session
+    
+    def _make_request(self, method, endpoint, **kwargs):
+        """Make HTTP request with consistent error handling"""
+        url = f"{self.api_url}{endpoint}"
+        try:
+            response = getattr(self.session, method.lower())(url, **kwargs)
+            response.raise_for_status()
+            return response
+        except requests.RequestException as e:
+            raise Exception(f"Failed {method.upper()} {endpoint}: {e}")
 
 
+    # Album operations
     def get_all_albums(self):
         """Get all albums from Immich"""
-        url = f"{self.api_url}/albums"
-        
-        try:
-            response = self.session.get(url)
-            response.raise_for_status()
-            return response.json()
-        except requests.RequestException as e:
-            raise Exception(f"Failed to get albums: {e}")
+        response = self._make_request('GET', self.ENDPOINTS['albums'])
+        return response.json()
     
     def get_album_by_id(self, album_id):
         """Get a specific album by ID with its assets"""
-        url = f"{self.api_url}/albums/{album_id}"
-        
-        try:
-            response = self.session.get(url)
-            response.raise_for_status()
-            return response.json()
-        except requests.RequestException as e:
-            raise Exception(f"Failed to get album {album_id}: {e}")
-            
+        response = self._make_request('GET', f"{self.ENDPOINTS['albums']}/{album_id}")
+        return response.json()
+
+    def create_album(self, album_name, description=""):
+        """Create a new album in Immich"""
+        payload = {
+            'albumName': album_name,
+            'description': description
+        }
+        response = self._make_request('POST', self.ENDPOINTS['albums'], json=payload)
+        return response.json()
+
+    def add_assets_to_album(self, album_id, asset_ids):
+        """Add assets to an album"""
+        payload = {'ids': asset_ids}
+        response = self._make_request('PUT', f"{self.ENDPOINTS['albums']}/{album_id}/assets", json=payload)
+        return response.json()
+    
+    # Asset search and retrieval operations
     def search_assets_by_metadata(self, original_file_name=None, original_path=None, is_favorite=None):
         """Search for assets by original filename and path"""
-        url = f"{self.api_url}/search/metadata"
+        payload = self._build_search_payload(original_file_name, original_path, is_favorite)
+        response = self._make_request('POST', self.ENDPOINTS['search_metadata'], json=payload)
+        return response.json()
+
+    def search_assets_updated_since(self, timestamp):
+        """Search for assets updated since a specific timestamp"""
+        payload = {'updatedAfter': timestamp}
+        response = self._make_request('POST', self.ENDPOINTS['search_metadata'], json=payload)
+        return response.json()
+
+    def get_asset_by_id(self, asset_id):
+        """Get detailed asset information by ID"""
+        response = self._make_request('GET', f"{self.ENDPOINTS['assets']}/{asset_id}")
+        return response.json()
+    
+    # Asset update operations
+    def update_asset(self, asset_id, is_favorite=None, description=None, file_created_at=None, latitude=None, longitude=None):
+        """Update an asset (favorite status, description, date/time, location)"""
+        payload = self._build_update_payload(is_favorite, description, file_created_at, latitude, longitude)
+        self._make_request('PUT', f"{self.ENDPOINTS['assets']}/{asset_id}", json=payload)
+        return True
+    
+    # Helper methods for payload construction
+    def _build_search_payload(self, original_file_name=None, original_path=None, is_favorite=None):
+        """Build search payload with non-None values"""
         payload = {}
-        
         if original_file_name:
             payload['originalFileName'] = original_file_name
         if original_path:
             payload['originalPath'] = original_path
         if is_favorite is not None:
             payload['isFavorite'] = is_favorite
-            
-        try:
-            response = self.session.post(url, json=payload)
-            response.raise_for_status()
-            return response.json()
-        except requests.RequestException as e:
-            raise Exception(f"Failed to search assets: {e} (Status: {response.status_code if 'response' in locals() else 'unknown'})")
-
-    def create_album(self, album_name, description=""):
-        """Create a new album in Immich"""
-        url = f"{self.api_url}/albums"
-        payload = {
-            'albumName': album_name,
-            'description': description
-        }
-        
-        try:
-            response = self.session.post(url, json=payload)
-            response.raise_for_status()
-            return response.json()
-        except requests.RequestException as e:
-            raise Exception(f"Failed to create album {album_name}: {e}")
-
-    def add_assets_to_album(self, album_id, asset_ids):
-        """Add assets to an album"""
-        url = f"{self.api_url}/albums/{album_id}/assets"
-        payload = {
-            'ids': asset_ids
-        }
-        
-        try:
-            response = self.session.put(url, json=payload)
-            response.raise_for_status()
-            return response.json()
-        except requests.RequestException as e:
-            raise Exception(f"Failed to add assets to album: {e}")
-
-    def get_asset_by_id(self, asset_id):
-        """Get detailed asset information by ID"""
-        url = f"{self.api_url}/assets/{asset_id}"
-        
-        try:
-            response = self.session.get(url)
-            response.raise_for_status()
-            return response.json()
-        except requests.RequestException as e:
-            raise Exception(f"Failed to get asset {asset_id}: {e}")
-
-    def search_assets_updated_since(self, timestamp):
-        """Search for assets updated since a specific timestamp"""
-        url = f"{self.api_url}/search/metadata"
-        payload = {
-            'updatedAfter': timestamp
-        }
-        
-        try:
-            response = self.session.post(url, json=payload)
-            response.raise_for_status()
-            return response.json()
-        except requests.RequestException as e:
-            raise Exception(f"Failed to search assets: {e}")
-
-    def update_asset(self, asset_id, is_favorite=None, description=None, file_created_at=None, latitude=None, longitude=None):
-        """Update an asset (favorite status, description, date/time, location)"""
-        url = f"{self.api_url}/assets/{asset_id}"  # Fixed: should be /assets/{id}
+        return payload
+    
+    def _build_update_payload(self, is_favorite=None, description=None, file_created_at=None, latitude=None, longitude=None):
+        """Build update payload with non-None values"""
         payload = {}
-        
         if is_favorite is not None:
             payload['isFavorite'] = is_favorite
         if description is not None:
@@ -145,14 +138,7 @@ class ImmichApiClient(object):
             payload['latitude'] = latitude
         if longitude is not None:
             payload['longitude'] = longitude
-        
-        try:
-            response = self.session.put(url, json=payload)
-            response.raise_for_status()
-            # PUT returns 204 with empty body
-            return True
-        except requests.RequestException as e:
-            raise Exception(f"Failed to update asset: {e}")
+        return payload
 
 
 class Immich(PluginBase):
@@ -168,37 +154,87 @@ class Immich(PluginBase):
     """
 
     __name__ = 'Immich'
+    
+    # Plugin constants
+    CLEANUP_RETENTION_DAYS = 14
+    BOOTSTRAP_FALLBACK_DATE = '2020-01-01T00:00:00.000Z'
+    PROGRESS_LOG_INTERVAL = 100
+    FAVORITE_RATING = 5
+    ALBUM_SEPARATOR = ';'
 
-    def __init__(self):
+    def __init__(self) -> None:
         super(Immich, self).__init__()
+        self._initialize_config()
+        self.filesystem = FileSystem()
+    
+    def _initialize_config(self) -> None:
+        """Initialize plugin configuration from config.ini."""
+        self.api_url = self.config_for_plugin.get('api_url')
+        self.api_key = self.config_for_plugin.get('api_key')
+        self.external_library_path = self.config_for_plugin.get('external_library_path')
         
-        # Get configuration from config.ini
-        self.api_url = None
-        if 'api_url' in self.config_for_plugin:
-            self.api_url = self.config_for_plugin['api_url']
-        
-        self.api_key = None
-        if 'api_key' in self.config_for_plugin:
-            self.api_key = self.config_for_plugin['api_key']
-            
-        self.external_library_path = None
-        if 'external_library_path' in self.config_for_plugin:
-            self.external_library_path = self.config_for_plugin['external_library_path']
-            
         # Initialize API client if we have required config
         self.client = None
         if self.api_url and self.api_key:
             self.client = ImmichApiClient(self.api_url, self.api_key)
-        
-        self.filesystem = FileSystem()
 
-    def after(self, file_path, destination_folder, final_file_path, metadata):
-        """Called after a file is processed"""
-        # File move tracking is now handled in batch() where we have asset IDs
+    def after(self, file_path: str, destination_folder: str, final_file_path: str, metadata: Dict) -> None:
+        """Called after a file is processed.
+        
+        File move tracking is handled in batch() where we have asset IDs.
+        """
         pass
 
-    def prune_immich_states(self):
-        """Prune plugin state to reflect what's in immich database"""
+    def batch(self) -> Tuple[bool, int]:
+        """Main batch processing method - handles sync operations.
+        
+        Returns:
+            Tuple of (success: bool, processed_count: int)
+        """
+        if not self.client:
+            self.display('Immich plugin not configured properly. Check api_url and api_key in config.')
+            return (False, 0)
+            
+        if not self.external_library_path:
+            self.display('Immich plugin missing external_library_path configuration.')
+            return (False, 0)
+            
+        try:
+            # First prune our state to match current Immich assets
+            self._prune_immich_states()
+            
+            # Check if bootstrap has been completed
+            bootstrap_completed = self.db.get('bootstrap_completed')
+            
+            if not bootstrap_completed:
+                self.display('Running initial bootstrap sync from Elodie to Immich...')
+                result = self._bootstrap_elodie_to_immich()
+                if result[0]:  # If successful
+                    self.db.set('bootstrap_completed', True)
+                    self.display('Bootstrap completed successfully')
+                return result
+            else:
+                self.display('Running incremental sync from Immich to Elodie...')
+                result = self._sync_immich_to_elodie()
+                return result
+                
+        except Exception as e:
+            self.display(f'Immich sync failed: {str(e)}')
+            return (False, 0)
+
+    def before(self, file_path: str, destination_folder: str) -> None:
+        """Called before a file is processed.
+        
+        We don't need to do anything before individual file processing.
+        """
+        pass
+
+    def _prune_immich_states(self) -> None:
+        """Prune plugin state to reflect what's in Immich database.
+        
+        Removes stale asset IDs from local state that no longer exist in Immich
+        and cleans up expired file move records.
+        """
         try:
             # Get all current assets from Immich
             search_results = self.client.search_assets_updated_since('2020-01-01T00:00:00.000Z')
@@ -235,45 +271,14 @@ class Immich(PluginBase):
         except Exception as e:
             self.log(f"Error during state reconciliation: {e}")
 
-    def batch(self):
-        """Main batch processing method - handles sync operations"""
-        if not self.client:
-            self.display('Immich plugin not configured properly. Check api_url and api_key in config.')
-            return (False, 0)
-            
-        if not self.external_library_path:
-            self.display('Immich plugin missing external_library_path configuration.')
-            return (False, 0)
-            
-        try:
-            # First prune our state to match current Immich assets
-            self.prune_immich_states()
-            
-            # Check if bootstrap has been completed
-            bootstrap_completed = self.db.get('bootstrap_completed')
-            
-            if not bootstrap_completed:
-                self.display('Running initial bootstrap sync from Elodie to Immich...')
-                result = self._bootstrap_elodie_to_immich()
-                if result[0]:  # If successful
-                    self.db.set('bootstrap_completed', True)
-                    self.display('Bootstrap completed successfully')
-                return result
-            else:
-                self.display('Running incremental sync from Immich to Elodie...')
-                return self._sync_immich_to_elodie()
-                
-        except Exception as e:
-            self.display(f'Immich sync failed: {str(e)}')
-            return (False, 0)
-
-    def before(self, file_path, destination_folder):
-        """Called before a file is processed"""
-        # We don't need to do anything before individual file processing
-        pass
-
-    def _bootstrap_elodie_to_immich(self):
-        """Bootstrap sync: Elodie → Immich (one-time setup)"""
+    def _bootstrap_elodie_to_immich(self) -> Tuple[bool, int]:
+        """Bootstrap sync: Elodie → Immich (one-time setup).
+        
+        Syncs all existing files from Elodie to Immich with resume capability.
+        
+        Returns:
+            Tuple of (success: bool, processed_count: int)
+        """
         count = 0
         errors = 0
         
@@ -291,53 +296,23 @@ class Immich(PluginBase):
             
             # Iterate through all files in the external library path
             all_files = list(self.filesystem.get_all_files(self.external_library_path))
-            total_files = len(all_files)
-            self.log(f'Bootstrap processing {total_files} total files ({total_processed} already completed)')
+            total_files_count = len(all_files)
+            self.log(f'Bootstrap processing {total_files_count} total files ({total_processed} already completed)')
             
             for file_path in all_files:
                 # Skip files already processed
                 if file_path in processed_files:
                     continue
                 try:
-                    # Get media object and metadata
-                    media = Base.get_class_by_file(file_path, get_all_subclasses())
-                    if not media:
+                    # Process single file for bootstrap
+                    asset_id = self._process_file_for_bootstrap(file_path)
+                    if not asset_id:
                         continue
-                        
-                    metadata = media.get_metadata()
-                    if not metadata:
-                        continue
-                    
-                    # Find corresponding Immich asset using both filename and path for uniqueness
-                    original_filename = basename(file_path)
-                    original_path = file_path
-                    search_results = self.client.search_assets_by_metadata(
-                        original_file_name=original_filename,
-                        original_path=original_path
-                    )
-                    
-                    # Get assets from the correct part of the response structure
-                    assets_data = search_results.get('assets', {})
-                    assets = assets_data.get('items', [])
-                    if not assets:
-                        self.log(f'No Immich asset found for {file_path} (filename: {original_filename})')
-                        continue
-                        
-                    asset = assets[0]  # Take first match
-                    asset_id = asset['id']
                     
                     # Use refactored sync method
                     if self._sync_single_file_to_immich(file_path, asset_id, album_name_to_id):
                         count += 1
-                        
-                        # Track this file as processed and save immediately for resume capability
-                        processed_files.add(file_path)
-                        self.db.set('bootstrap_processed_files', list(processed_files))
-                        
-                        # Log progress every 100 files
-                        if len(processed_files) % 100 == 0:
-                            progress_pct = (len(processed_files) / total_files) * 100
-                            self.log(f'Bootstrap progress: {len(processed_files)}/{total_files} files ({progress_pct:.1f}%)')
+                        self._track_bootstrap_progress(processed_files, file_path, total_files_count)
                     
                 except Exception as e:
                     self.log(f'Error processing {file_path}: {str(e)}')
@@ -350,17 +325,24 @@ class Immich(PluginBase):
             return (False, count)
         
         # Log completion and clean up progress tracking
-        final_progress_pct = (len(processed_files) / total_files) * 100 if total_files > 0 else 0
-        self.display(f'Bootstrap completed: {count} files processed, {errors} errors')
-        self.log(f'Final progress: {len(processed_files)}/{total_files} files ({final_progress_pct:.1f}%)')
+        total_processed_count = len(processed_files)
+        final_progress_pct = (total_processed_count / total_files_count) * 100 if total_files_count > 0 else 0
+        self.display(f'Bootstrap completed: {count} files processed successfully, {errors} errors')
+        self.log(f'Final progress: {total_processed_count}/{total_files_count} files ({final_progress_pct:.1f}%)')
         
         # Clean up bootstrap progress tracking since we're done
         self.db.set('bootstrap_processed_files', None)
         
         return (True, count)
 
-    def _sync_immich_to_elodie(self):
-        """Incremental sync: Immich → Elodie"""
+    def _sync_immich_to_elodie(self) -> Tuple[bool, int]:
+        """Incremental sync: Immich → Elodie.
+        
+        Syncs changes from Immich back to Elodie metadata.
+        
+        Returns:
+            Tuple of (success: bool, processed_count: int)
+        """
         count = 0
         errors = 0
         self.safe_to_update_assets = set()  # Track assets safe to update state for
@@ -658,35 +640,95 @@ class Immich(PluginBase):
         self.display(f'Incremental sync completed: {count} files updated, {errors} errors')
         return (True, count)
 
-    def _find_asset_id_for_path(self, file_path):
-        """Find the asset ID for a given file path from stored Immich state"""
+    # File path resolution helpers
+    def _find_asset_id_for_path(self, file_path: str) -> Optional[str]:
+        """Find the asset ID for a given file path from stored Immich state."""
         immich_states = self.db.get('immich_states') or {}
         for asset_id, asset_info in immich_states.items():
             if asset_info.get('originalPath') == file_path:
                 return asset_id
         return None
     
-    def _find_file_for_asset(self, asset):
-        """Find the local file path for an Immich asset using translation layer"""
+    def _find_file_for_asset(self, asset: Dict) -> Optional[str]:
+        """Find the local file path for an Immich asset using translation layer."""
         asset_id = asset['id']
         original_path = asset.get('originalPath')
         
         # First check if this asset was moved and we have a translation
-        file_moves = self.db.get('file_moves') or {}
-        if asset_id in file_moves:
-            move_info = file_moves[asset_id]
-            new_path = move_info['new_path']
-            if new_path and isfile(new_path):
-                return new_path
+        moved_path = self._get_moved_file_path(asset_id)
+        if moved_path:
+            return moved_path
                 
         # If no move recorded, try the original path from Immich
         if original_path and isfile(original_path):
             return original_path
                     
         return None
+    
+    def _get_moved_file_path(self, asset_id: str) -> Optional[str]:
+        """Get the moved file path for an asset if it exists and is valid."""
+        file_moves = self.db.get('file_moves') or {}
+        if asset_id in file_moves:
+            move_info = file_moves[asset_id]
+            new_path = move_info.get('new_path')
+            if new_path and isfile(new_path):
+                return new_path
+        return None
+    
+    def _find_asset_by_file_info(self, file_path: str) -> Optional[Dict]:
+        """Find Immich asset by searching with filename and path."""
+        original_filename = basename(file_path)
+        search_results = self.client.search_assets_by_metadata(
+            original_file_name=original_filename,
+            original_path=file_path
+        )
+        
+        assets_data = search_results.get('assets', {})
+        assets = assets_data.get('items', [])
+        return assets[0] if assets else None
+    
+    # Bootstrap helper methods
+    def _track_bootstrap_progress(self, processed_files_set: Set[str], file_path: str, total_files_count: int) -> None:
+        """Track and log bootstrap progress for the given file.
+        
+        Args:
+            processed_files_set: Set of file paths that have been successfully processed
+            file_path: Current file path being processed  
+            total_files_count: Total number of files to process
+        """
+        processed_files_set.add(file_path)
+        self.db.set('bootstrap_processed_files', list(processed_files_set))
+        
+        # Log progress every interval
+        if len(processed_files_set) % self.PROGRESS_LOG_INTERVAL == 0:
+            progress_pct = (len(processed_files_set) / total_files_count) * 100
+            self.log(f'Bootstrap progress: {len(processed_files_set)}/{total_files_count} files ({progress_pct:.1f}%)')
+    def _process_file_for_bootstrap(self, file_path: str) -> Optional[str]:
+        """Process a single file during bootstrap and return its asset ID."""
+        # Get media object and metadata
+        media = Base.get_class_by_file(file_path, get_all_subclasses())
+        if not media:
+            return None
+            
+        metadata = media.get_metadata()
+        if not metadata:
+            return None
+        
+        # Find corresponding Immich asset
+        asset = self._find_asset_by_file_info(file_path)
+        if not asset:
+            original_filename = basename(file_path)
+            self.log(f'No Immich asset found for {file_path} (filename: {original_filename})')
+            return None
+            
+        return asset['id']
+    
 
-    def _bootstrap_moved_files(self):
-        """Bootstrap album/favorite state for files that were moved but not yet processed by Immich"""
+    def _bootstrap_moved_files(self) -> None:
+        """Bootstrap album/favorite state for files that were moved but not yet processed by Immich.
+        
+        Handles files that have been moved by Elodie but haven't been reprocessed by Immich yet.
+        """
         file_moves = self.db.get('file_moves') or {}
         updated_moves = {}
         
@@ -796,8 +838,17 @@ class Immich(PluginBase):
         except Exception as e:
             self.log(f'Error in _restore_album_membership_after_move: {e}')
 
-    def _sync_single_file_to_immich(self, file_path, asset_id, album_name_to_id):
-        """Sync a single file's metadata from Elodie to Immich"""
+    def _sync_single_file_to_immich(self, file_path: str, asset_id: str, album_name_to_id: Dict[str, str]) -> bool:
+        """Sync a single file's metadata from Elodie to Immich.
+        
+        Args:
+            file_path: Path to the file to sync
+            asset_id: Immich asset ID
+            album_name_to_id: Mapping of album names to Immich album IDs
+            
+        Returns:
+            True if sync was successful, False otherwise
+        """
         try:
             # Get media object and metadata
             media = Base.get_class_by_file(file_path, get_all_subclasses())
@@ -833,8 +884,11 @@ class Immich(PluginBase):
             self.log(f'Error syncing {file_path}: {str(e)}')
             return False
 
-    def _cleanup_expired_file_moves(self):
-        """Remove file move records older than 14 days"""
+    def _cleanup_expired_file_moves(self) -> None:
+        """Remove file move records older than the configured retention period.
+        
+        Cleans up file move tracking records that are older than CLEANUP_RETENTION_DAYS.
+        """
         try:
             file_moves = self.db.get('file_moves') or {}
             moves_to_remove = []
