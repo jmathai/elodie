@@ -35,6 +35,10 @@ def _copyfile(src, dst):
     # http://stackoverflow.com/questions/22078621/python-how-to-copy-files-fast  # noqa
     # Python 3 hangs using open/write method so we proceed with shutil.copy
     #  and only perform the optimized write for Python 2.
+    if constants.dry_run:
+        print(f"[DRY-RUN] Would copy file: {src} -> {dst}")
+        return
+        
     if (constants.python_version == 3):
         # Do not use copy2(), it will have an issue when copying to a
         #  network/mounted drive.
@@ -74,6 +78,10 @@ def _copyfile(src, dst):
 # use os.replace() instead of rename().
 # https://docs.python.org/3/library/os.html#os.rename
 def _rename(src, dst):
+    if constants.dry_run:
+        print(f"[DRY-RUN] Would rename file: {src} -> {dst}")
+        return
+        
     if (constants.python_version == 3):
         return os.replace(src, dst)
     else:

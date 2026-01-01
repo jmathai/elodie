@@ -29,6 +29,7 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import AuthorizedSession
 from google.oauth2.credentials import Credentials
 
+from elodie import constants
 from elodie.media.photo import Photo
 from elodie.media.video import Video
 from elodie.plugins.plugins import PluginBase
@@ -119,6 +120,10 @@ class GooglePhotos(PluginBase):
         self.session.headers["X-Goog-Upload-Protocol"] = "raw"
 
     def upload(self, path_to_photo):
+        if constants.dry_run:
+            print(f"[DRY-RUN][GooglePhotos] Would upload photo: {path_to_photo}")
+            return True
+            
         self.set_session()
         if(self.session is None):
             self.log('Could not initialize session')

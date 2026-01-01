@@ -8,6 +8,9 @@ from sys import version_info
 #: If True, debug messages will be printed.
 debug = False
 
+#: If True, dry run mode - no changes will be made to files or databases.
+dry_run = False
+
 #: Directory in which to store Elodie settings.
 def application_directory():
     """Get the application directory, checking environment variable each time."""

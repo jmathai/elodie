@@ -253,3 +253,42 @@ def test_db_get_all():
     all_rows = db.get_all()
 
     assert all_rows == {'a': '1', 'b': '2', 'c': '3', 'd': '4'}, all_rows
+
+@mock.patch('elodie.constants.dry_run', True)
+@mock.patch('builtins.print')
+def test_db_delete_dry_run(mock_print):
+    """Test that PluginDb delete respects dry-run mode."""
+    db = PluginDb('foobar')
+    # Set up some data first (need to disable dry-run temporarily)
+    with mock.patch('elodie.constants.dry_run', False):
+        db.set('test_key', 'test_value')
+    
+    # Verify data exists
+    value = db.get('test_key')
+    assert value == 'test_value', value
+    
+    # Try to delete in dry-run mode
+    db.delete('test_key')
+    
+    # Verify data still exists (wasn't actually deleted)
+    value_after = db.get('test_key')
+    assert value_after == 'test_value', value_after
+    
+    # Verify dry-run message was printed
+    mock_print.assert_called_once_with('[DRY-RUN][foobar] Would delete from plugin database: test_key')
+
+@mock.patch('elodie.constants.dry_run', True)
+@mock.patch('builtins.print')  
+def test_db_set_dry_run(mock_print):
+    """Test that PluginDb set respects dry-run mode."""
+    db = PluginDb('foobar_set_test')
+    
+    # Try to set in dry-run mode
+    db.set('dry_run_key', 'dry_run_value')
+    
+    # Verify data was NOT actually set
+    value = db.get('dry_run_key')
+    assert value is None, value
+    
+    # Verify dry-run message was printed
+    mock_print.assert_called_once_with("[DRY-RUN][foobar_set_test] Would save to database 'dry_run_key': dry_run_value")

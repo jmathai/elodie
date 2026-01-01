@@ -1324,3 +1324,194 @@ full_path=%year/%album|%month|%"foo"/%month
         del load_config.config
 
     assert path_definition == expected, path_definition
+
+
+# Dry-run tests
+@mock.patch('elodie.constants.dry_run', True)
+@mock.patch('builtins.print')
+@mock.patch('elodie.filesystem.shutil.move')
+def test_file_operation_move_dry_run(mock_move, mock_print):
+    """Test that move operation is logged but not executed in dry-run mode."""
+    filesystem = FileSystem()
+    result = filesystem._file_operation('move', '/src/file.jpg', '/dst/file.jpg')
+    
+    assert result == True
+    mock_print.assert_called_once_with('[DRY-RUN] Would move: /src/file.jpg -> /dst/file.jpg')
+    mock_move.assert_not_called()
+
+
+@mock.patch('elodie.constants.dry_run', True)
+@mock.patch('builtins.print')
+@mock.patch('elodie.filesystem.compatability._copyfile')
+def test_file_operation_copy_dry_run(mock_copy, mock_print):
+    """Test that copy operation is logged but not executed in dry-run mode."""
+    filesystem = FileSystem()
+    result = filesystem._file_operation('copy', '/src/file.jpg', '/dst/file.jpg')
+    
+    assert result == True
+    mock_print.assert_called_once_with('[DRY-RUN] Would copy: /src/file.jpg -> /dst/file.jpg')
+    mock_copy.assert_not_called()
+
+
+@mock.patch('elodie.constants.dry_run', True)
+@mock.patch('builtins.print')
+@mock.patch('elodie.filesystem.os.remove')
+def test_file_operation_remove_dry_run(mock_remove, mock_print):
+    """Test that remove operation is logged but not executed in dry-run mode."""
+    filesystem = FileSystem()
+    result = filesystem._file_operation('remove', '/tmp/file_original')
+    
+    assert result == True
+    mock_print.assert_called_once_with('[DRY-RUN] Would remove: /tmp/file_original')
+    mock_remove.assert_not_called()
+
+
+@mock.patch('elodie.constants.dry_run', True)
+@mock.patch('builtins.print')
+@mock.patch('elodie.filesystem.send2trash')
+def test_file_operation_send2trash_dry_run(mock_send2trash, mock_print):
+    """Test that send2trash operation is logged but not executed in dry-run mode."""
+    filesystem = FileSystem()
+    result = filesystem._file_operation('send2trash', '/tmp/file.jpg')
+    
+    assert result == True
+    mock_print.assert_called_once_with('[DRY-RUN] Would send2trash: /tmp/file.jpg')
+    mock_send2trash.assert_not_called()
+
+
+@mock.patch('elodie.constants.dry_run', False)
+@mock.patch('elodie.filesystem.shutil.move')
+def test_file_operation_move_normal_mode(mock_move):
+    """Test that move operation is executed normally when not in dry-run mode."""
+    filesystem = FileSystem()
+    result = filesystem._file_operation('move', '/src/file.jpg', '/dst/file.jpg')
+    
+    assert result == True
+    mock_move.assert_called_once_with('/src/file.jpg', '/dst/file.jpg')
+
+
+@mock.patch('elodie.constants.dry_run', False)
+@mock.patch('elodie.filesystem.compatability._copyfile')
+def test_file_operation_copy_normal_mode(mock_copy):
+    """Test that copy operation is executed normally when not in dry-run mode."""
+    filesystem = FileSystem()
+    result = filesystem._file_operation('copy', '/src/file.jpg', '/dst/file.jpg')
+    
+    assert result == True
+    mock_copy.assert_called_once_with('/src/file.jpg', '/dst/file.jpg')
+
+
+@mock.patch('elodie.constants.dry_run', False)
+@mock.patch('elodie.filesystem.os.remove')
+def test_file_operation_remove_normal_mode(mock_remove):
+    """Test that remove operation is executed normally when not in dry-run mode."""
+    filesystem = FileSystem()
+    result = filesystem._file_operation('remove', '/tmp/file_original')
+    
+    assert result == True
+    mock_remove.assert_called_once_with('/tmp/file_original')
+
+
+@mock.patch('elodie.constants.dry_run', True)
+@mock.patch('builtins.print')
+@mock.patch('elodie.filesystem.FileSystem._file_operation')
+@mock.patch('elodie.filesystem.FileSystem.create_directory')
+def test_process_file_dry_run_move_operation(mock_create_dir, mock_file_op, mock_print):
+    """Test that process_file uses _file_operation for moves in dry-run mode."""
+    filesystem = FileSystem()
+    
+    # Create a temporary test file
+    temp_dir = helper.temp_dir()
+    src_file = helper.get_file('plain.jpg')
+    test_file = os.path.join(temp_dir, 'test_plain.jpg')
+    shutil.copyfile(src_file, test_file)
+    
+    try:
+        # Mock the media object
+        media = Photo(test_file)
+        
+        # Mock successful file operation
+        mock_file_op.return_value = True
+        mock_create_dir.return_value = True
+        
+        # Call process_file with move=True
+        result = filesystem.process_file(test_file, temp_dir, media, move=True)
+        
+        # Verify that _file_operation was called for the move
+        mock_file_op.assert_called()
+        
+        # Check that one of the calls was a move operation
+        move_calls = [call for call in mock_file_op.call_args_list if call[0][0] == 'move']
+        assert len(move_calls) > 0, "Expected at least one move operation call"
+        
+    finally:
+        # Clean up
+        if os.path.exists(test_file):
+            os.remove(test_file)
+
+
+@mock.patch('elodie.constants.dry_run', True)
+@mock.patch('builtins.print')
+@mock.patch('elodie.filesystem.FileSystem._file_operation')
+@mock.patch('elodie.filesystem.FileSystem.create_directory')
+def test_process_file_dry_run_copy_operation(mock_create_dir, mock_file_op, mock_print):
+    """Test that process_file uses _file_operation for copies in dry-run mode."""
+    filesystem = FileSystem()
+    
+    # Create a temporary test file
+    temp_dir = helper.temp_dir()
+    src_file = helper.get_file('plain.jpg')
+    test_file = os.path.join(temp_dir, 'test_plain_copy.jpg')
+    shutil.copyfile(src_file, test_file)
+    
+    try:
+        # Mock the media object
+        media = Photo(test_file)
+        
+        # Mock successful file operation
+        mock_file_op.return_value = True
+        mock_create_dir.return_value = True
+        
+        # Call process_file with move=False (copy mode)
+        result = filesystem.process_file(test_file, temp_dir, media, move=False)
+        
+        # Verify that _file_operation was called
+        mock_file_op.assert_called()
+        
+        # Check that _file_operation was called for file operations
+        # In copy mode, we expect either a copy operation or move operations for exiftool handling
+        operation_calls = [call[0][0] for call in mock_file_op.call_args_list]
+        assert len(operation_calls) > 0, "Expected at least one file operation call"
+        
+        # Verify we have the expected operations (either copy or move for exiftool handling)
+        expected_operations = {'copy', 'move'}
+        assert any(op in expected_operations for op in operation_calls), f"Expected copy or move operations, got: {operation_calls}"
+        
+    finally:
+        # Clean up
+        if os.path.exists(test_file):
+            os.remove(test_file)
+
+@mock.patch('elodie.constants.dry_run', True)
+def test_process_file_dry_run_real():
+    """Test that process_file in dry-run mode doesn't actually move files."""
+    filesystem = FileSystem()
+    temporary_folder, folder = helper.create_working_folder()
+
+    origin = os.path.join(folder, 'photo.jpg')
+    shutil.copyfile(helper.get_file('plain.jpg'), origin)
+
+    media = Photo(origin)
+    destination = filesystem.process_file(origin, temporary_folder, media, allowDuplicate=True)
+    
+    # Should return destination path like normal mode
+    assert destination is not None, "Should return destination path even in dry-run mode"
+    
+    # But original file should still exist and destination file should not exist
+    assert os.path.exists(origin), "Original file should still exist in dry-run mode"
+    assert not os.path.exists(destination), "Destination file should not exist in dry-run mode"
+    
+    # Clean up
+    shutil.rmtree(folder)
+    if destination:
+        shutil.rmtree(os.path.dirname(os.path.dirname(destination)))

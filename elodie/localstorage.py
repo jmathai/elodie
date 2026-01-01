@@ -196,10 +196,16 @@ class Db(object):
 
     def update_hash_db(self):
         """Write the hash db to disk."""
+        if constants.dry_run:
+            print(f"[DRY-RUN] Would update hash database with {len(self.hash_db)} entries")
+            return
         with open(constants.hash_db(), 'w') as f:
             json.dump(self.hash_db, f)
 
     def update_location_db(self):
         """Write the location db to disk."""
+        if constants.dry_run:
+            print(f"[DRY-RUN] Would update location database with {len(self.location_db)} entries")
+            return
         with open(constants.location_db(), 'w') as f:
             json.dump(self.location_db, f)

@@ -75,17 +75,23 @@ def import_file(_file, destination, album_from_folder, trash, allow_duplicates, 
     if dest_path:
         log.all('%s -> %s' % (_file, dest_path))
     if trash:
-        send2trash(_file)
+        if constants.dry_run:
+            print(f"[DRY-RUN] Would move to trash: {_file}")
+        else:
+            send2trash(_file)
 
     return dest_path or None
 
 @click.command('batch')
 @click.option('--debug', default=False, is_flag=True,
               help='Override the value in constants.py with True.')
-def _batch(debug):
+@click.option('--dry-run', default=False, is_flag=True,
+              help='Show what would be done without making any changes.')
+def _batch(debug, dry_run):
     """Run batch() for all plugins.
     """
     constants.debug = debug
+    constants.dry_run = dry_run
     plugins = Plugins()
     plugins.run_batch()
        
@@ -110,13 +116,16 @@ def _batch(debug):
                               'YYYY-mm-dd hh:ii:ss or YYYY-mm-dd format.'))
 @click.option('--debug', default=False, is_flag=True,
               help='Override the value in constants.py with True.')
+@click.option('--dry-run', default=False, is_flag=True,
+              help='Show what would be done without making any changes.')
 @click.option('--exclude-regex', default=set(), multiple=True,
               help='Regular expression for directories or files to exclude.')
 @click.argument('paths', nargs=-1, type=click.Path())
-def _import(destination, source, file, album_from_folder, trash, allow_duplicates, location, time, debug, exclude_regex, paths):
+def _import(destination, source, file, album_from_folder, trash, allow_duplicates, location, time, debug, dry_run, exclude_regex, paths):
     """Import files or directories by reading their EXIF and organizing them accordingly.
     """
     constants.debug = debug
+    constants.dry_run = dry_run
     has_errors = False
     result = Result()
 
@@ -262,12 +271,15 @@ def update_time(media, file_path, time_string):
 @click.option('--title', help='Update the image title.')
 @click.option('--debug', default=False, is_flag=True,
               help='Override the value in constants.py with True.')
+@click.option('--dry-run', default=False, is_flag=True,
+              help='Show what would be done without making any changes.')
 @click.argument('paths', nargs=-1,
                 required=True)
-def _update(album, location, time, title, paths, debug):
+def _update(album, location, time, title, paths, debug, dry_run):
     """Update a file's EXIF. Automatically modifies the file's location and file name accordingly.
     """
     constants.debug = debug
+    constants.dry_run = dry_run
     has_errors = False
     result = Result()
 

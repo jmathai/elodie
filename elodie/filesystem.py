@@ -10,8 +10,10 @@ import os
 import re
 import shutil
 import time
+from send2trash import send2trash
 
 from elodie import compatability
+from elodie import constants
 from elodie import geolocation
 from elodie import log
 from elodie.config import load_config
@@ -46,6 +48,26 @@ class FileSystem(object):
 
         # Instantiate a plugins object
         self.plugins = Plugins()
+
+    def _file_operation(self, operation_type, src, dst=None):
+        """Perform file operation with dry-run support."""
+        if constants.dry_run:
+            if dst:
+                print(f"[DRY-RUN] Would {operation_type}: {src} -> {dst}")
+            else:
+                print(f"[DRY-RUN] Would {operation_type}: {src}")
+            return True  # Simulate success
+        
+        # Perform actual operation
+        if operation_type == 'move':
+            shutil.move(src, dst)
+        elif operation_type == 'copy':
+            compatability._copyfile(src, dst)
+        elif operation_type == 'remove':
+            os.remove(src)
+        elif operation_type == 'send2trash':
+            send2trash(src)
+        return True
 
     def create_directory(self, directory_path):
         """Create a directory if it does not already exist.
@@ -569,27 +591,34 @@ class FileSystem(object):
         if(move is True):
             stat = os.stat(_file)
             # Move the processed file into the destination directory
-            shutil.move(_file, dest_path)
+            self._file_operation('move', _file, dest_path)
 
             if(exif_original_file_exists is True):
                 # We can remove it as we don't need the initial file.
-                os.remove(exif_original_file)
-            os.utime(dest_path, (stat.st_atime, stat.st_mtime))
+                self._file_operation('remove', exif_original_file)
+            if not constants.dry_run:
+                os.utime(dest_path, (stat.st_atime, stat.st_mtime))
+            else:
+                print(f"[DRY-RUN] Would set utime for: {dest_path}")
         else:
             if(exif_original_file_exists is True):
                 # Move the newly processed file with any updated tags to the
                 # destination directory
-                shutil.move(_file, dest_path)
+                self._file_operation('move', _file, dest_path)
                 # Move the exif _original back to the initial source file
-                shutil.move(exif_original_file, _file)
+                self._file_operation('move', exif_original_file, _file)
             else:
-                compatability._copyfile(_file, dest_path)
+                self._file_operation('copy', _file, dest_path)
 
             # Set the utime based on what the original file contained 
             #  before we made any changes.
             # Then set the utime on the destination file based on metadata.
-            os.utime(_file, (stat_info_original.st_atime, stat_info_original.st_mtime))
-            self.set_utime_from_metadata(metadata, dest_path)
+            if not constants.dry_run:
+                os.utime(_file, (stat_info_original.st_atime, stat_info_original.st_mtime))
+                self.set_utime_from_metadata(metadata, dest_path)
+            else:
+                print(f"[DRY-RUN] Would set utime for: {_file}")
+                print(f"[DRY-RUN] Would set utime from metadata for: {dest_path}")
 
         db = Db()
         db.add_hash(checksum, dest_path)
@@ -625,12 +654,18 @@ class FileSystem(object):
                 '%Y-%m-%d %H:%M:%S'
             )
 
-            os.utime(file_path, (time.time(), time.mktime(date_taken)))
+            if not constants.dry_run:
+                os.utime(file_path, (time.time(), time.mktime(date_taken)))
+            else:
+                print(f"[DRY-RUN] Would set utime from date pattern for: {file_path}")
         else:
             # We don't make any assumptions about time zones and
             # assume local time zone.
             date_taken_in_seconds = time.mktime(date_taken)
-            os.utime(file_path, (time.time(), (date_taken_in_seconds)))
+            if not constants.dry_run:
+                os.utime(file_path, (time.time(), (date_taken_in_seconds)))
+            else:
+                print(f"[DRY-RUN] Would set utime from metadata for: {file_path}")
 
     def should_exclude(self, path, regex_list=set(), needs_compiled=False):
         if(len(regex_list) == 0):

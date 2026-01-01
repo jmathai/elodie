@@ -10,6 +10,8 @@ import io
 
 from json import dumps, loads
 from importlib import import_module
+
+from elodie import constants
 from os.path import dirname, dirname, isdir, isfile
 from os import mkdir
 from sys import exc_info
@@ -18,6 +20,7 @@ from traceback import format_exc
 from elodie.compatability import _bytes
 from elodie.config import load_config_for_plugin, load_plugin_config
 from elodie.constants import application_directory
+from elodie import constants
 from elodie import log
 
 
@@ -64,6 +67,7 @@ class PluginDb(object):
        The database is a JSON file located at %application_directory%/plugins/%pluginname.lower()%.json
     """
     def __init__(self, plugin_name):
+        self.plugin_name = plugin_name
         self.db_file = '{}/plugins/{}.json'.format(
             application_directory(),
             plugin_name.lower()
@@ -89,6 +93,10 @@ class PluginDb(object):
         return db[key]
 
     def set(self, key, value):
+        if constants.dry_run:
+            print(f"[DRY-RUN][{self.plugin_name}] Would save to database '{key}': {value}")
+            return
+        
         with io.open(self.db_file, 'r') as f:
             data = f.read()
             db = loads(data)
@@ -104,6 +112,10 @@ class PluginDb(object):
         return db
 
     def delete(self, key):
+        if constants.dry_run:
+            print(f"[DRY-RUN][{self.plugin_name}] Would delete from plugin database: {key}")
+            return
+            
         with io.open(self.db_file, 'r') as f:
             db = loads(f.read())
 
