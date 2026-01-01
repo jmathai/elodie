@@ -50,6 +50,23 @@ Now that you've got the minimum dependencies installed you can start using Elodi
 
 You'll notice that the photo was organized into an *Unknown Location* folder. That's because you haven't set up your MapQuest API ([instructions](#using-openstreetmap-data-from-mapquest)).
 
+### Testing changes safely with dry-run mode
+
+Before running any command that modifies your photos, you can use the `--dry-run` flag to see exactly what Elodie would do without actually making any changes. This is especially useful when organizing large photo collections for the first time.
+
+```
+# See what would happen during import without actually copying files
+./elodie.py import --dry-run --destination="/where/i/want/my/photos/to/go" /where/my/photos/are
+
+# See what EXIF changes would be made without modifying files  
+./elodie.py update --dry-run --location="Las Vegas, NV" /path/to/photo.jpg
+
+# See what plugin operations would run without executing them
+./elodie.py batch --dry-run
+```
+
+The dry-run mode shows you detailed output of what operations would be performed, letting you verify the organization structure and catch any issues before making actual changes to your photo library.
+
 Now you're ready to learn more about Elodie.
 
 <p align="center"><img src ="creative/logo@300x.png" /></p>
@@ -144,7 +161,8 @@ Options:
                            name of a place, like "Las Vegas, NV".
   --time TEXT              Update the image time. Time should be in YYYY-mm-dd
                            hh:ii:ss or YYYY-mm-dd format.
-  --debug                  Override the value in constants.py with True.
+  --debug                  Show more verbose debug output.
+  --dry-run                Show what would be done without making any changes.
   --exclude-regex TEXT     Regular expression for directories or files to
                            exclude.
   --help                   Show this message and exit.
@@ -165,6 +183,8 @@ Options:
   --time TEXT      Update the image time. Time should be in YYYY-mm-dd
                    hh:ii:ss or YYYY-mm-dd format.
   --title TEXT     Update the image title.
+  --debug          Show more verbose debug output.
+  --dry-run        Show what would be done without making any changes.
   --help           Show this message and exit.
 ```
 
@@ -179,6 +199,19 @@ Usage: elodie.py generate-db [OPTIONS]
 Options:
   --source DIRECTORY  Source of your photo library.  [required]
   --help              Show this message and exit.
+```
+
+#### Run batch operations for all plugins
+
+```
+Usage: elodie.py batch [OPTIONS]
+
+  Run batch() for all plugins.
+
+Options:
+  --debug    Show more verbose debug output.
+  --dry-run  Show what would be done without making any changes.
+  --help     Show this message and exit.
 ```
 
 #### Verify library against bit rot / data rot

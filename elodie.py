@@ -84,7 +84,7 @@ def import_file(_file, destination, album_from_folder, trash, allow_duplicates, 
 
 @click.command('batch')
 @click.option('--debug', default=False, is_flag=True,
-              help='Override the value in constants.py with True.')
+              help='Show more verbose debug output.')
 @click.option('--dry-run', default=False, is_flag=True,
               help='Show what would be done without making any changes.')
 def _batch(debug, dry_run):
@@ -115,7 +115,7 @@ def _batch(debug, dry_run):
 @click.option('--time', help=('Update the image time. Time should be in '
                               'YYYY-mm-dd hh:ii:ss or YYYY-mm-dd format.'))
 @click.option('--debug', default=False, is_flag=True,
-              help='Override the value in constants.py with True.')
+              help='Show more verbose debug output.')
 @click.option('--dry-run', default=False, is_flag=True,
               help='Show what would be done without making any changes.')
 @click.option('--exclude-regex', default=set(), multiple=True,
@@ -177,7 +177,7 @@ def _import(destination, source, file, album_from_folder, trash, allow_duplicate
 @click.option('--source', type=click.Path(file_okay=False),
               required=True, help='Source of your photo library.')
 @click.option('--debug', default=False, is_flag=True,
-              help='Override the value in constants.py with True.')
+              help='Show more verbose debug output.')
 def _generate_db(source, debug):
     """Regenerate the hash.json database which contains all of the sha256 signatures of media files. The hash.json file is located at ~/.elodie/.
     """
@@ -204,7 +204,7 @@ def _generate_db(source, debug):
 
 @click.command('verify')
 @click.option('--debug', default=False, is_flag=True,
-              help='Override the value in constants.py with True.')
+              help='Show more verbose debug output.')
 def _verify(debug):
     constants.debug = debug
     result = Result()
@@ -270,7 +270,7 @@ def update_time(media, file_path, time_string):
                               'YYYY-mm-dd hh:ii:ss or YYYY-mm-dd format.'))
 @click.option('--title', help='Update the image title.')
 @click.option('--debug', default=False, is_flag=True,
-              help='Override the value in constants.py with True.')
+              help='Show more verbose debug output.')
 @click.option('--dry-run', default=False, is_flag=True,
               help='Show what would be done without making any changes.')
 @click.argument('paths', nargs=-1,
