@@ -18,13 +18,13 @@ pip install -r elodie/plugins/immich/requirements.txt
 
 ## Configuration
 
-Add the following section to your `config.ini` file:
+Add the following section to your `~/.elodie/config.ini` file:
 
 ```ini
 [Plugins]
 plugins=Immich
 
-[Plugin Immich]
+[PluginImmich]
 api_url=https://immich.mydomain.com/api
 api_key=your_immich_api_key_here
 external_library_path=/path/to/your/photo/library
