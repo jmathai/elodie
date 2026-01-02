@@ -17,6 +17,7 @@ from datetime import datetime, timedelta
 from os.path import basename, dirname, isfile
 from typing import Dict, List, Optional, Set, Tuple
 
+from elodie import constants
 from elodie.media.photo import Photo
 from elodie.media.video import Video  
 from elodie.media.base import Base, get_all_subclasses
@@ -75,6 +76,10 @@ class ImmichApiClient:
 
     def create_album(self, album_name, description=""):
         """Create a new album in Immich"""
+        if constants.dry_run:
+            print(f"[DRY-RUN][Immich] Would create album: {album_name}")
+            return {'id': 'dry-run-album-id', 'albumName': album_name}
+            
         payload = {
             'albumName': album_name,
             'description': description
@@ -84,6 +89,10 @@ class ImmichApiClient:
 
     def add_assets_to_album(self, album_id, asset_ids):
         """Add assets to an album"""
+        if constants.dry_run:
+            print(f"[DRY-RUN][Immich] Would add {len(asset_ids)} assets to album {album_id}")
+            return {}
+            
         payload = {'ids': asset_ids}
         response = self._make_request('PUT', f"{self.ENDPOINTS['albums']}/{album_id}/assets", json=payload)
         return response.json()
@@ -109,6 +118,19 @@ class ImmichApiClient:
     # Asset update operations
     def update_asset(self, asset_id, is_favorite=None, description=None, file_created_at=None, latitude=None, longitude=None):
         """Update an asset (favorite status, description, date/time, location)"""
+        if constants.dry_run:
+            updates = []
+            if is_favorite is not None:
+                updates.append(f"favorite: {is_favorite}")
+            if description is not None:
+                updates.append(f"description: {description}")
+            if file_created_at is not None:
+                updates.append(f"date: {file_created_at}")
+            if latitude is not None and longitude is not None:
+                updates.append(f"location: {latitude},{longitude}")
+            print(f"[DRY-RUN][Immich] Would update asset {asset_id}: {', '.join(updates)}")
+            return True
+            
         payload = self._build_update_payload(is_favorite, description, file_created_at, latitude, longitude)
         self._make_request('PUT', f"{self.ENDPOINTS['assets']}/{asset_id}", json=payload)
         return True
@@ -574,34 +596,36 @@ class Immich(PluginBase):
                     # Only reprocess file for changes that affect file path (album or location changes)
                     # Description and favorite changes don't require file moves
                     if album_changed or location_changed:
-                        updated_media = Base.get_class_by_file(file_path, get_all_subclasses())
-                        new_path = self.filesystem.process_file(
-                            file_path, 
-                            self.external_library_path, 
-                            updated_media,
-                            move=True
-                        )
-                        if new_path and new_path != file_path:
-                            # File was moved - record the asset ID translation
-                            file_moves = self.db.get('file_moves') or {}
-                            file_moves[asset_id] = {
-                                'old_path': file_path,
-                                'new_path': new_path,
-                                'new_asset_id': None,  # Will be populated when Immich processes the move
-                                'timestamp': datetime.utcnow().isoformat() + 'Z'
-                            }
-                            self.db.set('file_moves', file_moves)
-                            self.display(f'Recorded file move: asset {asset_id} {file_path} -> {new_path}')
-                            
-                            # Clean up empty directories after moving files
-                            import os
-                            old_directory = os.path.dirname(file_path)
-                            self.filesystem.delete_directory_if_empty(old_directory)
-                            # Also try parent directory in case it's also empty
-                            self.filesystem.delete_directory_if_empty(os.path.dirname(old_directory))
+                        if constants.dry_run:
+                            self.display(f'[DRY-RUN] Would move file {file_path} due to album/location changes')
                         else:
-                            # No file move needed - changes were applied successfully
-                            self.log(f'Changes applied successfully to {file_path}')
+                            updated_media = Base.get_class_by_file(file_path, get_all_subclasses())
+                            new_path = self.filesystem.process_file(
+                                file_path, 
+                                self.external_library_path, 
+                                updated_media,
+                                move=True
+                            )
+                            if new_path and new_path != file_path:
+                                # File was moved - record the asset ID translation
+                                file_moves = self.db.get('file_moves') or {}
+                                file_moves[asset_id] = {
+                                    'old_path': file_path,
+                                    'new_path': new_path,
+                                    'new_asset_id': None,  # Will be populated when Immich processes the move
+                                    'timestamp': datetime.utcnow().isoformat() + 'Z'
+                                }
+                                self.db.set('file_moves', file_moves)
+                                self.display(f'Recorded file move: asset {asset_id} {file_path} -> {new_path}')
+                                
+                                # Clean up empty directories after moving files
+                                old_directory = os.path.dirname(file_path)
+                                self.filesystem.delete_directory_if_empty(old_directory)
+                                # Also try parent directory in case it's also empty
+                                self.filesystem.delete_directory_if_empty(os.path.dirname(old_directory))
+                            else:
+                                # No file move needed - changes were applied successfully
+                                self.log(f'Changes applied successfully to {file_path}')
                             
                             # Update our stored state immediately since changes were successful
                             if asset_id in immich_states:
