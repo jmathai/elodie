@@ -647,10 +647,17 @@ class Immich(PluginBase):
                     # Only reprocess file for changes that affect file path (album or location changes)
                     # Description and favorite changes don't require file moves
                     if album_changed or location_changed:
+                        self.log(f'File needs reprocessing due to album/location changes: {file_path}')
+                        self.log(f'  Album changed: {album_changed}, Location changed: {location_changed}')
                         if constants.dry_run:
                             self.display(f'[DRY-RUN] Would move file {file_path} due to album/location changes')
                         else:
+                            self.log(f'Creating media object for file: {file_path}')
                             updated_media = Base.get_class_by_file(file_path, get_all_subclasses())
+                            if not updated_media:
+                                self.log(f'Failed to create media object for: {file_path}')
+                                continue
+                            self.log(f'Processing file with filesystem.process_file: {file_path}')
                             new_path = self.filesystem.process_file(
                                 file_path, 
                                 self.external_library_path, 
