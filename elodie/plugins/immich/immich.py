@@ -98,17 +98,51 @@ class ImmichApiClient:
         return response.json()
     
     # Asset search and retrieval operations
-    def search_assets_by_metadata(self, original_file_name=None, original_path=None, is_favorite=None):
-        """Search for assets by original filename and path"""
-        payload = self._build_search_payload(original_file_name, original_path, is_favorite)
+    def search_assets_by_metadata(self, original_file_name=None, original_path=None, is_favorite=None, page=None):
+        """Search for assets by original filename and path with optional pagination"""
+        payload = self._build_search_payload(original_file_name, original_path, is_favorite, page)
         response = self._make_request('POST', self.ENDPOINTS['search_metadata'], json=payload)
         return response.json()
 
-    def search_assets_updated_since(self, timestamp):
-        """Search for assets updated since a specific timestamp"""
+    def search_assets_updated_since(self, timestamp, page=None):
+        """Search for assets updated since a specific timestamp with optional pagination"""
         payload = {'updatedAfter': timestamp}
+        if page is not None:
+            payload['page'] = page
         response = self._make_request('POST', self.ENDPOINTS['search_metadata'], json=payload)
         return response.json()
+
+    def get_all_assets_paginated(self, updated_after=None):
+        """Get all assets using pagination, yielding pages of results
+        
+        Args:
+            updated_after: ISO timestamp string to filter assets (optional)
+            
+        Yields:
+            List of asset dictionaries for each page
+        """
+        page = None  # Start with no page (first page)
+        
+        while True:
+            if updated_after:
+                response = self.search_assets_updated_since(updated_after, page=page)
+            else:
+                response = self.search_assets_by_metadata(page=page)
+            
+            assets_data = response.get('assets', {})
+            assets = assets_data.get('items', [])
+            
+            if not assets:
+                break
+                
+            yield assets
+            
+            # Use the nextPage parameter from the response
+            next_page = assets_data.get('nextPage')
+            if next_page is None:
+                break
+                
+            page = next_page
 
     def get_asset_by_id(self, asset_id):
         """Get detailed asset information by ID"""
@@ -136,7 +170,7 @@ class ImmichApiClient:
         return True
     
     # Helper methods for payload construction
-    def _build_search_payload(self, original_file_name=None, original_path=None, is_favorite=None):
+    def _build_search_payload(self, original_file_name=None, original_path=None, is_favorite=None, page=None):
         """Build search payload with non-None values"""
         payload = {}
         if original_file_name:
@@ -145,6 +179,8 @@ class ImmichApiClient:
             payload['originalPath'] = original_path
         if is_favorite is not None:
             payload['isFavorite'] = is_favorite
+        if page is not None:
+            payload['page'] = page
         return payload
     
     def _build_update_payload(self, is_favorite=None, description=None, file_created_at=None, latitude=None, longitude=None):
