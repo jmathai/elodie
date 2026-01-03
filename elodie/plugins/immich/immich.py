@@ -300,7 +300,6 @@ class Immich(PluginBase):
             current_asset_ids = {asset['id'] for asset in all_assets}
             
             self.log(f"Found {len(all_assets)} current assets in Immich")
-            self.log(f"Current asset IDs: {list(current_asset_ids)}")
             
             # Check which tracked asset IDs are stale (no longer exist in Immich)
             immich_states = self.db.get('immich_states') or {}
