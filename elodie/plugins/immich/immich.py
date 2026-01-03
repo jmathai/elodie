@@ -125,6 +125,8 @@ class ImmichApiClient:
         page = 1
         
         while True:
+            print(f"[DEBUG] Fetching page {page} (updated_after={updated_after}, is_favorite={is_favorite})")
+            
             if updated_after:
                 response = self.search_assets_updated_since(updated_after, page=page)
             else:
@@ -133,16 +135,23 @@ class ImmichApiClient:
             assets_data = response.get('assets', {})
             assets = assets_data.get('items', [])
             
+            print(f"[DEBUG] Page {page} returned {len(assets)} assets")
+            
             if not assets:
+                print(f"[DEBUG] No assets on page {page}, stopping pagination")
                 break
                 
             yield assets
             
             next_page = assets_data.get('nextPage')
+            print(f"[DEBUG] Next page indicator: {next_page}")
+            
             if next_page is None:
+                print(f"[DEBUG] No more pages, stopping pagination")
                 break
                 
             page = int(next_page)
+            print(f"[DEBUG] Moving to page {page}")
 
     def get_asset_by_id(self, asset_id):
         """Get detailed asset information by ID"""
