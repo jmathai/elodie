@@ -121,7 +121,7 @@ class ImmichApiClient:
         Yields:
             List of asset dictionaries for each page
         """
-        page = None  # Start with no page (first page)
+        page = 1
         
         while True:
             if updated_after:
@@ -137,12 +137,11 @@ class ImmichApiClient:
                 
             yield assets
             
-            # Use the nextPage parameter from the response
             next_page = assets_data.get('nextPage')
             if next_page is None:
                 break
                 
-            page = next_page
+            page = int(next_page)
 
     def get_asset_by_id(self, asset_id):
         """Get detailed asset information by ID"""
