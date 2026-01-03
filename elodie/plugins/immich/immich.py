@@ -239,6 +239,7 @@ class Immich(PluginBase):
         self.api_url = self.config_for_plugin.get('api_url')
         self.api_key = self.config_for_plugin.get('api_key')
         self.external_library_path = self.config_for_plugin.get('external_library_path')
+        self.elodie_library_path = self.config_for_plugin.get('elodie_library_path')
         
         # Initialize API client if we have required config
         self.client = None
@@ -719,6 +720,25 @@ class Immich(PluginBase):
                 return asset_id
         return None
     
+    def _translate_immich_path_to_elodie(self, immich_path: str) -> Optional[str]:
+        """Translate an Immich file path to the corresponding Elodie path.
+        
+        Requires external_library_path and elodie_library_path to be configured with
+        matching directory structures. Both paths should NOT have trailing slashes.
+        
+        Example config:
+            external_library_path=/mnt/server1/photos
+            elodie_library_path=/home/user/photos
+        """
+        if not immich_path or not self.external_library_path or not self.elodie_library_path:
+            return None
+            
+        if immich_path.startswith(self.external_library_path):
+            relative_path = immich_path[len(self.external_library_path):]
+            return self.elodie_library_path + relative_path
+            
+        return None
+
     def _find_file_for_asset(self, asset: Dict) -> Optional[str]:
         """Find the local file path for an Immich asset using translation layer."""
         asset_id = asset['id']
@@ -732,6 +752,12 @@ class Immich(PluginBase):
         # If no move recorded, try the original path from Immich
         if original_path and isfile(original_path):
             return original_path
+        
+        # Try translating the Immich path to the Elodie path
+        if original_path:
+            translated_path = self._translate_immich_path_to_elodie(original_path)
+            if translated_path and isfile(translated_path):
+                return translated_path
                     
         return None
     
