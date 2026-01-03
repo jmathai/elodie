@@ -112,11 +112,12 @@ class ImmichApiClient:
         response = self._make_request('POST', self.ENDPOINTS['search_metadata'], json=payload)
         return response.json()
 
-    def get_all_assets_paginated(self, updated_after=None):
+    def get_all_assets_paginated(self, updated_after=None, is_favorite=None):
         """Get all assets using pagination, yielding pages of results
         
         Args:
             updated_after: ISO timestamp string to filter assets (optional)
+            is_favorite: Boolean to filter by favorite status (optional)
             
         Yields:
             List of asset dictionaries for each page
@@ -127,7 +128,7 @@ class ImmichApiClient:
             if updated_after:
                 response = self.search_assets_updated_since(updated_after, page=page)
             else:
-                response = self.search_assets_by_metadata(page=page)
+                response = self.search_assets_by_metadata(is_favorite=is_favorite, page=page)
             
             assets_data = response.get('assets', {})
             assets = assets_data.get('items', [])
@@ -214,7 +215,7 @@ class Immich(PluginBase):
     
     # Plugin constants
     CLEANUP_RETENTION_DAYS = 14
-    BOOTSTRAP_FALLBACK_DATE = '2020-01-01T00:00:00.000Z'
+    GET_ALL_ASSETS_TIMESTAMP = '1800-01-01T00:00:00.000Z'
     PROGRESS_LOG_INTERVAL = 100
     FAVORITE_RATING = 5
     ALBUM_SEPARATOR = ';'
@@ -293,10 +294,10 @@ class Immich(PluginBase):
         and cleans up expired file move records.
         """
         try:
-            # Get all current assets from Immich
-            search_results = self.client.search_assets_updated_since('2020-01-01T00:00:00.000Z')
-            assets_data = search_results.get('assets', {})
-            all_assets = assets_data.get('items', [])
+            # Get all current assets from Immich using pagination
+            all_assets = []
+            for asset_page in self.client.get_all_assets_paginated(self.GET_ALL_ASSETS_TIMESTAMP):
+                all_assets.extend(asset_page)
             current_asset_ids = {asset['id'] for asset in all_assets}
             
             self.log(f"Found {len(all_assets)} current assets in Immich")
@@ -406,13 +407,14 @@ class Immich(PluginBase):
         try:
             # Get assets updated since last sync
             last_sync_timestamp = self.db.get('last_sync_timestamp')
+            updated_assets = []
             if last_sync_timestamp:
-                search_results = self.client.search_assets_updated_since(last_sync_timestamp)
-                updated_assets = search_results.get('assets', {}).get('items', [])
+                for asset_page in self.client.get_all_assets_paginated(last_sync_timestamp):
+                    updated_assets.extend(asset_page)
             else:
-                # First run - get all assets (fallback to current behavior)
-                search_results = self.client.search_assets_by_metadata()
-                updated_assets = search_results.get('assets', {}).get('items', [])
+                # First run - get all assets
+                for asset_page in self.client.get_all_assets_paginated(self.GET_ALL_ASSETS_TIMESTAMP):
+                    updated_assets.extend(asset_page)
             
             self.log(f'Found {len(updated_assets)} assets updated since last sync')
             
@@ -452,8 +454,9 @@ class Immich(PluginBase):
             current_favorites = {}  # asset_id -> is_favorite
             
             # Get favorited assets - all others are implicitly not favorited
-            favorite_search = self.client.search_assets_by_metadata(is_favorite=True)
-            favorite_assets = favorite_search.get('assets', {}).get('items', [])
+            favorite_assets = []
+            for asset_page in self.client.get_all_assets_paginated(is_favorite=True):
+                favorite_assets.extend(asset_page)
             self.log(f'Found {len(favorite_assets)} favorite assets')
             for asset in favorite_assets:
                 asset_id = asset.get('id')
