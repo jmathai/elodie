@@ -660,7 +660,7 @@ class Immich(PluginBase):
                             self.log(f'Processing file with filesystem.process_file: {file_path}')
                             new_path = self.filesystem.process_file(
                                 file_path, 
-                                self.external_library_path, 
+                                self.elodie_library_path, 
                                 updated_media,
                                 move=True
                             )
