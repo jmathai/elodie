@@ -143,6 +143,10 @@ class ImmichApiClient:
                 
             yield assets
             
+            # TEMP DEBUG HACK: Only process first page
+            print(f"[DEBUG] TEMP HACK: Stopping after page 1 for debugging")
+            break
+            
             next_page = assets_data.get('nextPage')
             print(f"[DEBUG] Next page indicator: {next_page}")
             
@@ -744,21 +748,31 @@ class Immich(PluginBase):
         asset_id = asset['id']
         original_path = asset.get('originalPath')
         
+        self.log(f"Finding file for asset {asset_id}")
+        self.log(f"  Original path from Immich: {original_path}")
+        
         # First check if this asset was moved and we have a translation
         moved_path = self._get_moved_file_path(asset_id)
         if moved_path:
+            self.log(f"  Found via move tracking: {moved_path}")
             return moved_path
                 
         # If no move recorded, try the original path from Immich
         if original_path and isfile(original_path):
+            self.log(f"  Found via original path: {original_path}")
             return original_path
         
         # Try translating the Immich path to the Elodie path
         if original_path:
             translated_path = self._translate_immich_path_to_elodie(original_path)
+            self.log(f"  Translated path: {translated_path}")
             if translated_path and isfile(translated_path):
+                self.log(f"  Found via path translation: {translated_path}")
                 return translated_path
+            elif translated_path:
+                self.log(f"  Translated path does not exist: {translated_path}")
                     
+        self.log(f"  Could not find file for asset {asset_id}")
         return None
     
     def _get_moved_file_path(self, asset_id: str) -> Optional[str]:
