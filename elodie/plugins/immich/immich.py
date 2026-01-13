@@ -367,7 +367,6 @@ class Immich(PluginBase):
                     if not asset_id:
                         continue
                     
-                    # Use refactored sync method
                     if self._sync_single_file_to_immich(file_path, asset_id, album_name_to_id):
                         count += 1
                         self._track_bootstrap_progress(processed_files, file_path, total_files_count)
@@ -561,7 +560,6 @@ class Immich(PluginBase):
                         continue
                     
                     self.log(f'Processing asset: {asset_id} - {asset_info.get("originalFileName", "unknown")}')
-                    self.log(f'Available asset fields: {list(asset_info.keys())}')
                     
                     # Find the corresponding file in Elodie
                     file_path = self._find_file_for_asset(asset_info)
@@ -606,14 +604,17 @@ class Immich(PluginBase):
                         updated = True
                     
                     # Apply description changes
-                    current_description = exif_info.get('description')
-                    previous_immich_states = self.db.get('immich_states') or {}
-                    previous_description = previous_immich_states.get(asset_id, {}).get('description')
-                    
-                    if current_description != previous_description:
-                        media.set_description(current_description or '')
-                        self.log(f'Updated description for {file_path} to: {current_description}')
-                        updated = True
+                    # TODO: Temporarily disabled - was causing sync loops with 20k photo library
+                    # current_description = exif_info.get('description')
+                    # previous_immich_states = self.db.get('immich_states') or {}
+                    # previous_description = previous_immich_states.get(asset_id, {}).get('description')
+                    # 
+                    # # TODO: Added truthy conditions
+                    # # if current_description != previous_description:
+                    # if current_description && previous_description && current_description != previous_description:
+                    #     media.set_description(current_description or '')
+                    #     self.log(f'Updated description for {file_path} to: {current_description}')
+                    #     updated = True
                     
                     # Note: Date/time synchronization is disabled to avoid timezone issues
                     # that cause endless file rename cycles
@@ -624,12 +625,14 @@ class Immich(PluginBase):
                     previous_lat = previous_immich_states.get(asset_id, {}).get('latitude')
                     previous_lng = previous_immich_states.get(asset_id, {}).get('longitude')
                     
+                    # TODO: make location change less precise
+                    # Lookup precision difference with immich
                     location_changed = False
-                    if (current_lat != previous_lat or current_lng != previous_lng) and current_lat is not None and current_lng is not None:
-                        media.set_location(current_lat, current_lng)
-                        self.log(f'Updated location for {file_path} to: {current_lat}, {current_lng}')
-                        updated = True
-                        location_changed = True
+                    # if (current_lat != previous_lat or current_lng != previous_lng) and current_lat is not None and current_lng is not None:
+                    #     media.set_location(current_lat, current_lng)
+                    #     self.log(f'Updated location for {file_path} to: {current_lat}, {current_lng}')
+                    #     updated = True
+                    #     location_changed = True
                         
                     # Only reprocess file for changes that affect file path (album or location changes)
                     # Description and favorite changes don't require file moves
