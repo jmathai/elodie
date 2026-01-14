@@ -15,6 +15,7 @@ import requests
 import time
 from datetime import datetime, timedelta
 from os.path import basename, dirname, isfile
+from pathlib import Path
 from typing import Dict, List, Optional, Set, Tuple
 
 from elodie import constants
@@ -776,10 +777,13 @@ class Immich(PluginBase):
     
     def _find_asset_by_file_info(self, file_path: str) -> Optional[Dict]:
         """Find Immich asset by searching with filename and path."""
-        original_filename = basename(file_path)
+        immich_file_path = file_path.replace(self.elodie_library_path, self.external_library_path)
+        immich_filename = basename(immich_file_path)
+        immich_dir_path = Path(immich_file_path).resolve().parent
+
         search_results = self.client.search_assets_by_metadata(
-            original_file_name=original_filename,
-            original_path=file_path
+            original_file_name=immich_filename,
+            original_path=immich_dir_path
         )
         
         assets_data = search_results.get('assets', {})
