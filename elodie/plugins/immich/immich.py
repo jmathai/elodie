@@ -208,7 +208,9 @@ class Immich(PluginBase):
        api_key:
             Your Immich API key for authentication
        external_library_path:
-            The base path for all photos that Elodie will organize into
+            The base path for the Immich external library
+       elodie_library_path:
+            The base path for elodie to organize photos
     """
 
     __name__ = 'Immich'
@@ -352,8 +354,8 @@ class Immich(PluginBase):
             immich_albums = self.client.get_all_albums()
             album_name_to_id = {album['albumName']: album['id'] for album in immich_albums}
             
-            # Iterate through all files in the external library path
-            all_files = list(self.filesystem.get_all_files(self.external_library_path))
+            # Iterate through all files in elodie's library path
+            all_files = list(self.filesystem.get_all_files(self.elodie_library_path))
             total_files_count = len(all_files)
             self.log(f'Bootstrap processing {total_files_count} total files ({total_processed} already completed)')
             
@@ -800,6 +802,7 @@ class Immich(PluginBase):
         if len(processed_files_set) % self.PROGRESS_LOG_INTERVAL == 0:
             progress_pct = (len(processed_files_set) / total_files_count) * 100
             self.log(f'Bootstrap progress: {len(processed_files_set)}/{total_files_count} files ({progress_pct:.1f}%)')
+
     def _process_file_for_bootstrap(self, file_path: str) -> Optional[str]:
         """Process a single file during bootstrap and return its asset ID."""
         # Get media object and metadata
