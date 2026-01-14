@@ -606,10 +606,10 @@ class Immich(PluginBase):
                         self.log(f'Updated favorite for {file_path} to: {current_favorite}')
                         updated = True
                     
+                    previous_immich_states = self.db.get('immich_states') or {}
                     # Apply description changes
                     # TODO: Temporarily disabled - was causing sync loops with 20k photo library
                     # current_description = exif_info.get('description')
-                    # previous_immich_states = self.db.get('immich_states') or {}
                     # previous_description = previous_immich_states.get(asset_id, {}).get('description')
                     # 
                     # # TODO: Added truthy conditions
