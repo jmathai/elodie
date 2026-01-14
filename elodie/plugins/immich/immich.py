@@ -779,7 +779,7 @@ class Immich(PluginBase):
         """Find Immich asset by searching with filename and path."""
         immich_file_path = file_path.replace(self.elodie_library_path, self.external_library_path)
         immich_filename = basename(immich_file_path)
-        immich_dir_path = Path(immich_file_path).resolve().parent
+        immich_dir_path = os.path.dirname(os.path.abspath(immich_file_path))
 
         search_results = self.client.search_assets_by_metadata(
             original_file_name=immich_filename,
