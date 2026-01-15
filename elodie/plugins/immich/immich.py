@@ -515,18 +515,6 @@ class Immich(PluginBase):
             
             self.log(f'Asset info lookup has {len(asset_info_lookup)} assets')
             
-            # Debug: Show current asset IDs and paths in Immich
-            current_assets_debug = []
-            for album_summary in all_albums:
-                album_detail = self.client.get_album_by_id(album_summary.get('id'))
-                for asset in album_detail.get('assets', []):
-                    current_assets_debug.append({
-                        'id': asset.get('id'),
-                        'path': asset.get('originalPath'),
-                        'filename': asset.get('originalFileName')
-                    })
-            #self.log(f'Current assets in Immich: {current_assets_debug}')
-            
             # Bootstrap moved files that haven't been processed yet
             self._bootstrap_moved_files()
             
@@ -842,7 +830,7 @@ class Immich(PluginBase):
                 updated_moves[old_asset_id] = move_info
                 continue
                 
-            new_path = move_info['new_path']
+            new_path = move_info['new_path'].replace(self.elodie_library_path, self.external_library_path)
             self.log(f'Attempting to bootstrap moved file: {new_path}')
             
             try:
