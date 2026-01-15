@@ -830,46 +830,48 @@ class Immich(PluginBase):
                 updated_moves[old_asset_id] = move_info
                 continue
                 
-            new_path = move_info['new_path'].replace(self.elodie_library_path, self.external_library_path)
-            self.log(f'Attempting to bootstrap moved file: {new_path}')
+            new_path_elodie = move_info['new_path']
+            new_path_immich = move_info['new_path'].replace(self.elodie_library_path, self.external_library_path)
+            self.log(f'Attempting to bootstrap moved file: {new_path_elodie}')
             
             try:
                 # Search for asset at the new path
+                self.log(f'Searching for immich asset: {new_path_immich}')
                 search_results = self.client.search_assets_by_metadata(
-                    original_file_name=basename(new_path),
-                    original_path=new_path
+                    original_file_name=basename(new_path_immich),
+                    original_path=new_path_immich
                 )
                 
                 assets = search_results.get('assets', {}).get('items', [])
                 if not assets:
-                    self.log(f'No asset found for moved file {new_path}')
-                    self.log(f'  - Searched by filename: {basename(new_path)}')
-                    self.log(f'  - Searched by path: {new_path}')
+                    self.log(f'No immich asset found for moved file {new_path_immich}')
+                    self.log(f'  - Searched by filename: {basename(new_path_immich)}')
+                    self.log(f'  - Searched by path: {new_path_immich}')
                     self.log(f'  - Old asset ID was: {old_asset_id}')
                     updated_moves[old_asset_id] = move_info
                     continue
                     
                 asset = assets[0]
                 new_asset_id = asset['id']
-                self.log(f'Found new asset ID {new_asset_id} for moved file {new_path}')
+                self.log(f'Found new asset ID {new_asset_id} for moved file {new_path_elodie}')
                 
                 # Read EXIF metadata from the file
-                media = Base.get_class_by_file(new_path, get_all_subclasses())
+                media = Base.get_class_by_file(new_path_elodie, get_all_subclasses())
                 if not media:
-                    self.log(f'Could not create media object for {new_path}')
+                    self.log(f'Could not create media object for {new_path_elodie}')
                     updated_moves[old_asset_id] = move_info
                     continue
                     
                 metadata = media.get_metadata()
                 if not metadata:
-                    self.log(f'Could not get metadata for {new_path}')
+                    self.log(f'Could not get metadata for {new_path_elodie}')
                     updated_moves[old_asset_id] = move_info
                     continue
                 
                 # Sync Elodie metadata to Immich for this moved file
                 all_albums = self.client.get_all_albums()
                 album_name_to_id = {album['albumName']: album['id'] for album in all_albums}
-                self._sync_single_file_to_immich(new_path, new_asset_id, album_name_to_id)
+                self._sync_single_file_to_immich(new_path_elodie, new_asset_id, album_name_to_id)
                 
                 # Update the file move record with new asset ID
                 move_info['new_asset_id'] = new_asset_id
@@ -877,7 +879,7 @@ class Immich(PluginBase):
                 self.log(f'Successfully bootstrapped moved file: {old_asset_id} -> {new_asset_id}')
                 
             except Exception as e:
-                self.log(f'Error bootstrapping moved file {new_path}: {str(e)}')
+                self.log(f'Error bootstrapping moved file {new_path_elodie}: {str(e)}')
                 updated_moves[old_asset_id] = move_info
                 
         # Save updated file moves
