@@ -444,7 +444,7 @@ class Immich(PluginBase):
                 album_detail = self.client.get_album_by_id(album_id)
                 album_assets = album_detail.get('assets', [])
                 
-                self.log(f'Album "{album_name}" has {len(album_assets)} assets')
+                #self.log(f'Album "{album_name}" has {len(album_assets)} assets')
                 
                 for album_asset in album_assets:
                     asset_id = album_asset.get('id')
@@ -525,7 +525,7 @@ class Immich(PluginBase):
                         'path': asset.get('originalPath'),
                         'filename': asset.get('originalFileName')
                     })
-            self.log(f'Current assets in Immich: {current_assets_debug}')
+            #self.log(f'Current assets in Immich: {current_assets_debug}')
             
             # Bootstrap moved files that haven't been processed yet
             self._bootstrap_moved_files()
