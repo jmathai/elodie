@@ -1,37 +1,39 @@
-FROM debian:jessie
+# Base image with Python 3.11 slim
+FROM python:3.11-slim
 
+# Avoid interactive prompts and set UTF-8
 ENV DEBIAN_FRONTEND=noninteractive
+ENV LANG=C.UTF-8
+ENV LC_ALL=C.UTF-8
 
-RUN apt-get update -y && \
-    apt-get install -y --no-install-recommends ca-certificates libimage-exiftool-perl python2.7 python-pip python-pyexiv2 wget make && \
-    pip install --upgrade pip setuptools && \
-    apt-get autoremove -y && \
+# Install system dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        ca-certificates \
+        libimage-exiftool-perl \
+        wget \
+        make \
+        locales && \
+    locale-gen C.UTF-8 && \
+    pip install --upgrade pip setuptools wheel && \
     rm -rf /var/lib/apt/lists/*
 
-RUN apt-get update -qq && \
-    apt-get install -y locales -qq && \
-    locale-gen en_US.UTF-8 en_us && \
-    dpkg-reconfigure locales && \
-    locale-gen C.UTF-8 && \
-    /usr/sbin/update-locale LANG=C.UTF-8
-
-ENV LANG C.UTF-8
-ENV LANGUAGE C.UTF-8
-ENV LC_ALL C.UTF-8
-
-RUN wget http://www.sno.phy.queensu.ca/~phil/exiftool/Image-ExifTool-10.20.tar.gz && \
-    gzip -dc Image-ExifTool-10.20.tar.gz  | tar -xf - && \
-    cd Image-ExifTool-10.20 && perl Makefile.PL && \
-    make install && cd ../ && rm -r Image-ExifTool-10.20
-
-COPY requirements.txt /opt/elodie/requirements.txt
-COPY docs/requirements.txt /opt/elodie/docs/requirements.txt
-COPY elodie/tests/requirements.txt /opt/elodie/elodie/tests/requirements.txt
+# Set working directory
 WORKDIR /opt/elodie
-RUN pip install -r docs/requirements.txt && \
-    pip install -r elodie/tests/requirements.txt && \
-    rm -rf /root/.cache/pip
 
-COPY . /opt/elodie
+# Copy Elodie requirements files
+COPY requirements.txt .
+COPY docs/requirements.txt docs/requirements.txt
+COPY elodie/tests/requirements.txt elodie/tests/requirements.txt
 
+# Install Python dependencies
+RUN pip install --no-cache-dir -r docs/requirements.txt && \
+    pip install --no-cache-dir -r elodie/tests/requirements.txt && \
+    pip install --no-cache-dir -r requirements.txt
+
+# Copy the rest of the Elodie project
+COPY . .
+
+# Default command (interactive bash for debugging)
 CMD ["/bin/bash"]
+
