@@ -56,6 +56,7 @@ class ImmichApiClient:
     def _make_request(self, method, endpoint, **kwargs):
         """Make HTTP request with consistent error handling"""
         url = f"{self.api_url}{endpoint}"
+        kwargs.setdefault('timeout', 10)
         try:
             response = getattr(self.session, method.lower())(url, **kwargs)
             response.raise_for_status()
