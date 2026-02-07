@@ -111,8 +111,11 @@ class ImmichApiClient:
         payload = {'updatedAfter': timestamp}
         if page is not None:
             payload['page'] = page
+        print(f"[DEBUG] Immich API call - updatedAfter: {timestamp}, payload: {payload}")
         response = self._make_request('POST', self.ENDPOINTS['search_metadata'], json=payload)
-        return response.json()
+        result = response.json()
+        print(f"[DEBUG] Immich API response - found {len(result.get('assets', {}).get('items', []))} assets on page {page or 1}")
+        return result
 
     def get_all_assets_paginated(self, updated_after=None, is_favorite=None):
         """Get all assets using pagination, yielding pages of results
@@ -411,11 +414,38 @@ class Immich(PluginBase):
         try:
             # Get assets updated since last sync
             last_sync_timestamp = self.db.get('last_sync_timestamp')
+            print(f"[DEBUG] Last sync timestamp from DB: {last_sync_timestamp}")
+            
+            # Debug: Let's get a sample of recent assets to see their timestamp format
+            print(f"[DEBUG] Getting sample assets to check timestamp format...")
+            sample_assets = []
+            sample_count = 0
+            for asset_page in self.client.get_all_assets_paginated(None):  # Get all assets, no filter
+                sample_assets.extend(asset_page)
+                sample_count += len(asset_page)
+                if sample_count >= 5:  # Just get first 5 assets
+                    break
+            
+            for i, asset in enumerate(sample_assets[:3]):  # Show first 3 assets
+                print(f"[DEBUG] Sample asset {i+1} updatedAt: {asset.get('updatedAt')}")
+            
             updated_assets = []
             if last_sync_timestamp:
+                print(f"[DEBUG] Searching for assets updated since: {last_sync_timestamp}")
+                
+                # Test: Try searching with a very recent timestamp to see if format is the issue
+                current_timestamp = datetime.utcnow().isoformat() + 'Z'
+                print(f"[DEBUG] Testing with current timestamp: {current_timestamp}")
+                test_assets = []
+                for asset_page in self.client.get_all_assets_paginated(current_timestamp):
+                    test_assets.extend(asset_page)
+                print(f"[DEBUG] Assets updated since current time: {len(test_assets)} (should be 0 or very few)")
+                
+                # Now try with the stored timestamp
                 for asset_page in self.client.get_all_assets_paginated(last_sync_timestamp):
                     updated_assets.extend(asset_page)
             else:
+                print(f"[DEBUG] No last sync timestamp - getting all assets")
                 # First run - get all assets
                 for asset_page in self.client.get_all_assets_paginated(self.GET_ALL_ASSETS_TIMESTAMP):
                     updated_assets.extend(asset_page)
@@ -531,6 +561,9 @@ class Immich(PluginBase):
             
             # Process all assets (both updated from search and changed from membership)
             total_assets = len(detailed_assets)
+            self.display(f'Processing {total_assets} assets for sync...')
+            if total_assets > 1000:
+                self.display(f'WARNING: Large number of assets ({total_assets}) to process. This may take a while.')
             processed_count = 0
             for asset_id, detailed_asset in detailed_assets.items():
                 processed_count += 1
@@ -560,6 +593,7 @@ class Immich(PluginBase):
                     # Find the corresponding file in Elodie
                     self.log(f'Finding file for asset {asset_id}')
                     file_path = self._find_file_for_asset(asset_info)
+                    self.log(f'_find_file_for_asset returned: {file_path}')
                     if not file_path:
                         self.log(f'Could not find file for asset {asset_id}')
                         self.log(f'Asset originalPath: {asset_info.get("originalPath")}')
@@ -567,10 +601,20 @@ class Immich(PluginBase):
                         continue
                         
                     self.log(f'Found file for asset {asset_id}: {file_path}')
+                    self.log(f'About to check if file exists: {file_path}')
+                    if not os.path.exists(file_path):
+                        self.log(f'File does not exist at path: {file_path}')
+                        continue
+                    self.log(f'File exists, proceeding with media object creation')
                     
                     # Get media object
                     self.log(f'Creating media object for {file_path}')
-                    media = Base.get_class_by_file(file_path, get_all_subclasses())
+                    self.log(f'Getting all subclasses...')
+                    subclasses = get_all_subclasses()
+                    self.log(f'Got {len(subclasses)} subclasses')
+                    self.log(f'Calling Base.get_class_by_file...')
+                    media = Base.get_class_by_file(file_path, subclasses)
+                    self.log(f'Base.get_class_by_file returned: {media}')
                     if not media:
                         self.log(f'Failed to create media object for {file_path}')
                         continue
@@ -710,6 +754,9 @@ class Immich(PluginBase):
                     continue
                 finally:
                     self.log(f'Completed processing asset {processed_count}/{total_assets}: {asset_id}')
+                    # Progress logging every 10 assets
+                    if processed_count % 10 == 0:
+                        self.display(f'Progress: {processed_count}/{total_assets} assets processed ({(processed_count/total_assets)*100:.1f}%)')
             
             # Save updated immich states
             self.db.set('immich_states', immich_states)
@@ -720,7 +767,9 @@ class Immich(PluginBase):
             self.db.set('favorite_state', current_favorites)
                     
             # Update last sync timestamp
-            self.db.set('last_sync_timestamp', datetime.utcnow().isoformat() + 'Z')
+            new_timestamp = datetime.utcnow().isoformat() + 'Z'
+            print(f"[DEBUG] Setting new last_sync_timestamp: {new_timestamp}")
+            self.db.set('last_sync_timestamp', new_timestamp)
             
         except Exception as e:
             self.display(f'Incremental sync failed: {str(e)}')
