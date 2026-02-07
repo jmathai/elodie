@@ -530,7 +530,11 @@ class Immich(PluginBase):
                         self.log(f'Could not get detailed info for changed asset {asset_id}: {e}')
             
             # Process all assets (both updated from search and changed from membership)
+            total_assets = len(detailed_assets)
+            processed_count = 0
             for asset_id, detailed_asset in detailed_assets.items():
+                processed_count += 1
+                self.log(f'Processing asset {processed_count}/{total_assets}: {asset_id}')
                 try:
                     # Use detailed asset info
                     asset_info = detailed_asset
@@ -554,6 +558,7 @@ class Immich(PluginBase):
                     self.log(f'Processing asset: {asset_id} - {asset_info.get("originalFileName", "unknown")}')
                     
                     # Find the corresponding file in Elodie
+                    self.log(f'Finding file for asset {asset_id}')
                     file_path = self._find_file_for_asset(asset_info)
                     if not file_path:
                         self.log(f'Could not find file for asset {asset_id}')
@@ -561,12 +566,18 @@ class Immich(PluginBase):
                         self.log(f'Asset originalFileName: {asset_info.get("originalFileName")}')
                         continue
                         
+                    self.log(f'Found file for asset {asset_id}: {file_path}')
+                    
                     # Get media object
+                    self.log(f'Creating media object for {file_path}')
                     media = Base.get_class_by_file(file_path, get_all_subclasses())
                     if not media:
+                        self.log(f'Failed to create media object for {file_path}')
                         continue
                         
                     updated = False
+                    
+                    self.log(f'Checking for changes to asset {asset_id}')
                     
                     # Apply album changes
                     current_albums = set(current_membership.get(asset_id, []))
@@ -574,9 +585,11 @@ class Immich(PluginBase):
                     
                     album_changed = False
                     if current_albums != previous_albums:
+                        self.log(f'Album changes detected for {asset_id}: {previous_albums} -> {current_albums}')
                         if current_albums:
                             # Join multiple albums with semicolon separator
                             album_string = ';'.join(sorted(current_albums))
+                            self.log(f'Setting album string: {album_string}')
                             media.set_album(album_string)
                             self.log(f'Updated albums for {file_path} to: {sorted(current_albums)}')
                         updated = True
@@ -588,6 +601,7 @@ class Immich(PluginBase):
                     previous_favorite = previous_favorites.get(asset_id, False)
                     
                     if current_favorite != previous_favorite:
+                        self.log(f'Favorite changes detected for {asset_id}: {previous_favorite} -> {current_favorite}')
                         if current_favorite:
                             media.set_rating(5)
                         else:
@@ -640,12 +654,18 @@ class Immich(PluginBase):
                                 self.log(f'Failed to create media object for: {file_path}')
                                 continue
                             self.log(f'Processing file with filesystem.process_file: {file_path}')
-                            new_path = self.filesystem.process_file(
-                                file_path, 
-                                self.elodie_library_path, 
-                                updated_media,
-                                move=True
-                            )
+                            self.log(f'File size: {os.path.getsize(file_path) / (1024*1024):.1f} MB')
+                            try:
+                                new_path = self.filesystem.process_file(
+                                    file_path, 
+                                    self.elodie_library_path, 
+                                    updated_media,
+                                    move=True
+                                )
+                                self.log(f'Finished processing file: {file_path}')
+                            except Exception as process_error:
+                                self.log(f'Error during filesystem.process_file for {file_path}: {process_error}')
+                                continue
                             if new_path and new_path != file_path:
                                 # File was moved - record the asset ID translation
                                 file_moves = self.db.get('file_moves') or {}
@@ -680,11 +700,16 @@ class Immich(PluginBase):
                                     current_favorites.pop(asset_id, None)
                             
                         count += 1
+                    else:
+                        self.log(f'No changes required for asset {asset_id}')
                         
                 except Exception as e:
                     self.log(f'Error processing asset {asset_id}: {str(e)}')
+                    self.log(f'Exception type: {type(e).__name__}')
                     errors += 1
                     continue
+                finally:
+                    self.log(f'Completed processing asset {processed_count}/{total_assets}: {asset_id}')
             
             # Save updated immich states
             self.db.set('immich_states', immich_states)
@@ -737,21 +762,28 @@ class Immich(PluginBase):
         asset_id = asset['id']
         original_path = asset.get('originalPath')
         
+        self.log(f'Finding file for asset {asset_id} with originalPath: {original_path}')
+        
         # First check if this asset was moved and we have a translation
         moved_path = self._get_moved_file_path(asset_id)
         if moved_path:
+            self.log(f'Found moved path for asset {asset_id}: {moved_path}')
             return moved_path
                 
         # If no move recorded, try the original path from Immich
         if original_path and isfile(original_path):
+            self.log(f'Found original path for asset {asset_id}: {original_path}')
             return original_path
         
         # Try translating the Immich path to the Elodie path
         if original_path:
             translated_path = self._translate_immich_path_to_elodie(original_path)
+            self.log(f'Translated path for asset {asset_id}: {translated_path}')
             if translated_path and isfile(translated_path):
+                self.log(f'Found translated path for asset {asset_id}: {translated_path}')
                 return translated_path
-                    
+        
+        self.log(f'No valid file path found for asset {asset_id}')        
         return None
     
     def _get_moved_file_path(self, asset_id: str) -> Optional[str]:
