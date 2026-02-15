@@ -12,12 +12,12 @@ jobs:
           name: Install dependencies
           command: |
             export ELODIE_DIR=${PWD}
-            export EXIFTOOL_VERSION=13.45
+            export EXIFTOOL_VERSION=13.50
             pip install -r elodie/tests/requirements.txt
             pip install -r elodie/plugins/googlephotos/requirements.txt
             pip install coveralls pytest-cov
             sed -i.bak 's/debug = False/debug = True/g' elodie/constants.py
-            wget -O Image-ExifTool-${EXIFTOOL_VERSION}.tar.gz https://sourceforge.net/projects/exiftool/files/Image-ExifTool-${EXIFTOOL_VERSION}.tar.gz/download
+            wget -O Image-ExifTool-${EXIFTOOL_VERSION}.tar.gz https://files.jmathai.com/elodie/Image-ExifTool-13.50.tar.gz
             gzip -dc Image-ExifTool-${EXIFTOOL_VERSION}.tar.gz  | tar -xf -
             cd Image-ExifTool-${EXIFTOOL_VERSION}
             perl Makefile.PL
@@ -31,7 +31,6 @@ jobs:
       - run:
           name: Generate coverage
           command: |
-            export COVERALLS_REPO_TOKEN=ID8gtfMwF9LYAukhtZHft0f9uo5Dg6TnU
             coveralls
 
 workflows:
