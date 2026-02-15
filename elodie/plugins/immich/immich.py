@@ -508,6 +508,7 @@ class Immich(PluginBase):
             
             # Store current Immich states for reverse lookup (we'll populate this as we process assets)
             immich_states = self.db.get('immich_states') or {}
+            previous_immich_states = self.db.get('immich_states') or {}  # For change detection
             
             # Get previous state from plugin database
             previous_membership = self.db.get('album_membership') or {}
@@ -696,7 +697,6 @@ class Immich(PluginBase):
                         self.log(f'Updated favorite for {file_path} to: {current_favorite}')
                         updated = True
                     
-                    previous_immich_states = self.db.get('immich_states') or {}
                     # Apply description changes (requires batching to detect)
                     # current_description = current_state['description']
                     # previous_description = normalized_stored['description']
