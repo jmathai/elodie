@@ -226,6 +226,7 @@ class Immich(PluginBase):
     PROGRESS_LOG_INTERVAL = 100
     FAVORITE_RATING = 5
     ALBUM_SEPARATOR = ';'
+    MAX_INCREMENTAL_ASSETS = 1000
 
     def __init__(self) -> None:
         super(Immich, self).__init__()
@@ -402,7 +403,9 @@ class Immich(PluginBase):
     def _sync_immich_to_elodie(self) -> Tuple[bool, int]:
         """Incremental sync: Immich → Elodie.
         
-        Syncs changes from Immich back to Elodie metadata.
+        Syncs changes from Immich back to Elodie metadata with batched processing.
+        Uses createdAt-based ordering to avoid issues with library rescans affecting updatedAt.
+        Processes maximum MAX_INCREMENTAL_ASSETS per run and tracks progress for resume capability.
         
         Returns:
             Tuple of (success: bool, processed_count: int)
@@ -412,49 +415,58 @@ class Immich(PluginBase):
         self.safe_to_update_assets = set()  # Track assets safe to update state for
         
         try:
-            # Get assets updated since last sync
-            last_sync_timestamp = self.db.get('last_sync_timestamp')
-            print(f"[DEBUG] Last sync timestamp from DB: {last_sync_timestamp}")
+            # Check if we're resuming from a previous incomplete run
+            last_processed_created_at = self.db.get('last_processed_created_at')
             
-            # Debug: Let's get a sample of recent assets to see their timestamp format
-            print(f"[DEBUG] Getting sample assets to check timestamp format...")
-            sample_assets = []
-            sample_count = 0
-            for asset_page in self.client.get_all_assets_paginated(None):  # Get all assets, no filter
-                sample_assets.extend(asset_page)
-                sample_count += len(asset_page)
-                if sample_count >= 5:  # Just get first 5 assets
-                    break
+            print(f"[DEBUG] Last processed createdAt: {last_processed_created_at}")
             
-            for i, asset in enumerate(sample_assets[:3]):  # Show first 3 assets
-                print(f"[DEBUG] Sample asset {i+1} updatedAt: {asset.get('updatedAt')}")
+            # Get all assets (ignoring updatedAfter to avoid rescan issues)
+            print(f"[DEBUG] Getting all assets for batched processing...")
+            all_assets = []
+            for asset_page in self.client.get_all_assets_paginated(self.GET_ALL_ASSETS_TIMESTAMP):
+                all_assets.extend(asset_page)
             
-            updated_assets = []
-            if last_sync_timestamp:
-                print(f"[DEBUG] Searching for assets updated since: {last_sync_timestamp}")
+            self.log(f'Found {len(all_assets)} total assets in Immich')
+            
+            # Sort by createdAt for consistent ordering (oldest first)
+            all_assets.sort(key=lambda a: a.get('createdAt', ''))
+            
+            # If resuming, filter out already processed assets
+            assets_to_consider = all_assets
+            if last_processed_created_at:
+                # Find assets created after our last processed timestamp
+                resume_index = 0
+                for i, asset in enumerate(all_assets):
+                    asset_created_at = asset.get('createdAt', '')
+                    if asset_created_at > last_processed_created_at:
+                        resume_index = i
+                        break
                 
-                # Test: Try searching with a very recent timestamp to see if format is the issue
-                current_timestamp = datetime.utcnow().isoformat() + 'Z'
-                print(f"[DEBUG] Testing with current timestamp: {current_timestamp}")
-                test_assets = []
-                for asset_page in self.client.get_all_assets_paginated(current_timestamp):
-                    test_assets.extend(asset_page)
-                print(f"[DEBUG] Assets updated since current time: {len(test_assets)} (should be 0 or very few)")
-                
-                # Now try with the stored timestamp
-                for asset_page in self.client.get_all_assets_paginated(last_sync_timestamp):
-                    updated_assets.extend(asset_page)
+                if resume_index > 0:
+                    assets_to_consider = all_assets[resume_index:]
+                    self.log(f'Resuming from createdAt {last_processed_created_at}, {len(assets_to_consider)} assets remaining')
+                else:
+                    self.log(f'All assets already processed through {last_processed_created_at}')
+                    # Update sync timestamp and return - we're done
+                    new_timestamp = datetime.utcnow().isoformat() + 'Z'
+                    self.db.set('last_sync_timestamp', new_timestamp)
+                    self.db.set('last_processed_created_at', None)  # Clear resume marker
+                    return (True, 0)
+            
+            # Limit to MAX_INCREMENTAL_ASSETS for this run
+            assets_to_process = assets_to_consider[:self.MAX_INCREMENTAL_ASSETS]
+            remaining_assets = len(assets_to_consider) - len(assets_to_process)
+            
+            if remaining_assets > 0:
+                self.display(f'Processing {len(assets_to_process)} assets this run ({remaining_assets} remaining for next run)')
             else:
-                print(f"[DEBUG] No last sync timestamp - getting all assets")
-                # First run - get all assets
-                for asset_page in self.client.get_all_assets_paginated(self.GET_ALL_ASSETS_TIMESTAMP):
-                    updated_assets.extend(asset_page)
+                self.display(f'Processing {len(assets_to_process)} assets (final batch)')
+                
+            self.log(f'Processing batch of {len(assets_to_process)} assets')
             
-            self.log(f'Found {len(updated_assets)} assets updated since last sync')
-            
-            # Get detailed info for each updated asset
+            # Get detailed info for each asset to process
             detailed_assets = {}
-            for asset in updated_assets:
+            for asset in assets_to_process:
                 asset_id = asset['id']
                 try:
                     detailed_asset = self.client.get_asset_by_id(asset_id)
@@ -590,6 +602,40 @@ class Immich(PluginBase):
                     
                     self.log(f'Processing asset: {asset_id} - {asset_info.get("originalFileName", "unknown")}')
                     
+                    # Check if this asset actually needs processing by comparing current vs stored state
+                    stored_state = previous_immich_states.get(asset_id, {})
+                    current_state = {
+                        'albums': current_membership.get(asset_id, []),
+                        'isFavorite': asset_info.get('isFavorite', False),
+                        'description': exif_info.get('description') or None,
+                        'latitude': exif_info.get('latitude') or None,
+                        'longitude': exif_info.get('longitude') or None
+                    }
+                    
+                    # Also normalize stored state for comparison
+                    normalized_stored = {
+                        'albums': stored_state.get('albums', []),
+                        'isFavorite': stored_state.get('isFavorite', False),
+                        'description': stored_state.get('description') or None,
+                        'latitude': stored_state.get('latitude') or None,
+                        'longitude': stored_state.get('longitude') or None
+                    }
+                    
+                    # Skip processing if nothing has changed
+                    state_changed = (
+                        set(current_state['albums']) != set(normalized_stored['albums']) or
+                        current_state['isFavorite'] != normalized_stored['isFavorite'] or
+                        current_state['description'] != normalized_stored['description'] or
+                        current_state['latitude'] != normalized_stored['latitude'] or
+                        current_state['longitude'] != normalized_stored['longitude']
+                    )
+                    
+                    if not state_changed:
+                        self.log(f'No state changes detected for asset {asset_id}, skipping expensive operations')
+                        continue
+                    
+                    self.log(f'State changes detected for asset {asset_id}, proceeding with processing')
+                    
                     # Find the corresponding file in Elodie
                     self.log(f'Finding file for asset {asset_id}')
                     file_path = self._find_file_for_asset(asset_info)
@@ -655,34 +701,29 @@ class Immich(PluginBase):
                     
                     previous_immich_states = self.db.get('immich_states') or {}
                     # Apply description changes
-                    # TODO: Temporarily disabled - was causing sync loops with 20k photo library
-                    # current_description = exif_info.get('description')
-                    # previous_description = previous_immich_states.get(asset_id, {}).get('description')
-                    # 
-                    # # TODO: Added truthy conditions
-                    # # if current_description != previous_description:
-                    # if current_description && previous_description && current_description != previous_description:
-                    #     media.set_description(current_description or '')
-                    #     self.log(f'Updated description for {file_path} to: {current_description}')
-                    #     updated = True
+                    current_description = current_state['description']
+                    previous_description = normalized_stored['description']
+                    
+                    if current_description != previous_description:
+                        media.set_description(current_description or '')
+                        self.log(f'Updated description for {file_path} to: {current_description}')
+                        updated = True
                     
                     # Note: Date/time synchronization is disabled to avoid timezone issues
                     # that cause endless file rename cycles
                     
                     # Apply location changes
-                    current_lat = exif_info.get('latitude')
-                    current_lng = exif_info.get('longitude') 
-                    previous_lat = previous_immich_states.get(asset_id, {}).get('latitude')
-                    previous_lng = previous_immich_states.get(asset_id, {}).get('longitude')
+                    current_lat = current_state['latitude']
+                    current_lng = current_state['longitude'] 
+                    previous_lat = normalized_stored['latitude']
+                    previous_lng = normalized_stored['longitude']
                     
-                    # TODO: make location change less precise
-                    # Lookup precision difference with immich
                     location_changed = False
-                    # if (current_lat != previous_lat or current_lng != previous_lng) and current_lat is not None and current_lng is not None:
-                    #     media.set_location(current_lat, current_lng)
-                    #     self.log(f'Updated location for {file_path} to: {current_lat}, {current_lng}')
-                    #     updated = True
-                    #     location_changed = True
+                    if (current_lat != previous_lat or current_lng != previous_lng) and current_lat is not None and current_lng is not None:
+                        media.set_location(current_lat, current_lng)
+                        self.log(f'Updated location for {file_path} to: {current_lat}, {current_lng}')
+                        updated = True
+                        location_changed = True
                         
                     # Only reprocess file for changes that affect file path (album or location changes)
                     # Description and favorite changes don't require file moves
@@ -765,11 +806,23 @@ class Immich(PluginBase):
             # (current_membership and current_favorites have been updated above for successful changes)
             self.db.set('album_membership', current_membership)
             self.db.set('favorite_state', current_favorites)
-                    
-            # Update last sync timestamp
-            new_timestamp = datetime.utcnow().isoformat() + 'Z'
-            print(f"[DEBUG] Setting new last_sync_timestamp: {new_timestamp}")
-            self.db.set('last_sync_timestamp', new_timestamp)
+            
+            # Update resume tracking based on whether we processed all available assets
+            if remaining_assets > 0:
+                # More assets to process - save the createdAt of the last processed asset for resume
+                if assets_to_process:
+                    last_asset = assets_to_process[-1]
+                    last_created_at = last_asset.get('createdAt', '')
+                    self.db.set('last_processed_created_at', last_created_at)
+                    print(f"[DEBUG] Saved resume point: {last_created_at}")
+                    self.display(f'Batch complete. Resume point saved: {last_created_at[:19]}')
+            else:
+                # All assets processed - clear resume marker and update sync timestamp
+                self.db.set('last_processed_created_at', None)
+                new_timestamp = datetime.utcnow().isoformat() + 'Z'
+                self.db.set('last_sync_timestamp', new_timestamp)
+                print(f"[DEBUG] Full sync complete. Updated last_sync_timestamp: {new_timestamp}")
+                self.display('All assets processed. Full sync completed.')
             
         except Exception as e:
             self.display(f'Incremental sync failed: {str(e)}')
