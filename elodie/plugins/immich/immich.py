@@ -415,64 +415,61 @@ class Immich(PluginBase):
         self.safe_to_update_assets = set()  # Track assets safe to update state for
         
         try:
-            # Check if we're resuming from a previous incomplete run
-            last_processed_created_at = self.db.get('last_processed_created_at')
+            # SIMPLIFIED: Only process assets with detected album/favorite changes
+            # (Batching logic temporarily commented out for testing)
             
-            print(f"[DEBUG] Last processed createdAt: {last_processed_created_at}")
+            # # Check if we're resuming from a previous incomplete run
+            # last_processed_created_at = self.db.get('last_processed_created_at')
+            # 
+            # print(f"[DEBUG] Last processed createdAt: {last_processed_created_at}")
+            # 
+            # # Get all assets (ignoring updatedAfter to avoid rescan issues)
+            # print(f"[DEBUG] Getting all assets for batched processing...")
+            # all_assets = []
+            # for asset_page in self.client.get_all_assets_paginated(self.GET_ALL_ASSETS_TIMESTAMP):
+            #     all_assets.extend(asset_page)
+            # 
+            # self.log(f'Found {len(all_assets)} total assets in Immich')
+            # 
+            # # Sort by createdAt for consistent ordering (oldest first)
+            # all_assets.sort(key=lambda a: a.get('createdAt', ''))
+            # 
+            # # If resuming, filter out already processed assets
+            # assets_to_consider = all_assets
+            # if last_processed_created_at:
+            #     # Find assets created after our last processed timestamp
+            #     resume_index = 0
+            #     for i, asset in enumerate(all_assets):
+            #         asset_created_at = asset.get('createdAt', '')
+            #         if asset_created_at > last_processed_created_at:
+            #             resume_index = i
+            #             break
+            #     
+            #     if resume_index > 0:
+            #         assets_to_consider = all_assets[resume_index:]
+            #         self.log(f'Resuming from createdAt {last_processed_created_at}, {len(assets_to_consider)} assets remaining')
+            #     else:
+            #         self.log(f'All assets already processed through {last_processed_created_at}')
+            #         # Update sync timestamp and return - we're done
+            #         new_timestamp = datetime.utcnow().isoformat() + 'Z'
+            #         self.db.set('last_sync_timestamp', new_timestamp)
+            #         self.db.set('last_processed_created_at', None)  # Clear resume marker
+            #         return (True, 0)
+            # 
+            # # Limit to MAX_INCREMENTAL_ASSETS for this run
+            # assets_to_process = assets_to_consider[:self.MAX_INCREMENTAL_ASSETS]
+            # remaining_assets = len(assets_to_consider) - len(assets_to_process)
+            # 
+            # if remaining_assets > 0:
+            #     self.display(f'Processing {len(assets_to_process)} assets this run ({remaining_assets} remaining for next run)')
+            # else:
+            #     self.display(f'Processing {len(assets_to_process)} assets (final batch)')
+            #     
+            # self.log(f'Processing batch of {len(assets_to_process)} assets')
             
-            # Get all assets (ignoring updatedAfter to avoid rescan issues)
-            print(f"[DEBUG] Getting all assets for batched processing...")
-            all_assets = []
-            for asset_page in self.client.get_all_assets_paginated(self.GET_ALL_ASSETS_TIMESTAMP):
-                all_assets.extend(asset_page)
-            
-            self.log(f'Found {len(all_assets)} total assets in Immich')
-            
-            # Sort by createdAt for consistent ordering (oldest first)
-            all_assets.sort(key=lambda a: a.get('createdAt', ''))
-            
-            # If resuming, filter out already processed assets
-            assets_to_consider = all_assets
-            if last_processed_created_at:
-                # Find assets created after our last processed timestamp
-                resume_index = 0
-                for i, asset in enumerate(all_assets):
-                    asset_created_at = asset.get('createdAt', '')
-                    if asset_created_at > last_processed_created_at:
-                        resume_index = i
-                        break
-                
-                if resume_index > 0:
-                    assets_to_consider = all_assets[resume_index:]
-                    self.log(f'Resuming from createdAt {last_processed_created_at}, {len(assets_to_consider)} assets remaining')
-                else:
-                    self.log(f'All assets already processed through {last_processed_created_at}')
-                    # Update sync timestamp and return - we're done
-                    new_timestamp = datetime.utcnow().isoformat() + 'Z'
-                    self.db.set('last_sync_timestamp', new_timestamp)
-                    self.db.set('last_processed_created_at', None)  # Clear resume marker
-                    return (True, 0)
-            
-            # Limit to MAX_INCREMENTAL_ASSETS for this run
-            assets_to_process = assets_to_consider[:self.MAX_INCREMENTAL_ASSETS]
-            remaining_assets = len(assets_to_consider) - len(assets_to_process)
-            
-            if remaining_assets > 0:
-                self.display(f'Processing {len(assets_to_process)} assets this run ({remaining_assets} remaining for next run)')
-            else:
-                self.display(f'Processing {len(assets_to_process)} assets (final batch)')
-                
-            self.log(f'Processing batch of {len(assets_to_process)} assets')
-            
-            # Get detailed info for each asset to process
+            # Get detailed info for assets (simplified - no batching)
             detailed_assets = {}
-            for asset in assets_to_process:
-                asset_id = asset['id']
-                try:
-                    detailed_asset = self.client.get_asset_by_id(asset_id)
-                    detailed_assets[asset_id] = detailed_asset
-                except Exception as e:
-                    self.log(f'Failed to get details for asset {asset_id}: {e}')
+            # (No batch processing - assets will be added below based on changes)
             
             # Get current album membership from Immich (for state comparison)
             all_albums = self.client.get_all_albums()
@@ -700,30 +697,31 @@ class Immich(PluginBase):
                         updated = True
                     
                     previous_immich_states = self.db.get('immich_states') or {}
-                    # Apply description changes
-                    current_description = current_state['description']
-                    previous_description = normalized_stored['description']
-                    
-                    if current_description != previous_description:
-                        media.set_description(current_description or '')
-                        self.log(f'Updated description for {file_path} to: {current_description}')
-                        updated = True
+                    # Apply description changes (requires batching to detect)
+                    # current_description = current_state['description']
+                    # previous_description = normalized_stored['description']
+                    # 
+                    # if current_description != previous_description:
+                    #     media.set_description(current_description or '')
+                    #     self.log(f'Updated description for {file_path} to: {current_description}')
+                    #     updated = True
                     
                     # Note: Date/time synchronization is disabled to avoid timezone issues
                     # that cause endless file rename cycles
                     
-                    # Apply location changes
-                    current_lat = current_state['latitude']
-                    current_lng = current_state['longitude'] 
-                    previous_lat = normalized_stored['latitude']
-                    previous_lng = normalized_stored['longitude']
-                    
-                    location_changed = False
-                    if (current_lat != previous_lat or current_lng != previous_lng) and current_lat is not None and current_lng is not None:
-                        media.set_location(current_lat, current_lng)
-                        self.log(f'Updated location for {file_path} to: {current_lat}, {current_lng}')
-                        updated = True
-                        location_changed = True
+                    # Apply location changes (requires batching to detect)
+                    # current_lat = current_state['latitude']
+                    # current_lng = current_state['longitude'] 
+                    # previous_lat = normalized_stored['latitude']
+                    # previous_lng = normalized_stored['longitude']
+                    # 
+                    # location_changed = False
+                    # if (current_lat != previous_lat or current_lng != previous_lng) and current_lat is not None and current_lng is not None:
+                    #     media.set_location(current_lat, current_lng)
+                    #     self.log(f'Updated location for {file_path} to: {current_lat}, {current_lng}')
+                    #     updated = True
+                    #     location_changed = True
+                    location_changed = False  # Always false in simplified mode
                         
                     # Only reprocess file for changes that affect file path (album or location changes)
                     # Description and favorite changes don't require file moves
@@ -807,22 +805,28 @@ class Immich(PluginBase):
             self.db.set('album_membership', current_membership)
             self.db.set('favorite_state', current_favorites)
             
-            # Update resume tracking based on whether we processed all available assets
-            if remaining_assets > 0:
-                # More assets to process - save the createdAt of the last processed asset for resume
-                if assets_to_process:
-                    last_asset = assets_to_process[-1]
-                    last_created_at = last_asset.get('createdAt', '')
-                    self.db.set('last_processed_created_at', last_created_at)
-                    print(f"[DEBUG] Saved resume point: {last_created_at}")
-                    self.display(f'Batch complete. Resume point saved: {last_created_at[:19]}')
-            else:
-                # All assets processed - clear resume marker and update sync timestamp
-                self.db.set('last_processed_created_at', None)
-                new_timestamp = datetime.utcnow().isoformat() + 'Z'
-                self.db.set('last_sync_timestamp', new_timestamp)
-                print(f"[DEBUG] Full sync complete. Updated last_sync_timestamp: {new_timestamp}")
-                self.display('All assets processed. Full sync completed.')
+            # SIMPLIFIED: Just update sync timestamp (no batching resume tracking)
+            new_timestamp = datetime.utcnow().isoformat() + 'Z'
+            self.db.set('last_sync_timestamp', new_timestamp)
+            self.db.set('last_processed_created_at', None)  # Clear any old resume state
+            print(f"[DEBUG] Sync complete. Updated last_sync_timestamp: {new_timestamp}")
+            
+            # # Update resume tracking based on whether we processed all available assets  
+            # if remaining_assets > 0:
+            #     # More assets to process - save the createdAt of the last processed asset for resume
+            #     if assets_to_process:
+            #         last_asset = assets_to_process[-1]
+            #         last_created_at = last_asset.get('createdAt', '')
+            #         self.db.set('last_processed_created_at', last_created_at)
+            #         print(f"[DEBUG] Saved resume point: {last_created_at}")
+            #         self.display(f'Batch complete. Resume point saved: {last_created_at[:19]}')
+            # else:
+            #     # All assets processed - clear resume marker and update sync timestamp
+            #     self.db.set('last_processed_created_at', None)
+            #     new_timestamp = datetime.utcnow().isoformat() + 'Z'
+            #     self.db.set('last_sync_timestamp', new_timestamp)
+            #     print(f"[DEBUG] Full sync complete. Updated last_sync_timestamp: {new_timestamp}")
+            #     self.display('All assets processed. Full sync completed.')
             
         except Exception as e:
             self.display(f'Incremental sync failed: {str(e)}')
