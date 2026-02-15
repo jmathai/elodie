@@ -13,7 +13,11 @@ Getting started takes just a few minutes.
 
 Elodie relies on the great [ExifTool library by Phil Harvey](http://www.sno.phy.queensu.ca/~phil/exiftool/). You'll need to install it for your platform.
 
-Some features for video files will only work with newer versions of ExifTool and have been tested on version 10.20 or higher. Support for HEIC files requires version 11.50 or higher. Check your version by typing `exiftool -ver` and see the [manual installation instructions for ExifTool](http://www.sno.phy.queensu.ca/~phil/exiftool/install.html#Unix) if needed.
+* Some video features require version 10.20 or higher
+* Support for HEIC files requires version 11.50 or higher
+* Translating geolocation to city name requires version 13.13 or higher
+
+Check your version by typing `exiftool -ver` and see the [manual installation instructions for ExifTool](http://www.sno.phy.queensu.ca/~phil/exiftool/install.html#Unix) if needed.
 
 ```
 # OSX (uses homebrew, http://brew.sh/)
@@ -48,8 +52,6 @@ Now that you've got the minimum dependencies installed you can start using Elodi
 ./elodie.py import --debug --destination="/where/i/want/my/photos/to/go" /where/my/photo/is.jpg
 ```
 
-You'll notice that the photo was organized into an *Unknown Location* folder. That's because you haven't set up your MapQuest API ([instructions](#using-openstreetmap-data-from-mapquest)).
-
 ### Testing changes safely with dry-run mode
 
 Before running any command that modifies your photos, you can use the `--dry-run` flag to see exactly what Elodie would do without actually making any changes. This is especially useful when organizing large photo collections for the first time.
@@ -73,7 +75,7 @@ Now you're ready to learn more about Elodie.
 
 ## Slowstart guide
 
-[Read a 3 part blog post on why I was created](https://medium.com/vantage/understanding-my-need-for-an-automated-photo-workflow-a2ff95b46f8f#.dmwyjlc57) and how [I can be used with Google Photos](https://medium.com/@jmathai/my-automated-photo-workflow-using-google-photos-and-elodie-afb753b8c724).
+[Read a 3 part blog post on why I was created](https://medium.com/vantage/understanding-my-need-for-an-automated-photo-workflow-a2ff95b46f8f#.dmwyjlc57) and how [I can be used with Immich](https://jaisenmathai.com/articles/my-ridiculously-robust-photo-management-system-immich-edition/).
 
 I work tirelessly to make sure your photos are always sorted and organized so you can focus on more important things. By photos I mean JPEG, DNG, NEF and common video and audio files.
 
@@ -430,19 +432,9 @@ When I organize photos I look at the embedded metadata. Here are the details of 
 | Camera Make (photo, video) | EXIF:Make, QuickTime:Make |   |
 | Camera Model (photo, video) | EXIF:Model, QuickTime:Model |   |
 
-## Using OpenStreetMap data from MapQuest
+## Deprecated Use of MapQuest
 
-I use MapQuest to help me organize your photos by location. You'll need to sign up for a [free developer account](https://developer.mapquest.com/plans) and get an API key. They give you 15,000 calls per month so I can't do any more than that unless you shell out some big bucks to them. Once I hit my limit the best I'll be able to do is *Unknown Location* until the following month.
-
-Once you sign up you'll have to get an API key and copy it into a file named `~/.elodie/config.ini`. I've included a `config.ini-sample` file which you can copy to `config.ini`.
-
-```
-mkdir ~/.elodie
-cp config.ini-sample ~/.elodie/config.ini
-# now you're ready to add your MapQuest key
-```
-
-If you're an english speaker then you will probably want to add `prefer_english_names=True` to the `[MapQuest]` section else you'll have cities named using the local language.
+I used to use the MapQuest API to help me organize your photos by location. I've deprecated this feature and will remove support from the code base. If you're already using MapQuest, after the removal of MapQuest support I'll automatically fall back to Exiftool which is the new default. Follow [pull request #518](https://github.com/jmathai/elodie/issues/518) to know when it gets removed.
 
 ## Questions, comments or concerns?
 
