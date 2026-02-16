@@ -44,11 +44,13 @@ class Media(Base):
         self.camera_model_keys = ['EXIF:Model', 'QuickTime:Model']
         self.album_keys = ['XMP-xmpDM:Album', 'XMP:Album']
         self.title_key = 'XMP:Title'
+        self.description_key = 'XMP:Description'
         self.latitude_keys = ['EXIF:GPSLatitude']
         self.longitude_keys = ['EXIF:GPSLongitude']
         self.latitude_ref_key = 'EXIF:GPSLatitudeRef'
         self.longitude_ref_key = 'EXIF:GPSLongitudeRef'
         self.original_name_key = 'XMP:OriginalFileName'
+        self.rating_key = 'XMP:Rating'
         self.set_gps_ref = True
         self.exif_metadata = None
 
@@ -115,6 +117,24 @@ class Media(Base):
                 return this_coordinate * direction_multiplier
 
         return None
+
+    def get_description(self):
+        """Get the description for a photo or video
+
+        :returns: str or None if no description is set or not a valid media type
+        """
+        if(not self.is_valid()):
+            return None
+
+        exiftool_attributes = self.get_exiftool_attributes()
+
+        if exiftool_attributes is None:
+            return None
+
+        if(self.description_key not in exiftool_attributes):
+            return None
+
+        return exiftool_attributes[self.description_key]
 
     def get_exiftool_attributes(self):
         """Get attributes for the media object from exiftool.
@@ -246,6 +266,24 @@ class Media(Base):
         self.reset_cache()
         return status
 
+    def set_description(self, description):
+        """Set description for a photo or video
+
+        :param str description: Description of the photo/video
+        :returns: bool
+        """
+        if(not self.is_valid()):
+            return None
+
+        if(description is None):
+            return None
+
+        tags = {self.description_key: description}
+        status = self.__set_tags(tags)
+        self.reset_cache()
+
+        return status
+
     def set_location(self, latitude, longitude):
         if(not self.is_valid()):
             return None
@@ -311,6 +349,40 @@ class Media(Base):
         status = self.__set_tags(tags)
         self.reset_cache()
 
+        return status
+
+    def get_rating(self):
+        """Get rating from EXIF
+
+        :returns: int or None if file invalid or no exif data
+        """
+        if(not self.is_valid()):
+            return None
+
+        exiftool_attributes = self.get_exiftool_attributes()
+        if exiftool_attributes is None:
+            return None
+
+        if(self.rating_key not in exiftool_attributes):
+            return None
+
+        try:
+            return int(exiftool_attributes[self.rating_key])
+        except (ValueError, TypeError):
+            return None
+
+    def set_rating(self, rating):
+        """Set rating for a photo
+        
+        :param rating: Rating value or empty string to remove rating
+        :returns: bool
+        """
+        if(not self.is_valid()):
+            return None
+
+        tags = {self.rating_key: rating}
+        status = self.__set_tags(tags)
+        self.reset_cache()
         return status
 
     def __set_tags(self, tags):

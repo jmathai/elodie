@@ -47,6 +47,13 @@ class Base(object):
         """
         return None
 
+    def get_rating(self):
+        """Base method for getting a rating
+
+        :returns: None
+        """
+        return None
+
     def get_file_path(self):
         """Get the full path to the video.
 
@@ -96,7 +103,9 @@ class Base(object):
             'latitude': self.get_coordinate('latitude'),
             'longitude': self.get_coordinate('longitude'),
             'album': self.get_album(),
+            'rating': self.get_rating(),
             'title': self.get_title(),
+            'description': self.get_description(),
             'mime_type': self.get_mimetype(),
             'original_name': self.get_original_name(),
             'base_name': os.path.splitext(os.path.basename(source))[0],
@@ -132,6 +141,13 @@ class Base(object):
 
     def get_title(self):
         """Base method for getting the title of a file
+
+        :returns: None
+        """
+        return None
+
+    def get_description(self):
+        """Base method for getting the description of a file
 
         :returns: None
         """

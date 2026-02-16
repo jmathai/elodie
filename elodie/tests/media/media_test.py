@@ -161,6 +161,144 @@ def test_set_original_name():
         assert metadata['original_name'] is None, metadata['original_name']
         assert metadata_updated['original_name'] == random_file_name, metadata_updated['original_name']
 
+def test_get_description_with_description():
+    media = Media.get_class_by_file(helper.get_file('with-description.jpg'), [Photo])
+    description = media.get_description()
+
+    assert description == 'some description', description
+
+def test_get_description_without_description():
+    media = Media.get_class_by_file(helper.get_file('plain.jpg'), [Photo])
+    description = media.get_description()
+
+    assert description is None, description
+
+def test_get_description_invalid_file():
+    media = Media.get_class_by_file(helper.get_file('invalid.jpg'), [Photo])
+    description = media.get_description()
+
+    assert description is None, description
+
+def test_set_description():
+    temporary_folder, folder = helper.create_working_folder()
+
+    origin = '%s/photo.jpg' % folder
+    shutil.copyfile(helper.get_file('plain.jpg'), origin)
+
+    media = Media.get_class_by_file(origin, [Photo])
+    original_metadata = media.get_metadata()
+
+    status = media.set_description('My photo description')
+
+    assert status == True, status
+
+    # Create new media object to verify the description was set
+    media_new = Media.get_class_by_file(origin, [Photo])
+    metadata = media_new.get_metadata()
+
+    shutil.rmtree(folder)
+
+    assert metadata['description'] == 'My photo description', metadata['description']
+
+def test_set_description_non_ascii():
+    temporary_folder, folder = helper.create_working_folder()
+
+    origin = '%s/photo.jpg' % folder
+    shutil.copyfile(helper.get_file('plain.jpg'), origin)
+
+    media = Media.get_class_by_file(origin, [Photo])
+    unicode_description = u'形声字 / 形聲字 description'
+
+    status = media.set_description(unicode_description)
+
+    assert status == True, status
+
+    # Create new media object to verify the description was set
+    media_new = Media.get_class_by_file(origin, [Photo])
+    metadata = media_new.get_metadata()
+
+    shutil.rmtree(folder)
+
+    assert metadata['description'] == unicode_description, metadata['description']
+
+def test_set_description_with_none():
+    temporary_folder, folder = helper.create_working_folder()
+
+    origin = '%s/photo.jpg' % folder
+    shutil.copyfile(helper.get_file('plain.jpg'), origin)
+
+    media = Media.get_class_by_file(origin, [Photo])
+    
+    status = media.set_description(None)
+
+    shutil.rmtree(folder)
+
+    assert status is None, status
+
+def test_get_rating_with_rating():
+    media = Media.get_class_by_file(helper.get_file('with-rating.jpg'), [Photo])
+    rating = media.get_rating()
+
+    assert rating == 5, rating
+
+def test_get_rating_without_rating():
+    media = Media.get_class_by_file(helper.get_file('no-exif.jpg'), [Photo])
+    rating = media.get_rating()
+
+    assert rating is None, rating
+
+def test_get_rating_invalid_file():
+    media = Media.get_class_by_file(helper.get_file('invalid.jpg'), [Photo])
+    rating = media.get_rating()
+
+    assert rating is None, rating
+
+def test_set_rating():
+    temporary_folder, folder = helper.create_working_folder()
+
+    origin = '%s/photo.jpg' % folder
+    shutil.copyfile(helper.get_file('no-exif.jpg'), origin)
+
+    media = Media.get_class_by_file(origin, [Photo])
+    original_metadata = media.get_metadata()
+
+    status = media.set_rating(3)
+
+    assert status == True, status
+
+    # Create new media object to verify the rating was set
+    media_new = Media.get_class_by_file(origin, [Photo])
+    metadata = media_new.get_metadata()
+
+    shutil.rmtree(folder)
+
+    assert metadata['rating'] == 3, metadata['rating']
+
+def test_set_rating_remove_with_empty_string():
+    temporary_folder, folder = helper.create_working_folder()
+
+    origin = '%s/photo.jpg' % folder
+    shutil.copyfile(helper.get_file('with-rating.jpg'), origin)
+
+    media = Media.get_class_by_file(origin, [Photo])
+    original_metadata = media.get_metadata()
+    
+    # Verify it has a rating first
+    assert original_metadata['rating'] == 5, original_metadata['rating']
+
+    # Remove the rating with empty string
+    status = media.set_rating('')
+
+    assert status == True, status
+
+    # Create new media object to verify the rating was removed
+    media_new = Media.get_class_by_file(origin, [Photo])
+    metadata = media_new.get_metadata()
+
+    shutil.rmtree(folder)
+
+    assert metadata['rating'] is None, metadata['rating']
+
 def is_valid():
     media = Media()
 
