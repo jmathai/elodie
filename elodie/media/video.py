@@ -91,9 +91,9 @@ class Video(Media):
                                 offset_seconds = int(offset_parts[0]) * 3600
                                 offset_seconds = offset_seconds + int(offset_parts[1]) * 60  # noqa
                                 if date_offset[0] == '-':
-                                    seconds_since_epoch - offset_seconds
+                                    seconds_since_epoch -= offset_seconds
                                 elif date_offset[0] == '+':
-                                    seconds_since_epoch + offset_seconds
+                                    seconds_since_epoch += offset_seconds
                     except:
                         pass
 
