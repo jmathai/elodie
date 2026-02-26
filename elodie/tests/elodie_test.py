@@ -780,6 +780,82 @@ def test_regenerate_valid_source_with_invalid_files():
     assert '3c19a5d751cf19e093b7447297731124d9cc987d3f91a9d1872c3b1c1b15639a' in db.hash_db, db.hash_db
     assert 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855' not in db.hash_db, db.hash_db
 
+def test_import_stops_cleanly_on_interrupt_request():
+    class FakeInterruptHandler(object):
+        def __init__(self):
+            self.interrupted = False
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc_value, traceback):
+            return False
+
+    fake_interrupt = FakeInterruptHandler()
+    import_calls = {'count': 0}
+
+    def fake_import_file(*args, **kwargs):
+        import_calls['count'] += 1
+        fake_interrupt.interrupted = True
+        return '/tmp/imported-file.jpg'
+
+    runner = CliRunner()
+    with mock.patch.object(elodie, '_GracefulInterruptHandler', return_value=fake_interrupt):
+        with mock.patch.object(elodie, 'import_file', side_effect=fake_import_file):
+            with mock.patch.object(elodie, 'load_config', return_value={}):
+                result = runner.invoke(
+                    elodie._import,
+                    ['--destination', '/tmp/elodie-import', '/tmp/a.jpg', '/tmp/b.jpg']
+                )
+
+    assert result.exit_code == 130, result.output
+    assert import_calls['count'] == 1, import_calls
+
+def test_generate_db_stops_cleanly_on_interrupt_request():
+    class FakeInterruptHandler(object):
+        def __init__(self):
+            self.interrupted = False
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc_value, traceback):
+            return False
+
+    class FakeDb(object):
+        def __init__(self, interrupt_handler):
+            self.interrupt_handler = interrupt_handler
+            self.update_calls = 0
+            self.hash_db = {}
+
+        def backup_hash_db(self):
+            return None
+
+        def reset_hash_db(self):
+            self.hash_db = {}
+
+        def checksum(self, file_path):
+            return file_path
+
+        def add_hash(self, key, value):
+            self.hash_db[key] = value
+            self.interrupt_handler.interrupted = True
+
+        def update_hash_db(self):
+            self.update_calls += 1
+
+    fake_interrupt = FakeInterruptHandler()
+    fake_db = FakeDb(fake_interrupt)
+
+    runner = CliRunner()
+    with mock.patch.object(elodie, '_GracefulInterruptHandler', return_value=fake_interrupt):
+        with mock.patch.object(elodie, 'Db', return_value=fake_db):
+            with mock.patch.object(elodie.FILESYSTEM, 'get_all_files', return_value=['/tmp/a.jpg', '/tmp/b.jpg']):
+                result = runner.invoke(elodie._generate_db, ['--source', helper.temp_dir()])
+
+    assert result.exit_code == 130, result.output
+    assert fake_db.update_calls == 1
+
 def test_verify_ok():
     temporary_folder, folder = helper.create_working_folder()
 

@@ -238,6 +238,20 @@ def test_get_file_name_with_uppercase_and_spaces():
 
     assert file_name == helper.path_tz_fix('2015-12-05_00-59-26-plain-with-spaces-and-uppercase-123.jpg'), file_name
 
+def test_get_file_name_sanitizes_invalid_path_characters():
+    filesystem = FileSystem()
+    media = Photo(helper.get_file('with-title.jpg'))
+    metadata = media.get_metadata()
+    metadata['title'] = 'nami cc aapi / 中文部公众讲座 : 1?*'
+
+    file_name = filesystem.get_file_name(metadata)
+
+    assert '/' not in file_name, file_name
+    assert '\\' not in file_name, file_name
+    assert ':' not in file_name, file_name
+    assert '?' not in file_name, file_name
+    assert '*' not in file_name, file_name
+
 @mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-filename-custom' % gettempdir())
 def test_get_file_name_custom(mock_get_config_file):
     with open(mock_get_config_file.return_value, 'w') as f:
@@ -381,6 +395,14 @@ def test_get_folder_path_with_location():
     path = filesystem.get_folder_path(media.get_metadata())
 
     assert path == os.path.join('2015-12-Dec','Sunnyvale'), path
+
+@mock.patch('elodie.filesystem.geolocation.place_name', return_value={'default': u'Bellevue/WA', 'city': u'Bellevue/WA'})
+def test_get_folder_path_sanitizes_location_separator(mock_place_name):
+    filesystem = FileSystem()
+    media = Photo(helper.get_file('with-location.jpg'))
+    path = filesystem.get_folder_path(media.get_metadata())
+
+    assert path == os.path.join('2015-12-Dec', 'Bellevue-WA'), path
 
 @mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-original-with-camera-make-and-model' % gettempdir())
 def test_get_folder_path_with_camera_make_and_model(mock_get_config_file):

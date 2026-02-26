@@ -9,6 +9,7 @@ import shutil
 import string
 import tempfile
 import time
+from unittest.mock import patch
 
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))))
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
@@ -18,6 +19,7 @@ from elodie.media.audio import Audio
 from elodie.media.media import Media
 from elodie.media.photo import Photo
 from elodie.media.video import Video
+from elodie.external.pyexiftool import ExifTool
 
 os.environ['TZ'] = 'GMT'
 
@@ -83,6 +85,19 @@ def test_get_original_name_invalid_file():
 
     media = Media.get_class_by_file(origin, [Photo])
     original_name = media.get_original_name()
+
+    assert original_name is None, original_name
+
+def test_get_original_name_when_exiftool_metadata_is_unavailable():
+    temporary_folder, folder = helper.create_working_folder()
+
+    origin = '%s/%s' % (folder, 'plain.jpg')
+    file = helper.get_file('plain.jpg')
+    shutil.copyfile(file, origin)
+
+    media = Media.get_class_by_file(origin, [Photo])
+    with patch.object(ExifTool, 'get_metadata', return_value=None):
+        original_name = media.get_original_name()
 
     assert original_name is None, original_name
 

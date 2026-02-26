@@ -3,6 +3,7 @@
 from __future__ import print_function
 import os
 import re
+import signal
 import sys
 from datetime import datetime
 
@@ -35,6 +36,28 @@ from elodie.dependencies import get_exiftool
 from elodie import constants
 
 FILESYSTEM = FileSystem()
+
+
+class _GracefulInterruptHandler(object):
+    """Track SIGINT requests so commands can stop cleanly between files."""
+
+    def __init__(self):
+        self.interrupted = False
+        self._previous_sigint_handler = None
+
+    def __enter__(self):
+        self._previous_sigint_handler = signal.getsignal(signal.SIGINT)
+        signal.signal(signal.SIGINT, self._handle_interrupt)
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        signal.signal(signal.SIGINT, self._previous_sigint_handler)
+        return False
+
+    def _handle_interrupt(self, signum, frame):
+        if not self.interrupted:
+            log.warn('Interrupt requested. Finishing current file before stopping.')
+        self.interrupted = True
 
 def import_file(_file, destination, album_from_folder, trash, allow_duplicates, location=None, time=None):
     
@@ -127,6 +150,7 @@ def _import(destination, source, file, album_from_folder, trash, allow_duplicate
     constants.debug = debug
     constants.dry_run = dry_run
     has_errors = False
+    interrupted = False
     result = Result()
 
     destination = _decode(destination)
@@ -156,18 +180,26 @@ def _import(destination, source, file, album_from_folder, trash, allow_duplicate
             if not FILESYSTEM.should_exclude(path, exclude_regex_list, True):
                 files.add(path)
 
-    for current_file in files:
-        dest_path = import_file(current_file, destination, album_from_folder,
-                    trash, allow_duplicates, location, time)
-        if dest_path:
-            result.append((current_file, True))
-        elif not allow_duplicates:
-            result.append((current_file, None))  # duplicate
-        else:
-            result.append((current_file, False))  # error
-        has_errors = has_errors is True or not dest_path
+    with _GracefulInterruptHandler() as interrupt_handler:
+        for current_file in files:
+            if interrupt_handler.interrupted:
+                interrupted = True
+                break
+
+            dest_path = import_file(current_file, destination, album_from_folder,
+                        trash, allow_duplicates, location, time)
+            if dest_path:
+                result.append((current_file, True))
+            elif not allow_duplicates:
+                result.append((current_file, None))  # duplicate
+            else:
+                result.append((current_file, False))  # error
+            has_errors = has_errors is True or not dest_path
 
     result.write()
+
+    if interrupted:
+        sys.exit(130)
 
     if has_errors:
         sys.exit(1)
@@ -182,6 +214,7 @@ def _generate_db(source, debug):
     """Regenerate the hash.json database which contains all of the sha256 signatures of media files. The hash.json file is located at ~/.elodie/.
     """
     constants.debug = debug
+    interrupted = False
     result = Result()
     source = os.path.abspath(os.path.expanduser(source))
 
@@ -193,38 +226,54 @@ def _generate_db(source, debug):
     db.backup_hash_db()
     db.reset_hash_db()
 
-    for current_file in FILESYSTEM.get_all_files(source):
-        result.append((current_file, True))
-        db.add_hash(db.checksum(current_file), current_file)
-        log.progress()
+    with _GracefulInterruptHandler() as interrupt_handler:
+        for current_file in FILESYSTEM.get_all_files(source):
+            if interrupt_handler.interrupted:
+                interrupted = True
+                break
+            result.append((current_file, True))
+            db.add_hash(db.checksum(current_file), current_file)
+            log.progress()
     
     db.update_hash_db()
     log.progress('', True)
     result.write()
+
+    if interrupted:
+        sys.exit(130)
 
 @click.command('verify')
 @click.option('--debug', default=False, is_flag=True,
               help='Show more verbose debug output.')
 def _verify(debug):
     constants.debug = debug
+    interrupted = False
     result = Result()
     db = Db()
-    for checksum, file_path in db.all():
-        if not os.path.isfile(file_path):
-            result.append((file_path, False))
-            log.progress('x')
-            continue
+    with _GracefulInterruptHandler() as interrupt_handler:
+        for checksum, file_path in db.all():
+            if interrupt_handler.interrupted:
+                interrupted = True
+                break
 
-        actual_checksum = db.checksum(file_path)
-        if checksum == actual_checksum:
-            result.append((file_path, True))
-            log.progress()
-        else:
-            result.append((file_path, False))
-            log.progress('x')
+            if not os.path.isfile(file_path):
+                result.append((file_path, False))
+                log.progress('f')
+                continue
+
+            actual_checksum = db.checksum(file_path)
+            if checksum == actual_checksum:
+                result.append((file_path, True))
+                log.progress()
+            else:
+                result.append((file_path, False))
+                log.progress('c')
 
     log.progress('', True)
     result.write()
+
+    if interrupted:
+        sys.exit(130)
 
 
 def update_location(media, file_path, location_name):
@@ -281,6 +330,7 @@ def _update(album, location, time, title, paths, debug, dry_run):
     constants.debug = debug
     constants.dry_run = dry_run
     has_errors = False
+    interrupted = False
     result = Result()
 
     files = set()
@@ -291,94 +341,102 @@ def _update(album, location, time, title, paths, debug, dry_run):
         else:
             files.add(path)
 
-    for current_file in files:
-        if not os.path.exists(current_file):
-            has_errors = True
-            result.append((current_file, False))
-            log.warn('Could not find %s' % current_file)
-            log.all('{"source":"%s", "error_msg":"Could not find %s"}' %
-                      (current_file, current_file))
-            continue
+    with _GracefulInterruptHandler() as interrupt_handler:
+        for current_file in files:
+            if interrupt_handler.interrupted:
+                interrupted = True
+                break
 
-        current_file = os.path.expanduser(current_file)
+            if not os.path.exists(current_file):
+                has_errors = True
+                result.append((current_file, False))
+                log.warn('Could not find %s' % current_file)
+                log.all('{"source":"%s", "error_msg":"Could not find %s"}' %
+                          (current_file, current_file))
+                continue
 
-        # The destination folder structure could contain any number of levels
-        #  So we calculate that and traverse up the tree.
-        # '/path/to/file/photo.jpg' -> '/path/to/file' ->
-        #  ['path','to','file'] -> ['path','to'] -> '/path/to'
-        current_directory = os.path.dirname(current_file)
-        destination_depth = -1 * len(FILESYSTEM.get_folder_path_definition())
-        destination = os.sep.join(
-                          os.path.normpath(
-                              current_directory
-                          ).split(os.sep)[:destination_depth]
-                      )
+            current_file = os.path.expanduser(current_file)
 
-        media = Media.get_class_by_file(current_file, get_all_subclasses())
-        if not media:
-            continue
+            # The destination folder structure could contain any number of levels
+            #  So we calculate that and traverse up the tree.
+            # '/path/to/file/photo.jpg' -> '/path/to/file' ->
+            #  ['path','to','file'] -> ['path','to'] -> '/path/to'
+            current_directory = os.path.dirname(current_file)
+            destination_depth = -1 * len(FILESYSTEM.get_folder_path_definition())
+            destination = os.sep.join(
+                              os.path.normpath(
+                                  current_directory
+                              ).split(os.sep)[:destination_depth]
+                          )
 
-        updated = False
-        if location:
-            update_location(media, current_file, location)
-            updated = True
-        if time:
-            update_time(media, current_file, time)
-            updated = True
-        if album:
-            media.set_album(album)
-            updated = True
+            media = Media.get_class_by_file(current_file, get_all_subclasses())
+            if not media:
+                continue
 
-        # Updating a title can be problematic when doing it 2+ times on a file.
-        # You would end up with img_001.jpg -> img_001-first-title.jpg ->
-        # img_001-first-title-second-title.jpg.
-        # To resolve that we have to track the prior title (if there was one.
-        # Then we massage the updated_media's metadata['base_name'] to remove
-        # the old title.
-        # Since FileSystem.get_file_name() relies on base_name it will properly
-        #  rename the file by updating the title instead of appending it.
-        remove_old_title_from_name = False
-        if title:
-            # We call get_metadata() to cache it before making any changes
-            metadata = media.get_metadata()
-            title_update_status = media.set_title(title)
-            original_title = metadata['title']
-            if title_update_status and original_title:
-                # @TODO: We should move this to a shared method since
-                # FileSystem.get_file_name() does it too.
-                original_title = re.sub(r'\W+', '-', original_title.lower())
-                original_base_name = metadata['base_name']
-                remove_old_title_from_name = True
-            updated = True
+            updated = False
+            if location:
+                update_location(media, current_file, location)
+                updated = True
+            if time:
+                update_time(media, current_file, time)
+                updated = True
+            if album:
+                media.set_album(album)
+                updated = True
 
-        if updated:
-            updated_media = Media.get_class_by_file(current_file,
-                                                    get_all_subclasses())
-            # See comments above on why we have to do this when titles
-            # get updated.
-            if remove_old_title_from_name and len(original_title) > 0:
-                updated_media.get_metadata()
-                updated_media.set_metadata_basename(
-                    original_base_name.replace('-%s' % original_title, ''))
+            # Updating a title can be problematic when doing it 2+ times on a file.
+            # You would end up with img_001.jpg -> img_001-first-title.jpg ->
+            # img_001-first-title-second-title.jpg.
+            # To resolve that we have to track the prior title (if there was one.
+            # Then we massage the updated_media's metadata['base_name'] to remove
+            # the old title.
+            # Since FileSystem.get_file_name() relies on base_name it will properly
+            #  rename the file by updating the title instead of appending it.
+            remove_old_title_from_name = False
+            if title:
+                # We call get_metadata() to cache it before making any changes
+                metadata = media.get_metadata()
+                title_update_status = media.set_title(title)
+                original_title = metadata['title']
+                if title_update_status and original_title:
+                    # @TODO: We should move this to a shared method since
+                    # FileSystem.get_file_name() does it too.
+                    original_title = re.sub(r'\W+', '-', original_title.lower())
+                    original_base_name = metadata['base_name']
+                    remove_old_title_from_name = True
+                updated = True
 
-            dest_path = FILESYSTEM.process_file(current_file, destination,
-                updated_media, move=True, allowDuplicate=True)
-            log.info(u'%s -> %s' % (current_file, dest_path))
-            log.all('{"source":"%s", "destination":"%s"}' % (current_file,
-                                                               dest_path))
-            # If the folder we moved the file out of or its parent are empty
-            # we delete it.
-            FILESYSTEM.delete_directory_if_empty(os.path.dirname(current_file))
-            FILESYSTEM.delete_directory_if_empty(
-                os.path.dirname(os.path.dirname(current_file)))
-            result.append((current_file, bool(dest_path)))
-            # Trip has_errors to False if it's already False or dest_path is.
-            has_errors = has_errors is True or not dest_path
-        else:
-            has_errors = False
-            result.append((current_file, False))
+            if updated:
+                updated_media = Media.get_class_by_file(current_file,
+                                                        get_all_subclasses())
+                # See comments above on why we have to do this when titles
+                # get updated.
+                if remove_old_title_from_name and len(original_title) > 0:
+                    updated_media.get_metadata()
+                    updated_media.set_metadata_basename(
+                        original_base_name.replace('-%s' % original_title, ''))
+
+                dest_path = FILESYSTEM.process_file(current_file, destination,
+                    updated_media, move=True, allowDuplicate=True)
+                log.info(u'%s -> %s' % (current_file, dest_path))
+                log.all('{"source":"%s", "destination":"%s"}' % (current_file,
+                                                                   dest_path))
+                # If the folder we moved the file out of or its parent are empty
+                # we delete it.
+                FILESYSTEM.delete_directory_if_empty(os.path.dirname(current_file))
+                FILESYSTEM.delete_directory_if_empty(
+                    os.path.dirname(os.path.dirname(current_file)))
+                result.append((current_file, bool(dest_path)))
+                # Trip has_errors to False if it's already False or dest_path is.
+                has_errors = has_errors is True or not dest_path
+            else:
+                has_errors = False
+                result.append((current_file, False))
 
     result.write()
+
+    if interrupted:
+        sys.exit(130)
     
     if has_errors:
         sys.exit(1)
