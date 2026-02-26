@@ -81,3 +81,17 @@ def test_exiftool_with_non_ascii_file():
             os.remove(test_file)
         if os.path.exists(test_dir):
             os.rmdir(test_dir)
+
+def test_get_metadata_returns_none_when_execute_json_fails():
+    """get_metadata() should not crash when execute_json returns None."""
+    et = ExifTool()
+    with patch.object(et, 'execute_json', return_value=None):
+        result = et.get_metadata("/tmp/test.jpg")
+        assert result is None
+
+def test_get_metadata_returns_none_when_execute_json_is_empty():
+    """get_metadata() should not crash when execute_json returns an empty list."""
+    et = ExifTool()
+    with patch.object(et, 'execute_json', return_value=[]):
+        result = et.get_metadata("/tmp/test.jpg")
+        assert result is None

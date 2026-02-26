@@ -8,6 +8,7 @@ from datetime import datetime
 import shutil
 import tempfile
 import time
+from unittest.mock import patch
 
 import pytest
 
@@ -134,6 +135,18 @@ def test_get_date_taken_without_exif():
     date_taken_from_file = time.gmtime(min(os.path.getmtime(source), os.path.getctime(source)))
 
     assert date_taken == date_taken_from_file, date_taken
+
+def test_get_date_taken_before_epoch():
+    photo = Photo(helper.get_file('plain.jpg'))
+
+    with patch.object(Photo, 'get_exiftool_attributes', return_value={
+        'EXIF:DateTimeOriginal': '1960:01:04 11:22:33'
+    }):
+        # Simulate platforms where mktime fails for pre-epoch dates.
+        with patch('elodie.media.photo.time.mktime', side_effect=OverflowError()):
+            date_taken = photo.get_date_taken()
+
+    assert date_taken == (1960, 1, 4, 11, 22, 33, 0, 4, 0), date_taken
 
 def test_get_camera_make():
     photo = Photo(helper.get_file('with-location.jpg'))

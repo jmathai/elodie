@@ -55,7 +55,7 @@ class Photo(Media):
 
         exif = self.get_exiftool_attributes()
         if not exif:
-            return seconds_since_epoch
+            return time.gmtime(seconds_since_epoch)
 
         # We need to parse a string from EXIF into a timestamp.
         # EXIF DateTimeOriginal and EXIF DateTime are both stored
@@ -71,10 +71,10 @@ class Photo(Media):
                         dt, tm = exif[key].split(' ')
                         dt_list = compile(r'-|:').split(dt)
                         dt_list = dt_list + compile(r'-|:').split(tm)
-                        dt_list = map(int, dt_list)
-                        time_tuple = datetime(*dt_list).timetuple()
-                        seconds_since_epoch = time.mktime(time_tuple)
-                        break
+                        dt_list = list(map(int, dt_list))
+                        # Build a struct_time directly from EXIF to support
+                        # pre-epoch dates on platforms where mktime can fail.
+                        return datetime(*dt_list).utctimetuple()
             except BaseException as e:
                 log.error(e)
                 pass

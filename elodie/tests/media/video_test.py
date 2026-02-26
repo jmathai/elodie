@@ -7,6 +7,7 @@ import shutil
 import tempfile
 import time
 import datetime
+from unittest.mock import patch
 
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))))
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
@@ -71,6 +72,18 @@ def test_get_date_taken():
     date_taken = video.get_date_taken()
 
     assert date_taken == (2015, 1, 19, 12, 45, 11, 0, 19, 0), date_taken
+
+def test_get_date_taken_before_epoch():
+    video = Video(helper.get_file('video.mov'))
+
+    with patch.object(Video, 'get_exiftool_attributes', return_value={
+        'QuickTime:CreationDate': '1960:01:04 11:22:33'
+    }):
+        # Simulate platforms where mktime fails for pre-epoch dates.
+        with patch('elodie.media.video.time.mktime', side_effect=OverflowError()):
+            date_taken = video.get_date_taken()
+
+    assert date_taken == (1960, 1, 4, 11, 22, 33, 0, 4, 0), date_taken
 
 def test_get_exiftool_attributes():
     video = Video(helper.get_file('video.mov'))

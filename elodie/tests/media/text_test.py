@@ -7,6 +7,7 @@ from datetime import datetime
 import shutil
 import tempfile
 import time
+from unittest.mock import patch
 
 import pytest
 
@@ -154,6 +155,24 @@ def test_set_date_taken():
     shutil.rmtree(folder)
 
     assert helper.time_convert((2013, 9, 30, 7, 6, 5, 0, 273, 0)) == metadata_new['date_taken'], metadata_new['date_taken']
+
+def test_set_date_taken_before_epoch():
+    temporary_folder, folder = helper.create_working_folder()
+
+    origin = '%s/text.txt' % folder
+    shutil.copyfile(helper.get_file('valid.txt'), origin)
+
+    text = Text(origin)
+
+    with patch('elodie.media.text.time.mktime', side_effect=OverflowError()):
+        status = text.set_date_taken(datetime(1960, 1, 4, 7, 6, 5))
+    assert status == True, status
+
+    metadata_new = Text(origin).get_metadata()
+
+    shutil.rmtree(folder)
+
+    assert metadata_new['date_taken'][0] == 1960, metadata_new['date_taken']
 
 def test_set_location():
     temporary_folder, folder = helper.create_working_folder()

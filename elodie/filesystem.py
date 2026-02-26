@@ -10,6 +10,7 @@ import os
 import re
 import shutil
 import time
+import calendar
 from send2trash import send2trash
 
 from elodie import compatability
@@ -45,10 +46,58 @@ class FileSystem(object):
         # See build failures in Python3 here.
         #  https://travis-ci.org/jmathai/elodie/builds/483012902
         self.whitespace_regex = '[ \t\n\r\f\v]+'
+        # Disallow path separators and filesystem-invalid characters in a single path component.
+        self.invalid_path_component_regex = r'[<>:"/\\|?*\x00-\x1f]'
+        self.windows_reserved_names = {
+            'CON', 'PRN', 'AUX', 'NUL',
+            'COM1', 'COM2', 'COM3', 'COM4', 'COM5', 'COM6', 'COM7', 'COM8', 'COM9',
+            'LPT1', 'LPT2', 'LPT3', 'LPT4', 'LPT5', 'LPT6', 'LPT7', 'LPT8', 'LPT9',
+        }
 
         # Instantiate a plugins object
         self.plugins = Plugins()
 
+    def sanitize_path_component(self, value):
+        """Sanitize a single folder/file path component for cross-platform safety."""
+        if value is None:
+            return value
+
+        value = re.sub(self.invalid_path_component_regex, '-', value)
+
+        if os.sep:
+            value = value.replace(os.sep, '-')
+        if os.altsep:
+            value = value.replace(os.altsep, '-')
+
+        value = value.rstrip(' .')
+        if len(value) == 0:
+            return ''
+
+        # Windows has reserved device names which cannot be used as path components.
+        stem = value.split('.', 1)[0].upper()
+        if stem in self.windows_reserved_names:
+            value = '_%s' % value
+
+        return value
+
+    def _safe_timestamp(self, date_taken):
+        """Convert struct_time to timestamp with a pre-epoch fallback."""
+        try:
+            return time.mktime(date_taken)
+        except (OverflowError, OSError, ValueError):
+            try:
+                return calendar.timegm(date_taken)
+            except (OverflowError, OSError, ValueError, TypeError):
+                return None
+
+    def _safe_set_mtime(self, file_path, mtime):
+        """Set file mtime without crashing on unsupported timestamps."""
+        try:
+            os.utime(file_path, (time.time(), mtime))
+            return True
+        except (OverflowError, OSError, ValueError):
+            log.warn('Unable to set mtime for %s using %s' % (file_path, mtime))
+            return False
     def _file_operation(self, operation_type, src, dst=None):
         """Perform file operation with dry-run support."""
         if constants.dry_run:
@@ -208,7 +257,7 @@ class FileSystem(object):
                         # This helps when re-running the program on file 
                         #  which were already processed.
                         this_value = re.sub(
-                            '^\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}-',
+                            r'^\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}-',
                             '',
                             metadata['base_name']
                         )
@@ -234,11 +283,15 @@ class FileSystem(object):
                     name,
                 )
             else:
+                this_value = self.sanitize_path_component(this_value)
                 name = re.sub(
                     '%{}'.format(part),
                     this_value,
                     name,
                 )
+
+        # Final guard to avoid unsafe separators from custom templates.
+        name = self.sanitize_path_component(name)
 
         config = load_config()
 
@@ -281,7 +334,7 @@ class FileSystem(object):
         #  name.
         #  I.e. %date-%original_name-%title.%extension => ['date', 'original_name', 'title', 'extension'] #noqa
         path_parts = re.findall(
-                         '(\%[a-z_]+)',
+                         r'(%[a-z_]+)',
                          config_file['name']
                      )
 
@@ -341,7 +394,7 @@ class FileSystem(object):
         #  I.e. %foo/%bar => ['foo', 'bar']
         #  I.e. %foo/%bar|%example|"something" => ['foo', 'bar|example|"something"']
         path_parts = re.findall(
-                         '(\%[^/]+)',
+                         r'(%[^/]+)',
                          config_directory['full_path']
                      )
 
@@ -385,7 +438,9 @@ class FileSystem(object):
                 part, mask = this_part
                 this_path = self.get_dynamic_path(part, mask, metadata)
                 if this_path:
-                    path.append(this_path.strip())
+                    this_path = self.sanitize_path_component(this_path).strip()
+                    if len(this_path) > 0:
+                        path.append(this_path)
                     # We break as soon as we have a value to append
                     # Else we continue for fallbacks
                     break
@@ -644,7 +699,7 @@ class FileSystem(object):
         date_taken = metadata['date_taken']
         base_name = metadata['base_name']
         year_month_day_match = re.search(
-            '^(\d{4})-(\d{2})-(\d{2})_(\d{2})-(\d{2})-(\d{2})',
+            r'^(\d{4})-(\d{2})-(\d{2})_(\d{2})-(\d{2})-(\d{2})',
             base_name
         )
         if(year_month_day_match is not None):
@@ -654,18 +709,17 @@ class FileSystem(object):
                 '%Y-%m-%d %H:%M:%S'
             )
 
-            if not constants.dry_run:
-                os.utime(file_path, (time.time(), time.mktime(date_taken)))
-            else:
-                print(f"[DRY-RUN] Would set utime from date pattern for: {file_path}")
+        date_taken_in_seconds = self._safe_timestamp(date_taken)
+        if(date_taken_in_seconds is None):
+            log.warn('Could not convert date_taken to timestamp for %s' % file_path)
+            return
+
+        if not constants.dry_run:
+            self._safe_set_mtime(file_path, date_taken_in_seconds)
+        elif year_month_day_match is not None:
+            print(f"[DRY-RUN] Would set utime from date pattern for: {file_path}")
         else:
-            # We don't make any assumptions about time zones and
-            # assume local time zone.
-            date_taken_in_seconds = time.mktime(date_taken)
-            if not constants.dry_run:
-                os.utime(file_path, (time.time(), (date_taken_in_seconds)))
-            else:
-                print(f"[DRY-RUN] Would set utime from metadata for: {file_path}")
+            print(f"[DRY-RUN] Would set utime from metadata for: {file_path}")
 
     def should_exclude(self, path, regex_list=set(), needs_compiled=False):
         if(len(regex_list) == 0):

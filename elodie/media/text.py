@@ -6,6 +6,7 @@ are tracked by Elodie.
 """
 
 from json import dumps, loads
+import calendar
 import os
 from shutil import copy2, copyfileobj
 import time
@@ -106,7 +107,10 @@ class Text(Base):
         if(time is None):
             return False
 
-        seconds_since_epoch = time.mktime(passed_in_time.timetuple())
+        try:
+            seconds_since_epoch = time.mktime(passed_in_time.timetuple())
+        except (OverflowError, OSError, ValueError):
+            seconds_since_epoch = calendar.timegm(passed_in_time.utctimetuple())
         status = self.write_metadata(date_taken=seconds_since_epoch)
         self.reset_cache()
         return status
