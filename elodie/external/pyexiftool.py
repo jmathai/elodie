@@ -337,7 +337,10 @@ class ExifTool(object, with_metaclass(Singleton)):
         The return value will have the format described in the
         documentation of :py:meth:`execute_json()`.
         """
-        return self.execute_json(*filenames)
+        data = self.execute_json(*filenames)
+        if isinstance(data, list):
+            return data
+        return []
 
     def get_metadata(self, filename):
         """Return meta-data for a single file.
@@ -345,7 +348,12 @@ class ExifTool(object, with_metaclass(Singleton)):
         The returned dictionary has the format described in the
         documentation of :py:meth:`execute_json()`.
         """
-        return self.execute_json(filename)[0]
+        data = self.execute_json(filename)
+        if not isinstance(data, list) or len(data) == 0:
+            return None
+        if not isinstance(data[0], dict):
+            return None
+        return data[0]
 
     def get_tags_batch(self, tags, filenames):
         """Return only specified tags for the given files.
@@ -368,7 +376,10 @@ class ExifTool(object, with_metaclass(Singleton)):
                             "an iterable of strings")
         params = ["-" + t for t in tags]
         params.extend(filenames)
-        return self.execute_json(*params)
+        data = self.execute_json(*params)
+        if isinstance(data, list):
+            return data
+        return []
 
     def get_tags(self, tags, filename):
         """Return only specified tags for a single file.
@@ -376,7 +387,10 @@ class ExifTool(object, with_metaclass(Singleton)):
         The returned dictionary has the format described in the
         documentation of :py:meth:`execute_json()`.
         """
-        return self.get_tags_batch(tags, [filename])[0]
+        data = self.get_tags_batch(tags, [filename])
+        if len(data) == 0:
+            return None
+        return data[0]
 
     def get_tag_batch(self, tag, filenames):
         """Extract a single tag from the given files.
@@ -390,9 +404,14 @@ class ExifTool(object, with_metaclass(Singleton)):
         non-existent tags, in the same order as ``filenames``.
         """
         data = self.get_tags_batch([tag], filenames)
+        if len(data) == 0:
+            return [None for _ in filenames]
         result = []
         for d in data:
-            d.pop("SourceFile")
+            if not isinstance(d, dict):
+                result.append(None)
+                continue
+            d.pop("SourceFile", None)
             result.append(next(iter(d.values()), None))
         return result
 
@@ -402,7 +421,10 @@ class ExifTool(object, with_metaclass(Singleton)):
         The return value is the value of the specified tag, or
         ``None`` if this tag was not found in the file.
         """
-        return self.get_tag_batch(tag, [filename])[0]
+        data = self.get_tag_batch(tag, [filename])
+        if len(data) == 0:
+            return None
+        return data[0]
 
     def set_tags_batch(self, tags, filenames):
         """Writes the values of the specified tags for the given files.

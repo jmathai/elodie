@@ -119,16 +119,19 @@ class Media(Base):
     def get_exiftool_attributes(self):
         """Get attributes for the media object from exiftool.
 
-        :returns: dict, or False if exiftool was not available.
+        :returns: dict, or None if exiftool metadata was unavailable.
         """
         source = self.source
 
         #Cache exif metadata results and use if already exists for media
         if(self.exif_metadata is None):
-            self.exif_metadata = ExifTool().get_metadata(source)
+            try:
+                self.exif_metadata = ExifTool().get_metadata(source)
+            except Exception:
+                self.exif_metadata = None
 
         if not self.exif_metadata:
-            return False
+            return None
 
         return self.exif_metadata
 
