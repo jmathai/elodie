@@ -64,6 +64,7 @@ import json
 import warnings
 import logging
 import codecs
+import errno
 
 from future.utils import with_metaclass
 
@@ -71,6 +72,11 @@ try:        # Py3k compatibility
     basestring
 except NameError:
     basestring = (bytes, str)
+
+try:
+    BrokenPipeError
+except NameError:  # pragma: no cover (Python 2 compatibility)
+    BrokenPipeError = IOError
 
 executable = "exiftool"
 """The name of the executable to run.
@@ -225,6 +231,46 @@ class ExifTool(object, with_metaclass(Singleton)):
         
         self.running = False
 
+    def _is_pipe_io_error(self, error):
+        """Return True when the subprocess pipe is already closed/broken."""
+        if isinstance(error, BrokenPipeError):
+            return True
+
+        err_no = getattr(error, "errno", None)
+        if err_no in (errno.EPIPE, errno.EINVAL, 109):
+            return True
+
+        # "I/O operation on closed file" can surface as ValueError.
+        if isinstance(error, ValueError):
+            return "closed file" in str(error).lower()
+
+        return False
+
+    def _cleanup_process(self):
+        """Reset internal process state and close any open pipe handles."""
+        process = getattr(self, "_process", None)
+        if process is not None:
+            for stream_name in ("stdin", "stdout", "stderr"):
+                stream = getattr(process, stream_name, None)
+                if stream is not None and hasattr(stream, "close"):
+                    try:
+                        stream.close()
+                    except Exception:
+                        pass
+            del self._process
+        self.running = False
+
+    def _ensure_running(self):
+        """Ensure exiftool process is alive, restarting when needed."""
+        process = getattr(self, "_process", None)
+        if self.running and process is not None and process.poll() is None:
+            return True
+
+        self._cleanup_process()
+        self.start()
+        process = getattr(self, "_process", None)
+        return self.running and process is not None and process.poll() is None
+
     def start(self):
         """Start an ``exiftool`` process in batch mode for this instance.
 
@@ -252,13 +298,27 @@ class ExifTool(object, with_metaclass(Singleton)):
 
         If the subprocess isn't running, this method will do nothing.
         """
-        if not self.running:
+        if not hasattr(self, "_process"):
+            self.running = False
             return
-        self._process.stdin.write(b"-stay_open\nFalse\n")
-        self._process.stdin.flush()
-        self._process.communicate()
-        del self._process
-        self.running = False
+        try:
+            sent_terminate = False
+            if self._process.poll() is None:
+                try:
+                    self._process.stdin.write(b"-stay_open\nFalse\n")
+                    self._process.stdin.flush()
+                    sent_terminate = True
+                except (OSError, ValueError) as e:
+                    if not self._is_pipe_io_error(e):
+                        raise
+
+            if sent_terminate:
+                self._process.communicate()
+            elif self._process.poll() is None:
+                self._process.terminate()
+                self._process.communicate()
+        finally:
+            self._cleanup_process()
 
     def __enter__(self):
         self.start()
@@ -268,7 +328,10 @@ class ExifTool(object, with_metaclass(Singleton)):
         self.terminate()
 
     def __del__(self):
-        self.terminate()
+        try:
+            self.terminate()
+        except Exception:
+            pass
 
     def execute(self, *params):
         """Execute the given batch of parameters with ``exiftool``.
@@ -289,15 +352,32 @@ class ExifTool(object, with_metaclass(Singleton)):
         .. note:: This is considered a low-level method, and should
            rarely be needed by application developers.
         """
-        if not self.running:
+        if not self._ensure_running():
             raise ValueError("ExifTool instance not running.")
-        self._process.stdin.write(b"\n".join(params + (b"-execute\n",)))
-        self._process.stdin.flush()
-        output = b""
-        fd = self._process.stdout.fileno()
-        while not output[-32:].strip().endswith(sentinel):
-            output += os.read(fd, block_size)
-        return output.strip()[:-len(sentinel)]
+
+        for attempt in range(2):
+            try:
+                self._process.stdin.write(b"\n".join(params + (b"-execute\n",)))
+                self._process.stdin.flush()
+
+                output = b""
+                fd = self._process.stdout.fileno()
+                while not output[-32:].strip().endswith(sentinel):
+                    chunk = os.read(fd, block_size)
+                    if chunk == b"":
+                        raise OSError(errno.EPIPE, "ExifTool stdout closed unexpectedly")
+                    output += chunk
+                return output.strip()[:-len(sentinel)]
+            except (OSError, ValueError) as e:
+                if not self._is_pipe_io_error(e):
+                    raise
+                logging.warning("ExifTool pipe error during execute; restarting process.")
+                self._cleanup_process()
+                if attempt == 0 and self._ensure_running():
+                    continue
+                return b""
+
+        return b""
 
     def execute_json(self, *params):
         """Execute the given batch of parameters and parse the JSON output.
@@ -327,9 +407,32 @@ class ExifTool(object, with_metaclass(Singleton)):
         # http://stackoverflow.com/a/5552623/1318758
         # https://github.com/jmathai/elodie/issues/127
         try:
-            return json.loads(self.execute(b"-j", *params).decode("utf-8"))
+            raw = self.execute(b"-j", *params)
+            if not raw:
+                return
+            return json.loads(raw.decode("utf-8"))
         except UnicodeDecodeError as e:
-            return json.loads(self.execute(b"-j", *params).decode("latin-1"))
+            try: 
+                raw = self.execute(b"-j", *params)
+                if not raw:
+                    return
+                return json.loads(raw.decode("latin-1"))
+            except UnicodeDecodeError as e:
+                # sys.stderr.write("An exception occurred: ", e) 
+                logging.critical(params)  # log exception info at CRITICAL log level                
+
+                logging.critical(e, exc_info=True)  # log exception info at CRITICAL log level                
+                return
+            except Exception as e:
+                # sys.stderr.write("An exception occurred: ", e) 
+                logging.critical(e, exc_info=True)  # log exception info at CRITICAL log level                
+                return
+        except Exception as e:
+            # Handle the exception
+            logging.critical(e, exc_info=True)  # log exception info at CRITICAL log level                
+            # sys.stderr.write("An exception occurred: ", e) 
+            # raise ValueError("Other Exception happened")
+            return
 
     def get_metadata_batch(self, filenames):
         """Return all meta-data for the given files.
@@ -337,7 +440,10 @@ class ExifTool(object, with_metaclass(Singleton)):
         The return value will have the format described in the
         documentation of :py:meth:`execute_json()`.
         """
-        return self.execute_json(*filenames)
+        data = self.execute_json(*filenames)
+        if isinstance(data, list):
+            return data
+        return []
 
     def get_metadata(self, filename):
         """Return meta-data for a single file.
@@ -345,7 +451,12 @@ class ExifTool(object, with_metaclass(Singleton)):
         The returned dictionary has the format described in the
         documentation of :py:meth:`execute_json()`.
         """
-        return self.execute_json(filename)[0]
+        data = self.execute_json(filename)
+        if not isinstance(data, list) or len(data) == 0:
+            return None
+        if not isinstance(data[0], dict):
+            return None
+        return data[0]
 
     def get_tags_batch(self, tags, filenames):
         """Return only specified tags for the given files.
@@ -368,7 +479,10 @@ class ExifTool(object, with_metaclass(Singleton)):
                             "an iterable of strings")
         params = ["-" + t for t in tags]
         params.extend(filenames)
-        return self.execute_json(*params)
+        data = self.execute_json(*params)
+        if isinstance(data, list):
+            return data
+        return []
 
     def get_tags(self, tags, filename):
         """Return only specified tags for a single file.
@@ -376,7 +490,10 @@ class ExifTool(object, with_metaclass(Singleton)):
         The returned dictionary has the format described in the
         documentation of :py:meth:`execute_json()`.
         """
-        return self.get_tags_batch(tags, [filename])[0]
+        data = self.get_tags_batch(tags, [filename])
+        if len(data) == 0:
+            return None
+        return data[0]
 
     def get_tag_batch(self, tag, filenames):
         """Extract a single tag from the given files.
@@ -390,9 +507,14 @@ class ExifTool(object, with_metaclass(Singleton)):
         non-existent tags, in the same order as ``filenames``.
         """
         data = self.get_tags_batch([tag], filenames)
+        if len(data) == 0:
+            return [None for _ in filenames]
         result = []
         for d in data:
-            d.pop("SourceFile")
+            if not isinstance(d, dict):
+                result.append(None)
+                continue
+            d.pop("SourceFile", None)
             result.append(next(iter(d.values()), None))
         return result
 
@@ -402,7 +524,10 @@ class ExifTool(object, with_metaclass(Singleton)):
         The return value is the value of the specified tag, or
         ``None`` if this tag was not found in the file.
         """
-        return self.get_tag_batch(tag, [filename])[0]
+        data = self.get_tag_batch(tag, [filename])
+        if len(data) == 0:
+            return None
+        return data[0]
 
     def set_tags_batch(self, tags, filenames):
         """Writes the values of the specified tags for the given files.

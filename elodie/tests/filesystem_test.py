@@ -238,6 +238,20 @@ def test_get_file_name_with_uppercase_and_spaces():
 
     assert file_name == helper.path_tz_fix('2015-12-05_00-59-26-plain-with-spaces-and-uppercase-123.jpg'), file_name
 
+def test_get_file_name_sanitizes_invalid_path_characters():
+    filesystem = FileSystem()
+    media = Photo(helper.get_file('with-title.jpg'))
+    metadata = media.get_metadata()
+    metadata['title'] = 'nami cc aapi / 中文部公众讲座 : 1?*'
+
+    file_name = filesystem.get_file_name(metadata)
+
+    assert '/' not in file_name, file_name
+    assert '\\' not in file_name, file_name
+    assert ':' not in file_name, file_name
+    assert '?' not in file_name, file_name
+    assert '*' not in file_name, file_name
+
 @mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-filename-custom' % gettempdir())
 def test_get_file_name_custom(mock_get_config_file):
     with open(mock_get_config_file.return_value, 'w') as f:
@@ -381,6 +395,14 @@ def test_get_folder_path_with_location():
     path = filesystem.get_folder_path(media.get_metadata())
 
     assert path == os.path.join('2015-12-Dec','Sunnyvale'), path
+
+@mock.patch('elodie.filesystem.geolocation.place_name', return_value={'default': u'Bellevue/WA', 'city': u'Bellevue/WA'})
+def test_get_folder_path_sanitizes_location_separator(mock_place_name):
+    filesystem = FileSystem()
+    media = Photo(helper.get_file('with-location.jpg'))
+    path = filesystem.get_folder_path(media.get_metadata())
+
+    assert path == os.path.join('2015-12-Dec', 'Bellevue-WA'), path
 
 @mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-original-with-camera-make-and-model' % gettempdir())
 def test_get_folder_path_with_camera_make_and_model(mock_get_config_file):
@@ -716,6 +738,34 @@ def test_process_file_plain():
     assert destination_checksum is not None
     assert origin_checksum_preprocess == origin_checksum
     assert helper.path_tz_fix(os.path.join('2015-12-Dec','Unknown Location','2015-12-05_00-59-26-photo.jpg')) in destination, destination
+
+@mock.patch('elodie.filesystem.Db')
+def test_process_file_skips_hash_db_flush_when_write_db_false(mock_db):
+    filesystem = FileSystem()
+    temporary_folder, folder = helper.create_working_folder()
+
+    origin = os.path.join(folder, 'photo.jpg')
+    shutil.copyfile(helper.get_file('plain.jpg'), origin)
+
+    db_instance = mock_db.return_value
+    db_instance.checksum.return_value = 'abc123'
+    db_instance.get_hash.return_value = None
+
+    media = Photo(origin)
+    destination = filesystem.process_file(
+        origin,
+        temporary_folder,
+        media,
+        allowDuplicate=True,
+        write_db=False,
+    )
+
+    shutil.rmtree(folder)
+    shutil.rmtree(os.path.dirname(os.path.dirname(destination)))
+
+    assert destination is not None
+    assert db_instance.add_hash.called
+    assert db_instance.update_hash_db.called == False
 
 def test_process_file_with_title():
     filesystem = FileSystem()

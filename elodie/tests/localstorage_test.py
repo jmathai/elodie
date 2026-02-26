@@ -3,6 +3,7 @@ from __future__ import absolute_import
 # Project imports
 import os
 import sys
+import unittest.mock as mock
 
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))))
 
@@ -171,6 +172,34 @@ def test_update_hash_db():
     # Instnatiate new db class to confirm random_key exists
     db3 = Db()
     assert db3.check_hash(random_key) == True
+
+def test_update_hash_db_uses_atomic_replace():
+    db = Db()
+    random_key = helper.random_string(10)
+    random_value = helper.random_string(12)
+    db.add_hash(random_key, random_value)
+
+    with mock.patch('elodie.localstorage.os.replace', wraps=os.replace) as mock_replace:
+        db.update_hash_db()
+
+    db2 = Db()
+
+    assert mock_replace.call_count == 1
+    assert db2.check_hash(random_key) == True
+
+def test_update_location_db_uses_atomic_replace():
+    db = Db()
+    latitude, longitude, name = helper.get_test_location()
+    db.add_location(latitude, longitude, name)
+
+    with mock.patch('elodie.localstorage.os.replace', wraps=os.replace) as mock_replace:
+        db.update_location_db()
+
+    db2 = Db()
+    coords = db2.get_location_coordinates(name)
+
+    assert mock_replace.call_count == 1
+    assert coords is not None
 
 def test_checksum():
     db = Db()

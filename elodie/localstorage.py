@@ -8,6 +8,7 @@ import hashlib
 import json
 import os
 import sys
+import tempfile
 
 from math import radians, cos, sqrt
 from shutil import copyfile
@@ -194,18 +195,33 @@ class Db(object):
     def reset_hash_db(self):
         self.hash_db = {}
 
+    def _write_json_atomic(self, file_path, data):
+        """Write JSON atomically so partial writes do not corrupt the DB."""
+        tmp_fd, tmp_file_path = tempfile.mkstemp(
+            prefix='%s.' % os.path.basename(file_path),
+            suffix='.tmp',
+            dir=os.path.dirname(file_path),
+        )
+        try:
+            with os.fdopen(tmp_fd, 'w') as f:
+                json.dump(data, f)
+                f.flush()
+                os.fsync(f.fileno())
+            os.replace(tmp_file_path, file_path)
+        finally:
+            if os.path.exists(tmp_file_path):
+                os.remove(tmp_file_path)
+
     def update_hash_db(self):
         """Write the hash db to disk."""
         if constants.dry_run:
             print(f"[DRY-RUN] Would update hash database with {len(self.hash_db)} entries")
             return
-        with open(constants.hash_db(), 'w') as f:
-            json.dump(self.hash_db, f)
+        self._write_json_atomic(constants.hash_db(), self.hash_db)
 
     def update_location_db(self):
         """Write the location db to disk."""
         if constants.dry_run:
             print(f"[DRY-RUN] Would update location database with {len(self.location_db)} entries")
             return
-        with open(constants.location_db(), 'w') as f:
-            json.dump(self.location_db, f)
+        self._write_json_atomic(constants.location_db(), self.location_db)

@@ -45,10 +45,39 @@ class FileSystem(object):
         # See build failures in Python3 here.
         #  https://travis-ci.org/jmathai/elodie/builds/483012902
         self.whitespace_regex = '[ \t\n\r\f\v]+'
+        # Disallow path separators and filesystem-invalid characters in a single path component.
+        self.invalid_path_component_regex = r'[<>:"/\\|?*\x00-\x1f]'
+        self.windows_reserved_names = {
+            'CON', 'PRN', 'AUX', 'NUL',
+            'COM1', 'COM2', 'COM3', 'COM4', 'COM5', 'COM6', 'COM7', 'COM8', 'COM9',
+            'LPT1', 'LPT2', 'LPT3', 'LPT4', 'LPT5', 'LPT6', 'LPT7', 'LPT8', 'LPT9',
+        }
 
         # Instantiate a plugins object
         self.plugins = Plugins()
 
+    def sanitize_path_component(self, value):
+        """Sanitize a single folder/file path component for cross-platform safety."""
+        if value is None:
+            return value
+
+        value = re.sub(self.invalid_path_component_regex, '-', value)
+
+        if os.sep:
+            value = value.replace(os.sep, '-')
+        if os.altsep:
+            value = value.replace(os.altsep, '-')
+
+        value = value.rstrip(' .')
+        if len(value) == 0:
+            return ''
+
+        # Windows has reserved device names which cannot be used as path components.
+        stem = value.split('.', 1)[0].upper()
+        if stem in self.windows_reserved_names:
+            value = '_%s' % value
+
+        return value
     def _file_operation(self, operation_type, src, dst=None):
         """Perform file operation with dry-run support."""
         if constants.dry_run:
@@ -234,11 +263,15 @@ class FileSystem(object):
                     name,
                 )
             else:
+                this_value = self.sanitize_path_component(this_value)
                 name = re.sub(
                     '%{}'.format(part),
                     this_value,
                     name,
                 )
+
+        # Final guard to avoid unsafe separators from custom templates.
+        name = self.sanitize_path_component(name)
 
         config = load_config()
 
@@ -385,7 +418,9 @@ class FileSystem(object):
                 part, mask = this_part
                 this_path = self.get_dynamic_path(part, mask, metadata)
                 if this_path:
-                    path.append(this_path.strip())
+                    this_path = self.sanitize_path_component(this_path).strip()
+                    if len(this_path) > 0:
+                        path.append(this_path)
                     # We break as soon as we have a value to append
                     # Else we continue for fallbacks
                     break
@@ -542,6 +577,10 @@ class FileSystem(object):
         if('allowDuplicate' in kwargs):
             allow_duplicate = kwargs['allowDuplicate']
 
+        write_db = True
+        if('write_db' in kwargs):
+            write_db = kwargs['write_db']
+
         stat_info_original = os.stat(_file)
         metadata = media.get_metadata()
 
@@ -620,9 +659,10 @@ class FileSystem(object):
                 print(f"[DRY-RUN] Would set utime for: {_file}")
                 print(f"[DRY-RUN] Would set utime from metadata for: {dest_path}")
 
-        db = Db()
+        db = kwargs['db'] if 'db' in kwargs and kwargs['db'] is not None else Db()
         db.add_hash(checksum, dest_path)
-        db.update_hash_db()
+        if write_db:
+            db.update_hash_db()
 
         # Run `after()` for every loaded plugin and if any of them raise an exception
         #  then we skip importing the file and log a message.
