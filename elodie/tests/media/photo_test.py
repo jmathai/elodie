@@ -10,6 +10,7 @@ import tempfile
 import time
 
 import pytest
+from unittest.mock import patch
 
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))))
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
@@ -34,10 +35,20 @@ def test_photo_extensions():
     assert 'nef' in extensions
     assert 'png' in extensions
     assert 'rw2' in extensions
+    assert 'tif' in extensions
+    assert 'tiff' in extensions
 
     valid_extensions = Photo.get_valid_extensions()
 
     assert extensions == valid_extensions, valid_extensions
+
+@pytest.mark.parametrize('extension', ('tif', 'tiff'))
+def test_is_valid_tiff_extensions_using_pillow(extension):
+    with tempfile.NamedTemporaryFile(suffix=f'.{extension}') as ntf:
+        photo = Photo(ntf.name)
+        with patch.object(photo.pillow, 'open') as mock_open:
+            mock_open.return_value.format = 'TIFF'
+            assert photo.is_valid()
 
 def test_empty_album():
     photo = Photo(helper.get_file('plain.jpg'))
@@ -53,6 +64,15 @@ def test_is_valid():
     photo = Photo(helper.get_file('plain.jpg'))
 
     assert photo.is_valid()
+
+def test_is_valid_raw_formats():
+    # Verify that RAW and HEIC formats are accepted even if they are not 
+    # valid images (bypassing Pillow).
+    # We use a dummy file for each extension.
+    for ext in ('arw', 'cr2', 'dng', 'heic', 'nef', 'rw2'):
+        with tempfile.NamedTemporaryFile(suffix=f'.{ext}') as ntf:
+            photo = Photo(ntf.name)
+            assert photo.is_valid(), f'Failed for extension {ext}'
 
 def test_is_not_valid():
     photo = Photo(helper.get_file('text.txt'))

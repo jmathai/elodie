@@ -29,7 +29,7 @@ class Photo(Media):
     __name__ = 'Photo'
 
     #: Valid extensions for photo files.
-    extensions = ('arw', 'cr2', 'dng', 'gif', 'heic', 'jpeg', 'jpg', 'nef', 'png', 'rw2')
+    extensions = ('arw', 'cr2', 'dng', 'gif', 'heic', 'jpeg', 'jpg', 'nef', 'png', 'rw2', 'tif', 'tiff')
 
     def __init__(self, source=None):
         super(Photo, self).__init__(source)
@@ -94,10 +94,10 @@ class Photo(Media):
         """
         source = self.source
 
-        # HEIC is not well supported yet so we special case it.
+        # HEIC and RAW formats are not well supported by Pillow so we special case them.
         # https://github.com/python-pillow/Pillow/issues/2806
         extension = os.path.splitext(source)[1][1:].lower()
-        if(extension != 'heic'):
+        if(extension not in ('arw', 'cr2', 'dng', 'heic', 'nef', 'rw2')):
             # gh-4 This checks if the source file is an image.
             # Use Pillow to validate the image format.
             if(self.pillow is None):
