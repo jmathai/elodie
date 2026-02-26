@@ -26,6 +26,7 @@ def test_video_extensions():
     assert 'mov' in extensions
     assert 'm4v' in extensions
     assert '3gp' in extensions
+    assert 'mkv' in extensions
 
     valid_extensions = Video.get_valid_extensions()
 
