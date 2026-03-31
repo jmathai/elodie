@@ -19,17 +19,43 @@ __KEY__ = None
 __DEFAULT_LOCATION__ = 'Unknown Location'
 __PREFER_ENGLISH_NAMES__ = None
 __EXIFTOOL_AVAILABLE__ = None
+__DB__ = None
+__DB_KEY__ = None
+__COORDINATE_CACHE__ = {}
+__PLACE_NAME_CACHE__ = {}
+
+
+def _get_db():
+    global __DB__
+    global __DB_KEY__
+    db_key = (constants.hash_db(), constants.location_db())
+    if __DB__ is None or __DB_KEY__ != db_key:
+        __DB__ = Db()
+        __DB_KEY__ = db_key
+        __COORDINATE_CACHE__.clear()
+        __PLACE_NAME_CACHE__.clear()
+    return __DB__
+
+
+def flush_db():
+    db = _get_db()
+    db.flush()
 
 
 def coordinates_by_name(name):
+    if name in __COORDINATE_CACHE__:
+        return __COORDINATE_CACHE__[name]
+
     # Try to get cached location first
-    db = Db()
+    db = _get_db()
     cached_coordinates = db.get_location_coordinates(name)
     if(cached_coordinates is not None):
-        return {
+        result = {
             'latitude': cached_coordinates[0],
             'longitude': cached_coordinates[1]
         }
+        __COORDINATE_CACHE__[name] = result
+        return result
 
     # Use MapQuest if key is available, otherwise use ExifTool
     key = get_key()
@@ -62,14 +88,17 @@ def coordinates_by_name(name):
                         use_location = location['latLng']
                         break
 
-                return {
+                result = {
                     'latitude': use_location['lat'],
                     'longitude': use_location['lng']
                 }
+                __COORDINATE_CACHE__[name] = result
+                return result
     else:
         # Use ExifTool as alternative when MapQuest key is not configured
         exiftool_result = exiftool_coordinates_by_name(name)
         if exiftool_result is not None:
+            __COORDINATE_CACHE__[name] = exiftool_result
             return exiftool_result
 
     return None
@@ -228,13 +257,18 @@ def place_name(lat, lon):
     if(not isinstance(lon, float)):
         lon = float(lon)
 
+    cache_key = (round(lat, 4), round(lon, 4))
+    if cache_key in __PLACE_NAME_CACHE__:
+        return __PLACE_NAME_CACHE__[cache_key]
+
     # Try to get cached location first
-    db = Db()
+    db = _get_db()
     # 3km distace radious for a match
     cached_place_name = db.get_location_name(lat, lon, 3000)
     # We check that it's a dict to coerce an upgrade of the location
     #  db from a string location to a dictionary. See gh-160.
     if(isinstance(cached_place_name, dict)):
+        __PLACE_NAME_CACHE__[cache_key] = cached_place_name
         return cached_place_name
 
     lookup_place_name = {}
@@ -263,12 +297,11 @@ def place_name(lat, lon):
 
     if(lookup_place_name):
         db.add_location(lat, lon, lookup_place_name)
-        # TODO: Maybe this should only be done on exit and not for every write.
-        db.update_location_db()
 
     if('default' not in lookup_place_name):
         lookup_place_name = lookup_place_name_default
 
+    __PLACE_NAME_CACHE__[cache_key] = lookup_place_name
     return lookup_place_name
 
 

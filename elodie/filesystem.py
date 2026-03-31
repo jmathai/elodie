@@ -48,6 +48,15 @@ class FileSystem(object):
 
         # Instantiate a plugins object
         self.plugins = Plugins()
+        self.db = Db()
+        self.db_key = (constants.hash_db(), constants.location_db())
+
+    def _get_db(self):
+        db_key = (constants.hash_db(), constants.location_db())
+        if self.db is None or self.db_key != db_key:
+            self.db = Db()
+            self.db_key = db_key
+        return self.db
 
     def _file_operation(self, operation_type, src, dst=None):
         """Perform file operation with dry-run support."""
@@ -507,7 +516,7 @@ class FileSystem(object):
         return folder_name
 
     def process_checksum(self, _file, allow_duplicate):
-        db = Db()
+        db = self._get_db()
         checksum = db.checksum(_file)
         if(checksum is None):
             log.info('Could not get checksum for %s.' % _file)
@@ -620,9 +629,7 @@ class FileSystem(object):
                 print(f"[DRY-RUN] Would set utime for: {_file}")
                 print(f"[DRY-RUN] Would set utime from metadata for: {dest_path}")
 
-        db = Db()
-        db.add_hash(checksum, dest_path)
-        db.update_hash_db()
+        self._get_db().add_hash(checksum, dest_path)
 
         # Run `after()` for every loaded plugin and if any of them raise an exception
         #  then we skip importing the file and log a message.
@@ -633,6 +640,9 @@ class FileSystem(object):
 
 
         return dest_path
+
+    def flush(self):
+        self._get_db().flush()
 
     def set_utime_from_metadata(self, metadata, file_path):
         """ Set the modification time on the file based on the file name.

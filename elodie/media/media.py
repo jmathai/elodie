@@ -132,6 +132,24 @@ class Media(Base):
 
         return self.exif_metadata
 
+    def set_exiftool_attributes(self, attributes):
+        self.exif_metadata = attributes
+
+    def get_exiftool_batch_tags(self):
+        tags = set(self.exif_map['date_taken'])
+        tags.update(self.camera_make_keys)
+        tags.update(self.camera_model_keys)
+        tags.update(self.album_keys)
+        tags.update(self.latitude_keys)
+        tags.update(self.longitude_keys)
+        tags.update([
+            self.title_key,
+            self.latitude_ref_key,
+            self.longitude_ref_key,
+            self.original_name_key,
+        ])
+        return list(tags)
+
     def get_camera_make(self):
         """Get the camera make stored in EXIF.
 
