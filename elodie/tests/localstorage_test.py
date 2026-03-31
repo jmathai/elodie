@@ -172,6 +172,26 @@ def test_update_hash_db():
     db3 = Db()
     assert db3.check_hash(random_key) == True
 
+def test_flush_persists_pending_hash_and_location_updates():
+    db = Db()
+
+    random_key = helper.random_string(10)
+    random_value = helper.random_string(12)
+    latitude, longitude, name = helper.get_test_location()
+
+    db.add_hash(random_key, random_value)
+    db.add_location(latitude, longitude, name)
+
+    db2 = Db()
+    assert db2.check_hash(random_key) == False
+    assert db2.get_location_coordinates(name) is None
+
+    db.flush()
+
+    db3 = Db()
+    assert db3.check_hash(random_key) == True
+    assert db3.get_location_coordinates(name) == (latitude, longitude)
+
 def test_checksum():
     db = Db()
 
@@ -231,6 +251,20 @@ def test_get_location_name_outside_threshold():
     retrieved_name = db.get_location_name(new_latitude, new_longitude, 800)
 
     assert retrieved_name is None
+
+def test_get_location_name_across_grid_boundary():
+    db = Db()
+    db.location_grid_size = 0.05
+    db._rebuild_indexes()
+
+    latitude = 37.0499
+    longitude = -122.0499
+    name = 'Boundary Test'
+    db.add_location(latitude, longitude, name)
+
+    retrieved_name = db.get_location_name(37.0501, -122.0501, 100)
+
+    assert retrieved_name == name
 
 def test_get_location_coordinates_exists():
     db = Db()

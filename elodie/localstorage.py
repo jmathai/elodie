@@ -9,7 +9,7 @@ import json
 import os
 import sys
 
-from math import radians, cos, sqrt
+from math import ceil, radians, cos, sqrt
 from shutil import copyfile
 from time import strftime
 
@@ -58,6 +58,62 @@ class Db(object):
             except ValueError:
                 pass
 
+        self.hash_db_dirty = False
+        self.location_db_dirty = False
+        self.location_grid_size = 0.01
+        self._location_name_index = {}
+        self._location_grid_index = {}
+        self._location_distance_cache = {}
+        self._rebuild_indexes()
+
+    def _rebuild_indexes(self):
+        self._location_name_index = {}
+        self._location_grid_index = {}
+        self._location_distance_cache = {}
+        for data in self.location_db:
+            if isinstance(data['name'], str):
+                self._location_name_index[data['name']] = (data['lat'], data['long'])
+            cell = self._location_grid_key(data['lat'], data['long'])
+            if cell not in self._location_grid_index:
+                self._location_grid_index[cell] = []
+            self._location_grid_index[cell].append(data)
+
+    def _location_grid_key(self, latitude, longitude):
+        return (
+            int(float(latitude) / self.location_grid_size),
+            int(float(longitude) / self.location_grid_size),
+        )
+
+    def _distance_m(self, latitude, longitude, location):
+        lon1, lat1, lon2, lat2 = list(map(
+            radians,
+            [longitude, latitude, location['long'], location['lat']]
+        ))
+
+        r = 6371000  # radius of the earth in m
+        x = (lon2 - lon1) * cos(0.5 * (lat2 + lat1))
+        y = lat2 - lat1
+        return r * sqrt(x * x + y * y)
+
+    def _location_candidates(self, latitude, longitude, threshold_m):
+        lat = float(latitude)
+        lon = float(longitude)
+        lat_radius = threshold_m / 111320.0
+        lon_scale = max(abs(cos(radians(lat))), 0.1)
+        lon_radius = threshold_m / (111320.0 * lon_scale)
+        radius = max(
+            1,
+            int(ceil(max(lat_radius, lon_radius) / self.location_grid_size))
+        )
+        center_lat, center_lon = self._location_grid_key(lat, lon)
+        candidates = []
+        for lat_offset in range(-radius, radius + 1):
+            for lon_offset in range(-radius, radius + 1):
+                cell = (center_lat + lat_offset, center_lon + lon_offset)
+                if cell in self._location_grid_index:
+                    candidates.extend(self._location_grid_index[cell])
+        return candidates
+
     def add_hash(self, key, value, write=False):
         """Add a hash to the hash db.
 
@@ -66,6 +122,7 @@ class Db(object):
         :param bool write: If true, write the hash db to disk.
         """
         self.hash_db[key] = value
+        self.hash_db_dirty = True
         if(write is True):
             self.update_hash_db()
 
@@ -90,6 +147,14 @@ class Db(object):
         data['long'] = longitude
         data['name'] = place
         self.location_db.append(data)
+        self.location_db_dirty = True
+        if isinstance(data['name'], str):
+            self._location_name_index[data['name']] = (data['lat'], data['long'])
+        cell = self._location_grid_key(data['lat'], data['long'])
+        if cell not in self._location_grid_index:
+            self._location_grid_index[cell] = []
+        self._location_grid_index[cell].append(data)
+        self._location_distance_cache = {}
         if(write is True):
             self.update_location_db()
 
@@ -148,27 +213,25 @@ class Db(object):
             the given latitude and longitude.
         :returns: str, or None if a matching location couldn't be found.
         """
+        cache_key = (
+            round(float(latitude), 4),
+            round(float(longitude), 4),
+            int(threshold_m),
+        )
+        if cache_key in self._location_distance_cache:
+            return self._location_distance_cache[cache_key]
+
         last_d = sys.maxsize
         name = None
-        for data in self.location_db:
-            # As threshold is quite small use simple math
-            # From http://stackoverflow.com/questions/15736995/how-can-i-quickly-estimate-the-distance-between-two-latitude-longitude-points  # noqa
-            # convert decimal degrees to radians
-
-            lon1, lat1, lon2, lat2 = list(map(
-                radians,
-                [longitude, latitude, data['long'], data['lat']]
-            ))
-
-            r = 6371000  # radius of the earth in m
-            x = (lon2 - lon1) * cos(0.5 * (lat2 + lat1))
-            y = lat2 - lat1
-            d = r * sqrt(x * x + y * y)
+        candidates = self._location_candidates(latitude, longitude, threshold_m)
+        for data in candidates:
+            d = self._distance_m(latitude, longitude, data)
             # Use if closer then threshold_km reuse lookup
             if(d <= threshold_m and d < last_d):
                 name = data['name']
-            last_d = d
+                last_d = d
 
+        self._location_distance_cache[cache_key] = name
         return name
 
     def get_location_coordinates(self, name):
@@ -177,11 +240,7 @@ class Db(object):
         :param str name: Name of the location.
         :returns: tuple(float), or None if the location wasn't in the database.
         """
-        for data in self.location_db:
-            if data['name'] == name:
-                return (data['lat'], data['long'])
-
-        return None
+        return self._location_name_index.get(name)
 
     def all(self):
         """Generator to get all entries from self.hash_db
@@ -193,6 +252,7 @@ class Db(object):
 
     def reset_hash_db(self):
         self.hash_db = {}
+        self.hash_db_dirty = True
 
     def update_hash_db(self):
         """Write the hash db to disk."""
@@ -201,6 +261,7 @@ class Db(object):
             return
         with open(constants.hash_db(), 'w') as f:
             json.dump(self.hash_db, f)
+        self.hash_db_dirty = False
 
     def update_location_db(self):
         """Write the location db to disk."""
@@ -209,3 +270,10 @@ class Db(object):
             return
         with open(constants.location_db(), 'w') as f:
             json.dump(self.location_db, f)
+        self.location_db_dirty = False
+
+    def flush(self):
+        if self.hash_db_dirty:
+            self.update_hash_db()
+        if self.location_db_dirty:
+            self.update_location_db()

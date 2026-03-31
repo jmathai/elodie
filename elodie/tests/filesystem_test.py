@@ -15,6 +15,7 @@ sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirna
 from . import helper
 from elodie.config import load_config
 from elodie.filesystem import FileSystem
+from elodie.localstorage import Db
 from elodie.media.text import Text
 from elodie.media.media import Media
 from elodie.media.photo import Photo
@@ -831,6 +832,24 @@ def test_process_file_with_location_and_title():
     assert destination_checksum is not None
     assert origin_checksum_preprocess == origin_checksum
     assert helper.path_tz_fix(os.path.join('2015-12-Dec','Sunnyvale','2015-12-05_00-59-26-photo-some-title.jpg')) in destination, destination
+
+def test_process_file_defers_hash_db_write():
+    filesystem = FileSystem()
+    filesystem.db = mock.Mock(spec=Db)
+    filesystem.process_checksum = mock.Mock(return_value='checksum')
+
+    temporary_folder, folder = helper.create_working_folder()
+    origin = os.path.join(folder, 'photo.jpg')
+    shutil.copyfile(helper.get_file('plain.jpg'), origin)
+
+    media = Photo(origin)
+    destination = filesystem.process_file(origin, temporary_folder, media, allowDuplicate=True)
+
+    filesystem.db.add_hash.assert_called_once_with('checksum', destination)
+    filesystem.db.update_hash_db.assert_not_called()
+
+    shutil.rmtree(folder)
+    shutil.rmtree(os.path.dirname(os.path.dirname(destination)))
 
 def test_process_file_with_album():
     filesystem = FileSystem()

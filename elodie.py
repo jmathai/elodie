@@ -36,7 +36,7 @@ from elodie import constants
 
 FILESYSTEM = FileSystem()
 
-def import_file(_file, destination, album_from_folder, trash, allow_duplicates, location=None, time=None):
+def import_file(_file, destination, album_from_folder, trash, allow_duplicates, location=None, time=None, media=None):
     
     _file = _decode(_file)
     destination = _decode(destination)
@@ -54,8 +54,8 @@ def import_file(_file, destination, album_from_folder, trash, allow_duplicates, 
             _file, destination))
         return
 
-
-    media = Media.get_class_by_file(_file, get_all_subclasses())
+    if media is None:
+        media = Media.get_class_by_file(_file, get_all_subclasses())
     if not media:
         log.warn('Not a supported file (%s)' % _file)
         log.all('{"source":"%s", "error_msg":"Not a supported file"}' % _file)
@@ -148,24 +148,57 @@ def _import(destination, source, file, album_from_folder, trash, allow_duplicate
 
     exclude_regex_list = set(exclude_regex)
 
-    for path in paths:
-        path = os.path.expanduser(path)
-        if os.path.isdir(path):
-            files.update(FILESYSTEM.get_all_files(path, None, exclude_regex_list))
-        else:
-            if not FILESYSTEM.should_exclude(path, exclude_regex_list, True):
-                files.add(path)
+    try:
+        for path in paths:
+            path = os.path.expanduser(path)
+            if os.path.isdir(path):
+                files.update(FILESYSTEM.get_all_files(path, None, exclude_regex_list))
+            else:
+                if not FILESYSTEM.should_exclude(path, exclude_regex_list, True):
+                    files.add(path)
 
-    for current_file in files:
-        dest_path = import_file(current_file, destination, album_from_folder,
-                    trash, allow_duplicates, location, time)
-        if dest_path:
-            result.append((current_file, True))
-        elif not allow_duplicates:
-            result.append((current_file, None))  # duplicate
-        else:
-            result.append((current_file, False))  # error
-        has_errors = has_errors is True or not dest_path
+        media_by_file = {}
+        exif_media = []
+        for current_file in files:
+            media = Media.get_class_by_file(current_file, get_all_subclasses())
+            if media:
+                media_by_file[current_file] = media
+                if isinstance(media, Media):
+                    exif_media.append(media)
+
+        if exif_media:
+            exif_tags = set()
+            for media in exif_media:
+                exif_tags.update(media.get_exiftool_batch_tags())
+
+            exif_metadata = ExifTool().get_tags_batch(
+                sorted(exif_tags),
+                [media.get_file_path() for media in exif_media]
+            )
+            exif_by_file = {
+                metadata['SourceFile']: metadata
+                for metadata in exif_metadata
+                if 'SourceFile' in metadata
+            }
+            for media in exif_media:
+                media.set_exiftool_attributes(
+                    exif_by_file.get(media.get_file_path())
+                )
+
+        for current_file in files:
+            dest_path = import_file(current_file, destination, album_from_folder,
+                        trash, allow_duplicates, location, time,
+                        media_by_file.get(current_file))
+            if dest_path:
+                result.append((current_file, True))
+            elif not allow_duplicates:
+                result.append((current_file, None))  # duplicate
+            else:
+                result.append((current_file, False))  # error
+            has_errors = has_errors is True or not dest_path
+    finally:
+        FILESYSTEM.flush()
+        geolocation.flush_db()
 
     result.write()
 
@@ -198,7 +231,7 @@ def _generate_db(source, debug):
         db.add_hash(db.checksum(current_file), current_file)
         log.progress()
     
-    db.update_hash_db()
+    db.flush()
     log.progress('', True)
     result.write()
 
@@ -291,92 +324,96 @@ def _update(album, location, time, title, paths, debug, dry_run):
         else:
             files.add(path)
 
-    for current_file in files:
-        if not os.path.exists(current_file):
-            has_errors = True
-            result.append((current_file, False))
-            log.warn('Could not find %s' % current_file)
-            log.all('{"source":"%s", "error_msg":"Could not find %s"}' %
-                      (current_file, current_file))
-            continue
+    try:
+        for current_file in files:
+            if not os.path.exists(current_file):
+                has_errors = True
+                result.append((current_file, False))
+                log.warn('Could not find %s' % current_file)
+                log.all('{"source":"%s", "error_msg":"Could not find %s"}' %
+                          (current_file, current_file))
+                continue
 
-        current_file = os.path.expanduser(current_file)
+            current_file = os.path.expanduser(current_file)
 
-        # The destination folder structure could contain any number of levels
-        #  So we calculate that and traverse up the tree.
-        # '/path/to/file/photo.jpg' -> '/path/to/file' ->
-        #  ['path','to','file'] -> ['path','to'] -> '/path/to'
-        current_directory = os.path.dirname(current_file)
-        destination_depth = -1 * len(FILESYSTEM.get_folder_path_definition())
-        destination = os.sep.join(
-                          os.path.normpath(
-                              current_directory
-                          ).split(os.sep)[:destination_depth]
-                      )
+            # The destination folder structure could contain any number of levels
+            #  So we calculate that and traverse up the tree.
+            # '/path/to/file/photo.jpg' -> '/path/to/file' ->
+            #  ['path','to','file'] -> ['path','to'] -> '/path/to'
+            current_directory = os.path.dirname(current_file)
+            destination_depth = -1 * len(FILESYSTEM.get_folder_path_definition())
+            destination = os.sep.join(
+                              os.path.normpath(
+                                  current_directory
+                              ).split(os.sep)[:destination_depth]
+                          )
 
-        media = Media.get_class_by_file(current_file, get_all_subclasses())
-        if not media:
-            continue
+            media = Media.get_class_by_file(current_file, get_all_subclasses())
+            if not media:
+                continue
 
-        updated = False
-        if location:
-            update_location(media, current_file, location)
-            updated = True
-        if time:
-            update_time(media, current_file, time)
-            updated = True
-        if album:
-            media.set_album(album)
-            updated = True
+            updated = False
+            if location:
+                update_location(media, current_file, location)
+                updated = True
+            if time:
+                update_time(media, current_file, time)
+                updated = True
+            if album:
+                media.set_album(album)
+                updated = True
 
-        # Updating a title can be problematic when doing it 2+ times on a file.
-        # You would end up with img_001.jpg -> img_001-first-title.jpg ->
-        # img_001-first-title-second-title.jpg.
-        # To resolve that we have to track the prior title (if there was one.
-        # Then we massage the updated_media's metadata['base_name'] to remove
-        # the old title.
-        # Since FileSystem.get_file_name() relies on base_name it will properly
-        #  rename the file by updating the title instead of appending it.
-        remove_old_title_from_name = False
-        if title:
-            # We call get_metadata() to cache it before making any changes
-            metadata = media.get_metadata()
-            title_update_status = media.set_title(title)
-            original_title = metadata['title']
-            if title_update_status and original_title:
-                # @TODO: We should move this to a shared method since
-                # FileSystem.get_file_name() does it too.
-                original_title = re.sub(r'\W+', '-', original_title.lower())
-                original_base_name = metadata['base_name']
-                remove_old_title_from_name = True
-            updated = True
+            # Updating a title can be problematic when doing it 2+ times on a file.
+            # You would end up with img_001.jpg -> img_001-first-title.jpg ->
+            # img_001-first-title-second-title.jpg.
+            # To resolve that we have to track the prior title (if there was one.
+            # Then we massage the updated_media's metadata['base_name'] to remove
+            # the old title.
+            # Since FileSystem.get_file_name() relies on base_name it will properly
+            #  rename the file by updating the title instead of appending it.
+            remove_old_title_from_name = False
+            if title:
+                # We call get_metadata() to cache it before making any changes
+                metadata = media.get_metadata()
+                title_update_status = media.set_title(title)
+                original_title = metadata['title']
+                if title_update_status and original_title:
+                    # @TODO: We should move this to a shared method since
+                    # FileSystem.get_file_name() does it too.
+                    original_title = re.sub(r'\W+', '-', original_title.lower())
+                    original_base_name = metadata['base_name']
+                    remove_old_title_from_name = True
+                updated = True
 
-        if updated:
-            updated_media = Media.get_class_by_file(current_file,
-                                                    get_all_subclasses())
-            # See comments above on why we have to do this when titles
-            # get updated.
-            if remove_old_title_from_name and len(original_title) > 0:
-                updated_media.get_metadata()
-                updated_media.set_metadata_basename(
-                    original_base_name.replace('-%s' % original_title, ''))
+            if updated:
+                updated_media = Media.get_class_by_file(current_file,
+                                                        get_all_subclasses())
+                # See comments above on why we have to do this when titles
+                # get updated.
+                if remove_old_title_from_name and len(original_title) > 0:
+                    updated_media.get_metadata()
+                    updated_media.set_metadata_basename(
+                        original_base_name.replace('-%s' % original_title, ''))
 
-            dest_path = FILESYSTEM.process_file(current_file, destination,
-                updated_media, move=True, allowDuplicate=True)
-            log.info(u'%s -> %s' % (current_file, dest_path))
-            log.all('{"source":"%s", "destination":"%s"}' % (current_file,
-                                                               dest_path))
-            # If the folder we moved the file out of or its parent are empty
-            # we delete it.
-            FILESYSTEM.delete_directory_if_empty(os.path.dirname(current_file))
-            FILESYSTEM.delete_directory_if_empty(
-                os.path.dirname(os.path.dirname(current_file)))
-            result.append((current_file, bool(dest_path)))
-            # Trip has_errors to False if it's already False or dest_path is.
-            has_errors = has_errors is True or not dest_path
-        else:
-            has_errors = False
-            result.append((current_file, False))
+                dest_path = FILESYSTEM.process_file(current_file, destination,
+                    updated_media, move=True, allowDuplicate=True)
+                log.info(u'%s -> %s' % (current_file, dest_path))
+                log.all('{"source":"%s", "destination":"%s"}' % (current_file,
+                                                                   dest_path))
+                # If the folder we moved the file out of or its parent are empty
+                # we delete it.
+                FILESYSTEM.delete_directory_if_empty(os.path.dirname(current_file))
+                FILESYSTEM.delete_directory_if_empty(
+                    os.path.dirname(os.path.dirname(current_file)))
+                result.append((current_file, bool(dest_path)))
+                # Trip has_errors to False if it's already False or dest_path is.
+                has_errors = has_errors is True or not dest_path
+            else:
+                has_errors = False
+                result.append((current_file, False))
+    finally:
+        FILESYSTEM.flush()
+        geolocation.flush_db()
 
     result.write()
     

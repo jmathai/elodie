@@ -293,6 +293,45 @@ def test_import_invalid_file_exit_code():
 
     assert result.exit_code == 1, result.exit_code
 
+def test_cli_import_persists_hash_db_on_success():
+    temporary_folder, folder = helper.create_working_folder()
+    temporary_folder_destination, folder_destination = helper.create_working_folder()
+
+    origin_valid = '%s/valid.jpg' % folder
+    shutil.copyfile(helper.get_file('plain.jpg'), origin_valid)
+
+    runner = CliRunner()
+    result = runner.invoke(elodie._import, ['--destination', folder_destination, '--allow-duplicates', origin_valid])
+
+    db = Db()
+
+    shutil.rmtree(folder)
+    shutil.rmtree(folder_destination)
+
+    assert result.exit_code == 0, result.output
+    assert len(db.hash_db) == 1, db.hash_db
+
+def test_cli_import_flushes_successes_even_when_command_exits_with_error():
+    temporary_folder, folder = helper.create_working_folder()
+    temporary_folder_destination, folder_destination = helper.create_working_folder()
+
+    origin_invalid = '%s/invalid.jpg' % folder
+    shutil.copyfile(helper.get_file('invalid.jpg'), origin_invalid)
+
+    origin_valid = '%s/valid.jpg' % folder
+    shutil.copyfile(helper.get_file('plain.jpg'), origin_valid)
+
+    runner = CliRunner()
+    result = runner.invoke(elodie._import, ['--destination', folder_destination, '--allow-duplicates', origin_invalid, origin_valid])
+
+    db = Db()
+
+    shutil.rmtree(folder)
+    shutil.rmtree(folder_destination)
+
+    assert result.exit_code == 1, result.output
+    assert len(db.hash_db) == 1, db.hash_db
+
 def test_import_file_with_single_exclude():
     temporary_folder, folder = helper.create_working_folder()
     temporary_folder_destination, folder_destination = helper.create_working_folder()
