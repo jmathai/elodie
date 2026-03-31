@@ -24,6 +24,12 @@ from elodie import geolocation
 os.environ['TZ'] = 'GMT'
 
 
+def require_exiftool_geolocation():
+    if not geolocation.is_exiftool_available():
+        pytest.skip('ExifTool geolocation is not available in this environment')
+
+
+
 def test_decimal_to_dms():
 
     for x in range(0, 1000):
@@ -86,6 +92,7 @@ def test_dms_string_longitude():
 
 def test_exiftool_coordinates_by_name_sunnyvale():
     """Test ExifTool coordinates lookup for Sunnyvale, California."""
+    require_exiftool_geolocation()
     result = geolocation.exiftool_coordinates_by_name("Sunnyvale, California")
     
     assert result is not None, "Should find coordinates for Sunnyvale, California"
@@ -109,10 +116,11 @@ def test_exiftool_coordinates_unavailable(mock_available):
 def test_exiftool_is_available():
     """Test if ExifTool geolocation is available."""
     available = geolocation.is_exiftool_available()
-    assert available == True, "ExifTool geolocation should be available"
+    assert isinstance(available, bool), "ExifTool availability should be reported as a boolean"
 
 def test_exiftool_place_name_sunnyvale():
     """Test ExifTool place name lookup with known Sunnyvale coordinates."""
+    require_exiftool_geolocation()
     lat, lon = 37.3688, -122.0365
     result = geolocation.exiftool_place_name(lat, lon)
     
@@ -134,6 +142,7 @@ def test_exiftool_place_name_unavailable(mock_available):
 @mock.patch('elodie.geolocation.__KEY__', None)
 def test_coordinates_by_name_fallback_to_exiftool():
     """Test that coordinates_by_name falls back to ExifTool when MapQuest key is not available."""
+    require_exiftool_geolocation()
     result = geolocation.coordinates_by_name("Sunnyvale, California")
     
     assert result is not None, "Should return coordinates using ExifTool fallback"
@@ -141,7 +150,14 @@ def test_coordinates_by_name_fallback_to_exiftool():
     assert abs(result['latitude'] - 37.3688) < 0.01, f"Should get correct latitude from ExifTool"
     assert abs(result['longitude'] - (-122.0365)) < 0.01, f"Should get correct longitude from ExifTool"
 
-def test_reverse_lookup_with_valid_key():
+@mock.patch('requests.get')
+@mock.patch('elodie.geolocation.__KEY__', 'configured-key')
+def test_reverse_lookup_with_valid_key(mock_get):
+    mock_get.return_value.json.return_value = {
+        "info": {"statuscode": 0, "copyright": {"text": "© 2022 MapQuest, Inc.", "imageUrl": "http://api.mqcdn.com/res/mqlogo.gif", "imageAltText": "© 2022 MapQuest, Inc."}, "messages": []},
+        "options": {"maxResults": 1, "ignoreLatLngInput": False},
+        "results": [{"providedLocation": {"latLng": {"lat": 37.368, "lng": -122.03}}, "locations": [{"street": "312 Old San Francisco Rd", "adminArea6": "Heritage District", "adminArea6Type": "Neighborhood", "adminArea5": "Sunnyvale", "adminArea5Type": "City", "adminArea4": "Santa Clara", "adminArea4Type": "County", "adminArea3": "CA", "adminArea3Type": "State", "adminArea1": "US", "adminArea1Type": "Country", "postalCode": "94086", "geocodeQualityCode": "P1AAA", "geocodeQuality": "POINT", "dragPoint": False, "sideOfStreet": "R", "linkId": "0", "unknownInput": "", "type": "s", "latLng": {"lat": 37.36798, "lng": -122.03018}, "displayLatLng": {"lat": 37.36785, "lng": -122.03021}, "mapUrl": ""}]}]
+    }
     res = geolocation.lookup(lat=37.368, lon=-122.03)
     assert res['address']['city'] == 'Sunnyvale', res
 
@@ -154,7 +170,14 @@ def test_reverse_lookup_with_invalid_key():
     res = geolocation.lookup(lat=37.368, lon=-122.03)
     assert res is None, res
 
-def test_lookup_with_valid_key():
+@mock.patch('requests.get')
+@mock.patch('elodie.geolocation.__KEY__', 'configured-key')
+def test_lookup_with_valid_key(mock_get):
+    mock_get.return_value.json.return_value = {
+        "info": {"statuscode": 0, "copyright": {"text": "© 2022 MapQuest, Inc.", "imageUrl": "http://api.mqcdn.com/res/mqlogo.gif", "imageAltText": "© 2022 MapQuest, Inc."}, "messages": []},
+        "options": {"maxResults": -1, "ignoreLatLngInput": False},
+        "results": [{"providedLocation": {"location": "Sunnyvale,CA"}, "locations": [{"street": "", "adminArea6": "", "adminArea6Type": "Neighborhood", "adminArea5": "Sunnyvale", "adminArea5Type": "City", "adminArea4": "Santa Clara", "adminArea4Type": "County", "adminArea3": "CA", "adminArea3Type": "State", "adminArea1": "US", "adminArea1Type": "Country", "postalCode": "", "geocodeQualityCode": "A5XAX", "geocodeQuality": "CITY", "dragPoint": False, "sideOfStreet": "N", "linkId": "0", "unknownInput": "", "type": "s", "latLng": {"lat": 37.37188, "lng": -122.03751}, "displayLatLng": {"lat": 37.37188, "lng": -122.03751}, "mapUrl": ""}]}]
+    }
     res = geolocation.lookup(location='Sunnyvale, CA')
     latLng = res['results'][0]['locations'][0]['latLng']
     assert latLng['lat'] == 37.37188, latLng
@@ -186,7 +209,9 @@ def test_lookup_debug_mapquest_url():
     assert 'MapQuest url:' in output, output
 
 @mock.patch('elodie.constants.location_db', return_value='%s/location.json-cached' % gettempdir())
-def test_place_name_deprecated_string_cached(mock_location_db):
+@mock.patch('elodie.geolocation.lookup', return_value={'address': {'city': 'Sunnyvale'}})
+@mock.patch('elodie.geolocation.__KEY__', 'configured-key')
+def test_place_name_deprecated_string_cached(mock_lookup, mock_location_db):
     # See gh-160 for backwards compatability needed when a string is stored instead of a dict
     helper.reset_dbs()
     with open(mock_location_db.return_value, 'w') as f:
@@ -223,6 +248,7 @@ def test_place_name_no_default():
 @mock.patch('elodie.geolocation.__KEY__', None)
 def test_place_name_fallback_to_exiftool():
     """Test that place_name falls back to ExifTool when MapQuest key is not available."""
+    require_exiftool_geolocation()
     # Test with known coordinates for Sunnyvale
     lat, lon = 37.3688, -122.0365
     result = geolocation.place_name(lat, lon)

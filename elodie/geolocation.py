@@ -19,6 +19,7 @@ __KEY__ = None
 __DEFAULT_LOCATION__ = 'Unknown Location'
 __PREFER_ENGLISH_NAMES__ = None
 __EXIFTOOL_AVAILABLE__ = None
+__MAPQUEST_PLACEHOLDERS__ = ('', 'your-api-key-goes-here')
 
 
 def coordinates_by_name(name):
@@ -185,18 +186,29 @@ def exiftool_place_name(lat, lon):
 def get_key():
     global __KEY__
     if __KEY__ is not None:
-        return __KEY__
+        return normalize_key(__KEY__)
 
     if constants.mapquest_key is not None:
         __KEY__ = constants.mapquest_key
-        return __KEY__
+        return normalize_key(__KEY__)
 
     config = load_config()
     if('MapQuest' not in config):
         return None
 
     __KEY__ = config['MapQuest']['key']
-    return __KEY__
+    return normalize_key(__KEY__)
+
+
+def normalize_key(key):
+    if key is None:
+        return None
+
+    key = key.strip()
+    if key in __MAPQUEST_PLACEHOLDERS__:
+        return None
+
+    return key
 
 def get_prefer_english_names():
     global __PREFER_ENGLISH_NAMES__
@@ -214,7 +226,7 @@ def get_prefer_english_names():
     if('prefer_english_names' not in config['MapQuest']):
         return False
 
-    __PREFER_ENGLISH_NAMES__ = bool(config['MapQuest']['prefer_english_names'])
+    __PREFER_ENGLISH_NAMES__ = config.getboolean('MapQuest', 'prefer_english_names')
     return __PREFER_ENGLISH_NAMES__
 
 def place_name(lat, lon):
