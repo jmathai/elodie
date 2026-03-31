@@ -12,3 +12,4 @@ build/**
 **/*.nef
 **/*.rw2
 env/**
+venv/**
