@@ -571,6 +571,9 @@ def test_update_location_on_video():
 
 def test_update_location_with_exiftool_fallback():
     """Test update_location uses ExifTool when MapQuest key is not available."""
+    if not elodie.geolocation.is_exiftool_available():
+        pytest.skip('ExifTool geolocation is not available in this environment')
+
     temporary_folder, folder = helper.create_working_folder()
 
     origin = '%s/photo.jpg' % folder

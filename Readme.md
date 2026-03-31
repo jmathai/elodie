@@ -434,7 +434,7 @@ When I organize photos I look at the embedded metadata. Here are the details of 
 
 ## Deprecated Use of MapQuest
 
-I used to use the MapQuest API to help me organize your photos by location. I've deprecated this feature and will remove support from the code base. If you're already using MapQuest, after the removal of MapQuest support I'll automatically fall back to Exiftool which is the new default. Follow [pull request #518](https://github.com/jmathai/elodie/issues/518) to know when it gets removed.
+I used to use the MapQuest API to help me organize your photos by location. I've deprecated this feature and will remove support from the code base. If you're already using MapQuest, after the removal of MapQuest support I'll automatically fall back to Exiftool which is the new default. Follow [issue #518](https://github.com/jmathai/elodie/issues/518) to know when it gets removed.
 
 ## Questions, comments or concerns?
 
