@@ -532,6 +532,34 @@ full_path=%date/%location
 
     assert path == os.path.join('2015-12-05','US-CA-Sunnyvale'), path
 
+@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-custom-with-location-alias' % gettempdir())
+@mock.patch('elodie.geolocation.place_name', return_value={
+    'city': 'Sunnyvale',
+    'state': 'California',
+    'country': 'United States',
+    'default': 'Sunnyvale',
+})
+def test_get_folder_path_custom_template_expands_location_alias(mock_place_name, mock_get_config_file):
+    """A %location reference nested inside a %custom template should resolve via
+    the [Directory] location alias rather than falling back to place_name['default']."""
+    with open(mock_get_config_file.return_value, 'w') as f:
+        f.write("""
+[Directory]
+date=%Y-%m
+location=%country
+custom=%date %location
+full_path=%custom
+        """)
+    if hasattr(load_config, 'config'):
+        del load_config.config
+    filesystem = FileSystem()
+    media = Photo(helper.get_file('with-location.jpg'))
+    path = filesystem.get_folder_path(media.get_metadata())
+    if hasattr(load_config, 'config'):
+        del load_config.config
+
+    assert path == '2015-12 United States', path
+
 @mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-fallback' % gettempdir())
 def test_get_folder_path_with_fallback_folder(mock_get_config_file):
     with open(mock_get_config_file.return_value, 'w') as f:

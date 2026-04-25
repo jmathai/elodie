@@ -403,12 +403,23 @@ class FileSystem(object):
         # Each part has its own custom logic and we evaluate a single part and return
         #  the evaluated string.
         if part in ('custom'):
+            config = load_config()
+            config_directory = self.default_folder_path_definition
+            if 'Directory' in config:
+                config_directory = config['Directory']
             custom_parts = re.findall('(%[a-z_]+)', mask)
             folder = mask
             for i in custom_parts:
+                sub_key = i[1:]
+                # If the sub-key is itself defined under [Directory] (e.g.
+                # location=%country|%"Unknown"), expand to that alias before
+                # dispatching. Without this, location/city/state/country
+                # references nested in a custom template would never see
+                # their alias and would fall through to place_name['default'].
+                sub_mask = config_directory[sub_key] if sub_key in config_directory else i
                 folder = folder.replace(
                     i,
-                    self.get_dynamic_path(i[1:], i, metadata)
+                    self.get_dynamic_path(sub_key, sub_mask, metadata)
                 )
             return folder
         elif part in ('date'):
