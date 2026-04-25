@@ -127,9 +127,93 @@ def test_exiftool_place_name_sunnyvale():
 def test_exiftool_place_name_unavailable(mock_available):
     """Test ExifTool place name when ExifTool is not available."""
     mock_available.return_value = False
-    
+
     result = geolocation.exiftool_place_name(37.3688, -122.0365)
     assert result is None, "Should return None when ExifTool is unavailable"
+
+
+# Regression tests: exiftool may return Geolocation* tags either with the
+# 'ExifTool:' group prefix (when -G is in effect) or without it. The library
+# must accept both forms; a previous bug accepted only the prefixed form,
+# causing reverse lookups to silently fall back to the city as country.
+
+@mock.patch('elodie.geolocation.is_exiftool_available')
+@mock.patch('elodie.geolocation.ExifTool')
+def test_exiftool_place_name_handles_bare_keys(mock_exiftool_cls, mock_available):
+    mock_available.return_value = True
+    mock_et = mock.MagicMock()
+    mock_et.execute_json.return_value = [{
+        'SourceFile': ' ',
+        'GeolocationCity': 'Bratislava',
+        'GeolocationRegion': 'Bratislava Region',
+        'GeolocationCountry': 'Slovakia',
+        'GeolocationCountryCode': 'SK',
+        'GeolocationPosition': '48.1481 17.1067',
+    }]
+    mock_exiftool_cls.return_value = mock_et
+
+    result = geolocation.exiftool_place_name(48.1486, 17.1077)
+
+    assert result is not None
+    assert result['city'] == 'Bratislava', result
+    assert result['state'] == 'Bratislava Region', result
+    assert result['country'] == 'Slovakia', result
+
+@mock.patch('elodie.geolocation.is_exiftool_available')
+@mock.patch('elodie.geolocation.ExifTool')
+def test_exiftool_place_name_handles_prefixed_keys(mock_exiftool_cls, mock_available):
+    mock_available.return_value = True
+    mock_et = mock.MagicMock()
+    mock_et.execute_json.return_value = [{
+        'SourceFile': ' ',
+        'ExifTool:GeolocationCity': 'Bratislava',
+        'ExifTool:GeolocationRegion': 'Bratislava Region',
+        'ExifTool:GeolocationCountry': 'Slovakia',
+        'ExifTool:GeolocationPosition': '48.1481 17.1067',
+    }]
+    mock_exiftool_cls.return_value = mock_et
+
+    result = geolocation.exiftool_place_name(48.1486, 17.1077)
+
+    assert result is not None
+    assert result['city'] == 'Bratislava', result
+    assert result['state'] == 'Bratislava Region', result
+    assert result['country'] == 'Slovakia', result
+
+@mock.patch('elodie.geolocation.ExifTool')
+def test_exiftool_coordinates_by_name_handles_bare_keys(mock_exiftool_cls):
+    # Reset the cached availability flag so the mocked ExifTool is consulted.
+    geolocation.__EXIFTOOL_AVAILABLE__ = None
+    mock_et = mock.MagicMock()
+    mock_et.execute_json.return_value = [{
+        'SourceFile': ' ',
+        'GeolocationCity': 'Bratislava',
+        'GeolocationCountry': 'Slovakia',
+        'GeolocationPosition': '48.1481 17.1067',
+    }]
+    mock_exiftool_cls.return_value = mock_et
+    try:
+        result = geolocation.exiftool_coordinates_by_name('Bratislava')
+    finally:
+        geolocation.__EXIFTOOL_AVAILABLE__ = None
+
+    assert result is not None
+    assert abs(result['latitude'] - 48.1481) < 0.001, result
+    assert abs(result['longitude'] - 17.1067) < 0.001, result
+
+@mock.patch('elodie.geolocation.ExifTool')
+def test_is_exiftool_available_handles_bare_keys(mock_exiftool_cls):
+    geolocation.__EXIFTOOL_AVAILABLE__ = None
+    mock_et = mock.MagicMock()
+    mock_et.execute_json.return_value = [{
+        'SourceFile': ' ',
+        'GeolocationCity': 'New York',
+    }]
+    mock_exiftool_cls.return_value = mock_et
+    try:
+        assert geolocation.is_exiftool_available() is True
+    finally:
+        geolocation.__EXIFTOOL_AVAILABLE__ = None
 
 @mock.patch('elodie.geolocation.__KEY__', None)
 def test_coordinates_by_name_fallback_to_exiftool():
