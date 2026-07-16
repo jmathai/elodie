@@ -14,7 +14,6 @@ from importlib import import_module
 from elodie import constants
 from os.path import dirname, dirname, isdir, isfile
 from os import mkdir
-from sys import exc_info
 from traceback import format_exc
 
 from elodie.compatability import _bytes
