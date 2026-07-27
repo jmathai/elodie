@@ -273,9 +273,11 @@ class Media(Base):
 
         return status
 
-    def set_original_name(self, name=None):
+    def set_original_name(self, name=None, file_path=None):
         """Sets the original name EXIF tag if not already set.
 
+        :param str name: The name to set as the original name.
+        :param str file_path: The path to the file to set the tag on.
         :returns: True, False, None
         """
         if(not self.is_valid()):
@@ -285,13 +287,13 @@ class Media(Base):
         if self.get_original_name() is not None:
             return None
 
-        source = self.source
+        target_path = file_path if file_path else self.source
 
         if not name:
-            name = os.path.basename(source)
+            name = os.path.basename(self.source)
 
         tags = {self.original_name_key: name}
-        status = self.__set_tags(tags)
+        status = self.__set_tags(tags, target_path)
         self.reset_cache()
         return status
 
@@ -313,13 +315,13 @@ class Media(Base):
 
         return status
 
-    def __set_tags(self, tags):
+    def __set_tags(self, tags, target_path=None):
         if(not self.is_valid()):
             return None
 
-        source = self.source
+        source = target_path if target_path else self.source
 
         status = ''
-        status = ExifTool().set_tags(tags,source)
+        status = ExifTool().set_tags(tags, source)
 
         return status != ''

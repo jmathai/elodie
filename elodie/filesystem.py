@@ -567,8 +567,6 @@ class FileSystem(object):
         file_name = self.get_file_name(metadata)
         dest_path = os.path.join(dest_directory, file_name)        
 
-        media.set_original_name()
-
         # If source and destination are identical then
         #  we should not write the file. gh-210
         if(_file == dest_path):
@@ -592,6 +590,8 @@ class FileSystem(object):
             stat = os.stat(_file)
             # Move the processed file into the destination directory
             self._file_operation('move', _file, dest_path)
+            if not constants.dry_run:
+                os.utime(dest_path, ns=(stat_info_original.st_atime_ns, stat_info_original.st_mtime_ns))
 
             if(exif_original_file_exists is True):
                 # We can remove it as we don't need the initial file.
@@ -601,23 +601,14 @@ class FileSystem(object):
             else:
                 print(f"[DRY-RUN] Would set utime for: {dest_path}")
         else:
-            if(exif_original_file_exists is True):
-                # Move the newly processed file with any updated tags to the
-                # destination directory
-                self._file_operation('move', _file, dest_path)
-                # Move the exif _original back to the initial source file
-                self._file_operation('move', exif_original_file, _file)
-            else:
-                self._file_operation('copy', _file, dest_path)
-
-            # Set the utime based on what the original file contained 
-            #  before we made any changes.
-            # Then set the utime on the destination file based on metadata.
+            self._file_operation('copy', _file, dest_path)
             if not constants.dry_run:
-                os.utime(_file, (stat_info_original.st_atime, stat_info_original.st_mtime))
+                os.utime(dest_path, ns=(stat_info_original.st_atime_ns, stat_info_original.st_mtime_ns))
+
+            if not constants.dry_run:
+                media.set_original_name(file_path=dest_path)
                 self.set_utime_from_metadata(metadata, dest_path)
             else:
-                print(f"[DRY-RUN] Would set utime for: {_file}")
                 print(f"[DRY-RUN] Would set utime from metadata for: {dest_path}")
 
         db = Db()
