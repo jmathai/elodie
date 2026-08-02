@@ -25,7 +25,7 @@ class FileSystem(object):
     """A class for interacting with the file system."""
 
     def __init__(self):
-        # The default folder path is along the lines of 2017-06-17_01-04-14-dsc_1234-some-title.jpg
+        # The default file name definition
         self.default_file_name_definition = {
             'date': '%Y-%m-%d_%H-%M-%S',
             'name': '%date-%original_name-%title.%extension',
@@ -34,7 +34,7 @@ class FileSystem(object):
         self.default_folder_path_definition = {
             'date': '%Y-%m-%b',
             'location': '%city',
-            'full_path': '%date/%album|%location|"{}"'.format(
+            'full_path': '%date/%album|%location|%"{}"'.format(
                             geolocation.__DEFAULT_LOCATION__
                          ),
         }
@@ -281,7 +281,7 @@ class FileSystem(object):
         #  name.
         #  I.e. %date-%original_name-%title.%extension => ['date', 'original_name', 'title', 'extension'] #noqa
         path_parts = re.findall(
-                         '(\%[a-z_]+)',
+                         '(\\%[a-z_]+)',
                          config_file['name']
                      )
 
@@ -341,7 +341,7 @@ class FileSystem(object):
         #  I.e. %foo/%bar => ['foo', 'bar']
         #  I.e. %foo/%bar|%example|"something" => ['foo', 'bar|example|"something"']
         path_parts = re.findall(
-                         '(\%[^/]+)',
+                         '(\\%[^/]+)',
                          config_directory['full_path']
                      )
 
@@ -349,19 +349,38 @@ class FileSystem(object):
             return self.default_folder_path_definition
 
         self.cached_folder_path_definition = []
-        for part in path_parts:
-            part = part.replace('%', '')
-            if part in config_directory:
+        for raw_part in path_parts:
+            # raw_part includes the leading '%' e.g. '%year' or '%month, %location'
+            # 1) exact single placeholder like '%month'
+            m = re.match(r'^\\%([a-z_]+)$', raw_part)
+            if m:
+                key = m.group(1)
                 self.cached_folder_path_definition.append(
-                    [(part, config_directory[part])]
+                    [(key, config_directory[key] if key in config_directory else '')]
                 )
-            else:
+                continue
+
+            # 2) fallback list using '|'
+            if '|' in raw_part:
                 this_part = []
-                for p in part.split('|'):
-                    this_part.append(
-                        (p, config_directory[p] if p in config_directory else '')
-                    )
+                for p in raw_part.split('|'):
+                    p = p.strip()
+                    if p.startswith('%'):
+                        key = p[1:]
+                        this_part.append((key, config_directory[key] if key in config_directory else ''))
+                    else:
+                        # p may be a quoted string like '\"foo\"'
+                        cleaned = p
+                        if cleaned.startswith('%'):
+                            cleaned = cleaned[1:]
+                        this_part.append((cleaned, config_directory[cleaned] if cleaned in config_directory else ''))
                 self.cached_folder_path_definition.append(this_part)
+                continue
+
+            # 3) composite segment (e.g. '%month, %location' or '%city-%state')
+            # Treat as a custom mask and let get_dynamic_path handle nested placeholders
+            # Keep the raw part (including % tokens)
+            self.cached_folder_path_definition.append([('custom', raw_part)])
 
         return self.cached_folder_path_definition
 
@@ -403,14 +422,19 @@ class FileSystem(object):
         # Each part has its own custom logic and we evaluate a single part and return
         #  the evaluated string.
         if part in ('custom'):
-            custom_parts = re.findall('(%[a-z_]+)', mask)
-            folder = mask
-            for i in custom_parts:
-                folder = folder.replace(
-                    i,
-                    self.get_dynamic_path(i[1:], i, metadata)
-                )
-            return folder
+            config = load_config()
+            config_directory = self.default_folder_path_definition
+            if('Directory' in config):
+                config_directory = config['Directory']
+
+            def _replace(m):
+                name = m.group(1)
+                submask = '%' + name
+                if name in config_directory:
+                    submask = config_directory[name]
+                return self.get_dynamic_path(name, submask, metadata)
+
+            return re.sub(r'%([a-z_]+)', _replace, mask)
         elif part in ('date'):
             config = load_config()
             # If Directory is in the config we assume full_path and its
@@ -430,9 +454,23 @@ class FileSystem(object):
                 metadata['longitude']
             )
 
-            location_parts = re.findall('(%[^%]+)', mask)
+            # Expand any nested placeholders (ex: %month) using Directory definitions
+            config = load_config()
+            config_directory = self.default_folder_path_definition
+            if('Directory' in config):
+                config_directory = config['Directory']
+
+            def _replace_loc(m):
+                name = m.group(1)
+                if name in config_directory:
+                    return self.get_dynamic_path(name, config_directory[name], metadata)
+                return m.group(0)
+
+            expanded_mask = re.sub(r'%([a-z_]+)', _replace_loc, mask)
+
+            location_parts = re.findall('(%[^%]+)', expanded_mask)
             parsed_folder_name = self.parse_mask_for_location(
-                mask,
+                expanded_mask,
                 location_parts,
                 place_name,
             )
@@ -635,7 +673,7 @@ class FileSystem(object):
         date_taken = metadata['date_taken']
         base_name = metadata['base_name']
         year_month_day_match = re.search(
-            '^(\d{4})-(\d{2})-(\d{2})_(\d{2})-(\d{2})-(\d{2})',
+            '^(\\d{4})-(\\d{2})-(\\d{2})_(\\d{2})-(\\d{2})-(\\d{2})',
             base_name
         )
         if(year_month_day_match is not None):
