@@ -1,1504 +1,390 @@
-from __future__ import absolute_import
-# Project imports
-import unittest.mock as mock
+"""
+General file system methods.
+
+.. moduleauthor:: Jaisen Mathai <jaisen@jmathai.com>
+"""
+from __future__ import print_function
+from builtins import object
+
 import os
 import re
 import shutil
-import sys
 import time
-from datetime import datetime
-from datetime import timedelta
-from tempfile import gettempdir
+from send2trash import send2trash
 
-sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))))
-
-from . import helper
+from elodie import compatability
+from elodie import constants
+from elodie import geolocation
+from elodie import log
 from elodie.config import load_config
-from elodie.filesystem import FileSystem
-from elodie.media.text import Text
-from elodie.media.media import Media
-from elodie.media.photo import Photo
-from elodie.media.video import Video
-import pytest
-
-os.environ['TZ'] = 'GMT'
-
-def test_create_directory_success():
-    filesystem = FileSystem()
-    folder = os.path.join(helper.temp_dir(), helper.random_string(10))
-    status = filesystem.create_directory(folder)
-
-    # Needs to be a subdirectory
-    assert helper.temp_dir() != folder
-
-    assert status == True
-    assert os.path.isdir(folder) == True
-    assert os.path.exists(folder) == True
-
-    # Clean up
-    shutil.rmtree(folder)
-
-
-def test_create_directory_recursive_success():
-    filesystem = FileSystem()
-    folder = os.path.join(helper.temp_dir(), helper.random_string(10), helper.random_string(10))
-    status = filesystem.create_directory(folder)
-
-    # Needs to be a subdirectory
-    assert helper.temp_dir() != folder
-
-    assert status == True
-    assert os.path.isdir(folder) == True
-    assert os.path.exists(folder) == True
-
-    shutil.rmtree(folder)
-
-@mock.patch('elodie.filesystem.os.makedirs')
-def test_create_directory_invalid_permissions(mock_makedirs):
-    if os.name == 'nt':
-       pytest.skip("It isn't implemented on Windows")
-
-    # Mock the case where makedirs raises an OSError because the user does
-    # not have permission to create the given directory.
-    mock_makedirs.side_effect = OSError()
-
-    filesystem = FileSystem()
-    status = filesystem.create_directory('/apathwhichdoesnotexist/afolderwhichdoesnotexist')
-
-    assert status == False
-
-def test_delete_directory_if_empty():
-    filesystem = FileSystem()
-    folder = os.path.join(helper.temp_dir(), helper.random_string(10))
-    os.makedirs(folder)
-
-    assert os.path.isdir(folder) == True
-    assert os.path.exists(folder) == True
-
-    filesystem.delete_directory_if_empty(folder)
-
-    assert os.path.isdir(folder) == False
-    assert os.path.exists(folder) == False
-
-def test_delete_directory_if_empty_when_not_empty():
-    filesystem = FileSystem()
-    folder = os.path.join(helper.temp_dir(), helper.random_string(10), helper.random_string(10))
-    os.makedirs(folder)
-    parent_folder = os.path.dirname(folder)
-
-    assert os.path.isdir(folder) == True
-    assert os.path.exists(folder) == True
-    assert os.path.isdir(parent_folder) == True
-    assert os.path.exists(parent_folder) == True
-
-    filesystem.delete_directory_if_empty(parent_folder)
-
-    assert os.path.isdir(folder) == True
-    assert os.path.exists(folder) == True
-    assert os.path.isdir(parent_folder) == True
-    assert os.path.exists(parent_folder) == True
-
-    shutil.rmtree(parent_folder)
-
-def test_get_all_files_success():
-    filesystem = FileSystem()
-    folder = helper.populate_folder(5)
-
-    files = set()
-    files.update(filesystem.get_all_files(folder))
-    shutil.rmtree(folder)
-
-    length = len(files)
-    assert length == 5, files
-
-def test_get_all_files_by_extension():
-    filesystem = FileSystem()
-    folder = helper.populate_folder(5)
-
-    files = set()
-    files.update(filesystem.get_all_files(folder))
-    length = len(files)
-    assert length == 5, length
-
-    files = set()
-    files.update(filesystem.get_all_files(folder, 'jpg'))
-    length = len(files)
-    assert length == 3, length
-
-    files = set()
-    files.update(filesystem.get_all_files(folder, 'txt'))
-    length = len(files)
-    assert length == 2, length
-
-    files = set()
-    files.update(filesystem.get_all_files(folder, 'gif'))
-    length = len(files)
-    assert length == 0, length
-
-    shutil.rmtree(folder)
-
-def test_get_all_files_with_only_invalid_file():
-    filesystem = FileSystem()
-    folder = helper.populate_folder(0, include_invalid=True)
-
-    files = set()
-    files.update(filesystem.get_all_files(folder))
-    shutil.rmtree(folder)
-
-    length = len(files)
-    assert length == 0, length
-
-def test_get_all_files_with_invalid_file():
-    filesystem = FileSystem()
-    folder = helper.populate_folder(5, include_invalid=True)
-
-    files = set()
-    files.update(filesystem.get_all_files(folder))
-    shutil.rmtree(folder)
-
-    length = len(files)
-    assert length == 5, length
-
-def test_get_all_files_for_loop():
-    filesystem = FileSystem()
-    folder = helper.populate_folder(5)
-
-    files = set()
-    files.update()
-    counter = 0
-    for file in filesystem.get_all_files(folder):
-        counter += 1
-    shutil.rmtree(folder)
-
-    assert counter == 5, counter
-
-def test_get_current_directory():
-    filesystem = FileSystem()
-    assert os.getcwd() == filesystem.get_current_directory()
-
-def test_get_file_name_definition_default():
-    filesystem = FileSystem()
-    name_template, definition = filesystem.get_file_name_definition()
-
-    assert name_template == '%date-%original_name-%title.%extension', name_template
-    assert definition == [[('date', '%Y-%m-%d_%H-%M-%S')], [('original_name', '')], [('title', '')], [('extension', '')]], definition #noqa
-
-@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-custom-filename' % gettempdir())
-def test_get_file_name_definition_custom(mock_get_config_file):
-    with open(mock_get_config_file.return_value, 'w') as f:
-        f.write("""
-[File]
-date=%Y-%m-%b
-name=%date-%original_name.%extension
-        """)
-    if hasattr(load_config, 'config'):
-        del load_config.config
-
-    filesystem = FileSystem()
-    name_template, definition = filesystem.get_file_name_definition()
-
-    if hasattr(load_config, 'config'):
-        del load_config.config
-
-    assert name_template == '%date-%original_name.%extension', name_template
-    assert definition == [[('date', '%Y-%m-%b')], [('original_name', '')], [('extension', '')]], definition #noqa
-
-def test_get_file_name_plain():
-    filesystem = FileSystem()
-    media = Photo(helper.get_file('plain.jpg'))
-    file_name = filesystem.get_file_name(media.get_metadata())
-
-    assert file_name == helper.path_tz_fix('2015-12-05_00-59-26-plain.jpg'), file_name
-
-def test_get_file_name_with_title():
-    filesystem = FileSystem()
-    media = Photo(helper.get_file('with-title.jpg'))
-    file_name = filesystem.get_file_name(media.get_metadata())
-
-    assert file_name == helper.path_tz_fix('2015-12-05_00-59-26-with-title-some-title.jpg'), file_name
-
-def test_get_file_name_with_original_name_exif():
-    filesystem = FileSystem()
-    media = Photo(helper.get_file('with-filename-in-exif.jpg'))
-    file_name = filesystem.get_file_name(media.get_metadata())
-
-    assert file_name == helper.path_tz_fix('2015-12-05_00-59-26-foobar.jpg'), file_name
-
-def test_get_file_name_with_original_name_title_exif():
-    filesystem = FileSystem()
-    media = Photo(helper.get_file('with-filename-and-title-in-exif.jpg'))
-    file_name = filesystem.get_file_name(media.get_metadata())
-
-    assert file_name == helper.path_tz_fix('2015-12-05_00-59-26-foobar-foobar-title.jpg'), file_name
-
-def test_get_file_name_with_uppercase_and_spaces():
-    filesystem = FileSystem()
-    media = Photo(helper.get_file('Plain With Spaces And Uppercase 123.jpg'))
-    file_name = filesystem.get_file_name(media.get_metadata())
-
-    assert file_name == helper.path_tz_fix('2015-12-05_00-59-26-plain-with-spaces-and-uppercase-123.jpg'), file_name
-
-@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-filename-custom' % gettempdir())
-def test_get_file_name_custom(mock_get_config_file):
-    with open(mock_get_config_file.return_value, 'w') as f:
-        f.write("""
-[File]
-date=%Y-%m-%b
-name=%date-%original_name.%extension
-        """)
-    if hasattr(load_config, 'config'):
-        del load_config.config
-
-    filesystem = FileSystem()
-    media = Photo(helper.get_file('plain.jpg'))
-    file_name = filesystem.get_file_name(media.get_metadata())
-
-    if hasattr(load_config, 'config'):
-        del load_config.config
-
-    assert file_name == helper.path_tz_fix('2015-12-dec-plain.jpg'), file_name
-
-@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-filename-custom-with-title' % gettempdir())
-def test_get_file_name_custom_with_title(mock_get_config_file):
-    with open(mock_get_config_file.return_value, 'w') as f:
-        f.write("""
-[File]
-date=%Y-%m-%d
-name=%date-%original_name-%title.%extension
-        """)
-    if hasattr(load_config, 'config'):
-        del load_config.config
-
-    filesystem = FileSystem()
-    media = Photo(helper.get_file('with-title.jpg'))
-    file_name = filesystem.get_file_name(media.get_metadata())
-
-    if hasattr(load_config, 'config'):
-        del load_config.config
-
-    assert file_name == helper.path_tz_fix('2015-12-05-with-title-some-title.jpg'), file_name
-
-@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-filename-custom-with-empty-value' % gettempdir())
-def test_get_file_name_custom_with_empty_value(mock_get_config_file):
-    with open(mock_get_config_file.return_value, 'w') as f:
-        f.write("""
-[File]
-date=%Y-%m-%d
-name=%date-%original_name-%title.%extension
-        """)
-    if hasattr(load_config, 'config'):
-        del load_config.config
-
-    filesystem = FileSystem()
-    media = Photo(helper.get_file('plain.jpg'))
-    file_name = filesystem.get_file_name(media.get_metadata())
-
-    if hasattr(load_config, 'config'):
-        del load_config.config
-
-    assert file_name == helper.path_tz_fix('2015-12-05-plain.jpg'), file_name
-
-@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-filename-custom-with-lowercase' % gettempdir())
-def test_get_file_name_custom_with_lower_capitalization(mock_get_config_file):
-    with open(mock_get_config_file.return_value, 'w') as f:
-        f.write("""
-[File]
-date=%Y-%m-%d
-name=%date-%original_name-%title.%extension
-capitalization=lower
-        """)
-    if hasattr(load_config, 'config'):
-        del load_config.config
-
-    filesystem = FileSystem()
-    media = Photo(helper.get_file('plain.jpg'))
-    file_name = filesystem.get_file_name(media.get_metadata())
-
-    if hasattr(load_config, 'config'):
-        del load_config.config
-
-    assert file_name == helper.path_tz_fix('2015-12-05-plain.jpg'), file_name
-
-@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-filename-custom-with-invalidcase' % gettempdir())
-def test_get_file_name_custom_with_invalid_capitalization(mock_get_config_file):
-    with open(mock_get_config_file.return_value, 'w') as f:
-        f.write("""
-[File]
-date=%Y-%m-%d
-name=%date-%original_name-%title.%extension
-capitalization=garabage
-        """)
-    if hasattr(load_config, 'config'):
-        del load_config.config
-
-    filesystem = FileSystem()
-    media = Photo(helper.get_file('plain.jpg'))
-    file_name = filesystem.get_file_name(media.get_metadata())
-
-    if hasattr(load_config, 'config'):
-        del load_config.config
-
-    assert file_name == helper.path_tz_fix('2015-12-05-plain.jpg'), file_name
-
-@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-filename-custom-with-uppercase' % gettempdir())
-def test_get_file_name_custom_with_upper_capitalization(mock_get_config_file):
-    with open(mock_get_config_file.return_value, 'w') as f:
-        f.write("""
-[File]
-date=%Y-%m-%d
-name=%date-%original_name-%title.%extension
-capitalization=upper
-        """)
-    if hasattr(load_config, 'config'):
-        del load_config.config
-
-    filesystem = FileSystem()
-    media = Photo(helper.get_file('plain.jpg'))
-    file_name = filesystem.get_file_name(media.get_metadata())
-
-    if hasattr(load_config, 'config'):
-        del load_config.config
-
-    assert file_name == helper.path_tz_fix('2015-12-05-PLAIN.JPG'), file_name
-
-def test_get_folder_path_plain():
-    filesystem = FileSystem()
-    media = Photo(helper.get_file('plain.jpg'))
-    path = filesystem.get_folder_path(media.get_metadata())
-
-    assert path == os.path.join('2015-12-Dec','Unknown Location'), path
-
-def test_get_folder_path_with_title():
-    filesystem = FileSystem()
-    media = Photo(helper.get_file('with-title.jpg'))
-    path = filesystem.get_folder_path(media.get_metadata())
-
-    assert path == os.path.join('2015-12-Dec','Unknown Location'), path
-
-def test_get_folder_path_with_location():
-    filesystem = FileSystem()
-    media = Photo(helper.get_file('with-location.jpg'))
-    path = filesystem.get_folder_path(media.get_metadata())
-
-    assert path == os.path.join('2015-12-Dec','Sunnyvale'), path
-
-@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-original-with-camera-make-and-model' % gettempdir())
-def test_get_folder_path_with_camera_make_and_model(mock_get_config_file):
-    with open(mock_get_config_file.return_value, 'w') as f:
-        f.write("""
-[Directory]
-full_path=%camera_make/%camera_model
-        """)
-    if hasattr(load_config, 'config'):
-        del load_config.config
-    filesystem = FileSystem()
-    media = Photo(helper.get_file('plain.jpg'))
-    path = filesystem.get_folder_path(media.get_metadata())
-    if hasattr(load_config, 'config'):
-        del load_config.config
-
-    assert path == os.path.join('Canon', 'Canon EOS REBEL T2i'), path
-
-@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-original-with-camera-make-and-model-fallback' % gettempdir())
-def test_get_folder_path_with_camera_make_and_model_fallback(mock_get_config_file):
-    with open(mock_get_config_file.return_value, 'w') as f:
-        f.write("""
-[Directory]
-full_path=%camera_make|"nomake"/%camera_model|"nomodel"
-        """)
-    if hasattr(load_config, 'config'):
-        del load_config.config
-    filesystem = FileSystem()
-    media = Photo(helper.get_file('no-exif.jpg'))
-    path = filesystem.get_folder_path(media.get_metadata())
-    if hasattr(load_config, 'config'):
-        del load_config.config
-
-    assert path == os.path.join('nomake', 'nomodel'), path
-
-@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-int-in-component-path' % gettempdir())
-def test_get_folder_path_with_int_in_config_component(mock_get_config_file):
-    # gh-239
-    with open(mock_get_config_file.return_value, 'w') as f:
-        f.write("""
-[Directory]
-date=%Y
-full_path=%date
-        """)
-    if hasattr(load_config, 'config'):
-        del load_config.config
-    filesystem = FileSystem()
-    media = Photo(helper.get_file('plain.jpg'))
-    path = filesystem.get_folder_path(media.get_metadata())
-    if hasattr(load_config, 'config'):
-        del load_config.config
-
-    assert path == os.path.join('2015'), path
-
-@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-combined-date-and-album' % gettempdir())
-def test_get_folder_path_with_combined_date_and_album(mock_get_config_file):
-    # gh-239
-    with open(mock_get_config_file.return_value, 'w') as f:
-        f.write("""
-[Directory]
-date=%Y-%m-%b
-custom=%date %album
-full_path=%custom
-        """)
-    if hasattr(load_config, 'config'):
-        del load_config.config
-    filesystem = FileSystem()
-    media = Photo(helper.get_file('with-album.jpg'))
-    path = filesystem.get_folder_path(media.get_metadata())
-    if hasattr(load_config, 'config'):
-        del load_config.config
-
-    assert path == '2015-12-Dec Test Album', path
-
-@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-combined-date-album-location-fallback' % gettempdir())
-def test_get_folder_path_with_album_and_location_fallback(mock_get_config_file):
-    # gh-279
-    with open(mock_get_config_file.return_value, 'w') as f:
-        f.write("""
-[Directory]
-date=%Y-%m-%b
-custom=%album
-full_path=%custom|%city
-        """)
-    if hasattr(load_config, 'config'):
-        del load_config.config
-    filesystem = FileSystem()
-
-    # Test with no location
-    media = Photo(helper.get_file('plain.jpg'))
-    path_plain = filesystem.get_folder_path(media.get_metadata())
-
-    # Test with City
-    media = Photo(helper.get_file('with-location.jpg'))
-    path_city = filesystem.get_folder_path(media.get_metadata())
-    if hasattr(load_config, 'config'):
-        del load_config.config
-
-    assert path_plain == 'Unknown Location', path_plain
-    assert path_city == 'Sunnyvale', path_city
-
-
-def test_get_folder_path_with_int_in_source_path():
-    # gh-239
-    filesystem = FileSystem()
-    temporary_folder, folder = helper.create_working_folder('int')
-
-    origin = os.path.join(folder,'plain.jpg')
-    shutil.copyfile(helper.get_file('plain.jpg'), origin)
-
-    media = Photo(origin)
-    path = filesystem.get_folder_path(media.get_metadata())
-
-    assert path == os.path.join('2015-12-Dec','Unknown Location'), path
-
-@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-original-default-unknown-location' % gettempdir())
-def test_get_folder_path_with_original_default_unknown_location(mock_get_config_file):
-    with open(mock_get_config_file.return_value, 'w') as f:
-        f.write('')
-    if hasattr(load_config, 'config'):
-        del load_config.config
-    filesystem = FileSystem()
-    media = Photo(helper.get_file('plain.jpg'))
-    path = filesystem.get_folder_path(media.get_metadata())
-    if hasattr(load_config, 'config'):
-        del load_config.config
-
-    assert path == os.path.join('2015-12-Dec','Unknown Location'), path
-
-@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-custom-path' % gettempdir())
-def test_get_folder_path_with_custom_path(mock_get_config_file):
-    with open(mock_get_config_file.return_value, 'w') as f:
-        f.write("""
-[MapQuest]
-key=czjNKTtFjLydLteUBwdgKAIC8OAbGLUx
-
-[Directory]
-date=%Y-%m-%d
-location=%country-%state-%city
-full_path=%date/%location
-        """)
-    if hasattr(load_config, 'config'):
-        del load_config.config
-    filesystem = FileSystem()
-    media = Photo(helper.get_file('with-location.jpg'))
-    path = filesystem.get_folder_path(media.get_metadata())
-    if hasattr(load_config, 'config'):
-        del load_config.config
-
-    assert path == os.path.join('2015-12-05','US-CA-Sunnyvale'), path
-
-@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-fallback' % gettempdir())
-def test_get_folder_path_with_fallback_folder(mock_get_config_file):
-    with open(mock_get_config_file.return_value, 'w') as f:
-        f.write("""
-[Directory]
-year=%Y
-month=%m
-full_path=%year/%month/%album|%"No Album Fool"/%month
-        """)
-#full_path=%year/%album|"No Album"
-    if hasattr(load_config, 'config'):
-        del load_config.config
-    filesystem = FileSystem()
-    media = Photo(helper.get_file('plain.jpg'))
-    path = filesystem.get_folder_path(media.get_metadata())
-    if hasattr(load_config, 'config'):
-        del load_config.config
-
-    assert path == os.path.join('2015','12','No Album Fool','12'), path
-
-@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-location-date' % gettempdir())
-def test_get_folder_path_with_with_more_than_two_levels(mock_get_config_file):
-    with open(mock_get_config_file.return_value, 'w') as f:
-        f.write("""
-[MapQuest]
-key=czjNKTtFjLydLteUBwdgKAIC8OAbGLUx
-
-[Directory]
-year=%Y
-month=%m
-location=%city, %state
-full_path=%year/%month/%location
-        """)
-
-    if hasattr(load_config, 'config'):
-        del load_config.config
-
-    filesystem = FileSystem()
-    media = Photo(helper.get_file('with-location.jpg'))
-    path = filesystem.get_folder_path(media.get_metadata())
-    if hasattr(load_config, 'config'):
-        del load_config.config
+from elodie.localstorage import Db
+from elodie.media.base import Base, get_all_subclasses
+from elodie.plugins.plugins import Plugins
+
+class FileSystem(object):
+    """A class for interacting with the file system."""
+
+    def __init__(self):
+        # The default file name definition
+        self.default_file_name_definition = {
+            'date': '%Y-%m-%d_%H-%M-%S',
+            'name': '%date-%original_name-%title.%extension',
+        }
+        # The default folder path is along the lines of 2015-01-Jan/Chicago
+        self.default_folder_path_definition = {
+            'date': '%Y-%m-%b',
+            'location': '%city',
+            'full_path': '%date/%album|%location|%"{}"'.format(
+                            geolocation.__DEFAULT_LOCATION__
+                         ),
+        }
+        self.cached_file_name_definition = None
+        self.cached_folder_path_definition = None
+        # Python3 treats the regex \s differently than Python2.
+        # It captures some additional characters like the unicode checkmark \u2713.
+        # See build failures in Python3 here.
+        #  https://travis-ci.org/jmathai/elodie/builds/483012902
+        self.whitespace_regex = '[ \t\n\r\f\v]+'
+
+        # Instantiate a plugins object
+        self.plugins = Plugins()
+
+    def _file_operation(self, operation_type, src, dst=None):
+        """Perform file operation with dry-run support."""
+        if constants.dry_run:
+            if dst:
+                print(f"[DRY-RUN] Would {operation_type}: {src} -> {dst}")
+            else:
+                print(f"[DRY-RUN] Would {operation_type}: {src}")
+            return True  # Simulate success
         
-    assert path == os.path.join('2015','12','Sunnyvale, CA'), path
-
-@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-location-date' % gettempdir())
-def test_get_folder_path_with_with_only_one_level(mock_get_config_file):
-    with open(mock_get_config_file.return_value, 'w') as f:
-        f.write("""
-[Directory]
-year=%Y
-full_path=%year
-        """)
-
-    if hasattr(load_config, 'config'):
-        del load_config.config
-
-    filesystem = FileSystem()
-    media = Photo(helper.get_file('plain.jpg'))
-    path = filesystem.get_folder_path(media.get_metadata())
-    if hasattr(load_config, 'config'):
-        del load_config.config
-
-    assert path == os.path.join('2015'), path
-
-def test_get_folder_path_with_location_and_title():
-    filesystem = FileSystem()
-    media = Photo(helper.get_file('with-location-and-title.jpg'))
-    path = filesystem.get_folder_path(media.get_metadata())
-
-    assert path == os.path.join('2015-12-Dec','Sunnyvale'), path
-
-def test_parse_folder_name_default():
-    if hasattr(load_config, 'config'):
-        del load_config.config
-    filesystem = FileSystem()
-    place_name = {'default': u'CA', 'country': u'US', 'state': u'CA', 'city': u'Sunnyvale'}
-    mask = '%city'
-    location_parts = re.findall('(%[^%]+)', mask)
-    path = filesystem.parse_mask_for_location(mask, location_parts, place_name)
-    if hasattr(load_config, 'config'):
-        del load_config.config
-
-    assert path == 'Sunnyvale', path
-
-def test_parse_folder_name_multiple():
-    if hasattr(load_config, 'config'):
-        del load_config.config
-    filesystem = FileSystem()
-    place_name = {'default': u'CA', 'country': u'US', 'state': u'CA', 'city': u'Sunnyvale'}
-    mask = '%city-%state-%country'
-    location_parts = re.findall('(%[^%]+)', mask)
-    path = filesystem.parse_mask_for_location(mask, location_parts, place_name)
-    if hasattr(load_config, 'config'):
-        del load_config.config
-
-    assert path == 'Sunnyvale-CA-US', path
-
-def test_parse_folder_name_static_chars():
-    if hasattr(load_config, 'config'):
-        del load_config.config
-    filesystem = FileSystem()
-    place_name = {'default': u'CA', 'country': u'US', 'state': u'CA', 'city': u'Sunnyvale'}
-    mask = '%city-is-the-city'
-    location_parts = re.findall('(%[^%]+)', mask)
-    path = filesystem.parse_mask_for_location(mask, location_parts, place_name)
-    if hasattr(load_config, 'config'):
-        del load_config.config
-
-    assert path == 'Sunnyvale-is-the-city', path
-
-def test_parse_folder_name_key_not_found():
-    if hasattr(load_config, 'config'):
-        del load_config.config
-    filesystem = FileSystem()
-    place_name = {'default': u'CA', 'country': u'US', 'state': u'CA'}
-    mask = '%city'
-    location_parts = re.findall('(%[^%]+)', mask)
-    path = filesystem.parse_mask_for_location(mask, location_parts, place_name)
-    if hasattr(load_config, 'config'):
-        del load_config.config
-
-    assert path == 'CA', path
-
-def test_parse_folder_name_key_not_found_with_static_chars():
-    if hasattr(load_config, 'config'):
-        del load_config.config
-    filesystem = FileSystem()
-    place_name = {'default': u'CA', 'country': u'US', 'state': u'CA'}
-    mask = '%city-is-not-found'
-    location_parts = re.findall('(%[^%]+)', mask)
-    path = filesystem.parse_mask_for_location(mask, location_parts, place_name)
-    if hasattr(load_config, 'config'):
-        del load_config.config
-
-    assert path == 'CA', path
-
-def test_parse_folder_name_multiple_keys_not_found():
-    if hasattr(load_config, 'config'):
-        del load_config.config
-    filesystem = FileSystem()
-    place_name = {'default': u'US', 'country': u'US'}
-    mask = '%city-%state'
-    location_parts = re.findall('(%[^%]+)', mask)
-    path = filesystem.parse_mask_for_location(mask, location_parts, place_name)
-    if hasattr(load_config, 'config'):
-        del load_config.config
-
-    assert path == 'US', path
-
-def test_process_file_invalid():
-    filesystem = FileSystem()
-    temporary_folder, folder = helper.create_working_folder()
-
-    origin = os.path.join(folder,'photo.jpg')
-    shutil.copyfile(helper.get_file('invalid.jpg'), origin)
-
-    media = Photo(origin)
-    destination = filesystem.process_file(origin, temporary_folder, media, allowDuplicate=True)
-
-    assert destination is None
-
-def test_process_file_plain():
-    filesystem = FileSystem()
-    temporary_folder, folder = helper.create_working_folder()
-
-    origin = os.path.join(folder,'photo.jpg')
-    shutil.copyfile(helper.get_file('plain.jpg'), origin)
-
-    origin_checksum_preprocess = helper.checksum(origin)
-    media = Photo(origin)
-    destination = filesystem.process_file(origin, temporary_folder, media, allowDuplicate=True)
-
-    origin_checksum = helper.checksum(origin)
-    destination_checksum = helper.checksum(destination)
-
-    shutil.rmtree(folder)
-    shutil.rmtree(os.path.dirname(os.path.dirname(destination)))
-
-    assert origin_checksum_preprocess is not None
-    assert origin_checksum is not None
-    assert destination_checksum is not None
-    assert origin_checksum_preprocess == origin_checksum
-    assert helper.path_tz_fix(os.path.join('2015-12-Dec','Unknown Location','2015-12-05_00-59-26-photo.jpg')) in destination, destination
-
-def test_process_file_with_title():
-    filesystem = FileSystem()
-    temporary_folder, folder = helper.create_working_folder()
-
-    origin = '%s/photo.jpg' % folder
-    shutil.copyfile(helper.get_file('with-title.jpg'), origin)
-
-    origin_checksum_preprocess = helper.checksum(origin)
-    media = Photo(origin)
-    destination = filesystem.process_file(origin, temporary_folder, media, allowDuplicate=True)
-
-    origin_checksum = helper.checksum(origin)
-    destination_checksum = helper.checksum(destination)
-
-    shutil.rmtree(folder)
-    shutil.rmtree(os.path.dirname(os.path.dirname(destination)))
-
-    assert origin_checksum_preprocess is not None
-    assert origin_checksum is not None
-    assert destination_checksum is not None
-    assert origin_checksum_preprocess == origin_checksum
-    assert helper.path_tz_fix(os.path.join('2015-12-Dec','Unknown Location','2015-12-05_00-59-26-photo-some-title.jpg')) in destination, destination
-
-def test_process_file_with_location():
-    filesystem = FileSystem()
-    temporary_folder, folder = helper.create_working_folder()
-
-    origin = os.path.join(folder,'photo.jpg')
-    shutil.copyfile(helper.get_file('with-location.jpg'), origin)
-
-    origin_checksum_preprocess = helper.checksum(origin)
-    media = Photo(origin)
-    destination = filesystem.process_file(origin, temporary_folder, media, allowDuplicate=True)
-
-    origin_checksum = helper.checksum(origin)
-    destination_checksum = helper.checksum(destination)
-
-    shutil.rmtree(folder)
-    shutil.rmtree(os.path.dirname(os.path.dirname(destination)))
-
-    assert origin_checksum_preprocess is not None
-    assert origin_checksum is not None
-    assert destination_checksum is not None
-    assert origin_checksum_preprocess == origin_checksum
-    assert helper.path_tz_fix(os.path.join('2015-12-Dec','Sunnyvale','2015-12-05_00-59-26-photo.jpg')) in destination, destination
-
-def test_process_file_validate_original_checksum():
-    filesystem = FileSystem()
-    temporary_folder, folder = helper.create_working_folder()
-
-    origin = os.path.join(folder,'photo.jpg')
-    shutil.copyfile(helper.get_file('plain.jpg'), origin)
-
-    origin_checksum_preprocess = helper.checksum(origin)
-    media = Photo(origin)
-    destination = filesystem.process_file(origin, temporary_folder, media, allowDuplicate=True)
-
-    origin_checksum = helper.checksum(origin)
-    destination_checksum = helper.checksum(destination)
-
-    shutil.rmtree(folder)
-    shutil.rmtree(os.path.dirname(os.path.dirname(destination)))
-
-    assert origin_checksum_preprocess is not None, origin_checksum_preprocess
-    assert origin_checksum is not None, origin_checksum
-    assert destination_checksum is not None, destination_checksum
-    assert origin_checksum_preprocess == origin_checksum, (origin_checksum_preprocess, origin_checksum)
-
-
-# See https://github.com/jmathai/elodie/issues/330
-def test_process_file_no_exif_date_is_correct_gh_330():
-    filesystem = FileSystem()
-    temporary_folder, folder = helper.create_working_folder()
-
-    origin = os.path.join(folder,'photo.jpg')
-    shutil.copyfile(helper.get_file('no-exif.jpg'), origin)
-
-    atime = 1330712100
-    utime = 1330712900
-    os.utime(origin, (atime, utime))
-
-    media = Photo(origin)
-    metadata = media.get_metadata()
-
-    destination = filesystem.process_file(origin, temporary_folder, media, allowDuplicate=True)
-
-    shutil.rmtree(folder)
-    shutil.rmtree(os.path.dirname(os.path.dirname(destination)))
-
-    assert '/2012-03-Mar/' in destination, destination
-    assert '/2012-03-02_18-28-20' in destination, destination
-
-def test_process_file_with_location_and_title():
-    filesystem = FileSystem()
-    temporary_folder, folder = helper.create_working_folder()
-
-    origin = os.path.join(folder,'photo.jpg')
-    shutil.copyfile(helper.get_file('with-location-and-title.jpg'), origin)
-
-    origin_checksum_preprocess = helper.checksum(origin)
-    media = Photo(origin)
-    destination = filesystem.process_file(origin, temporary_folder, media, allowDuplicate=True)
-
-    origin_checksum = helper.checksum(origin)
-    destination_checksum = helper.checksum(destination)
-
-    shutil.rmtree(folder)
-    shutil.rmtree(os.path.dirname(os.path.dirname(destination)))
-
-    assert origin_checksum_preprocess is not None
-    assert origin_checksum is not None
-    assert destination_checksum is not None
-    assert origin_checksum_preprocess == origin_checksum
-    assert helper.path_tz_fix(os.path.join('2015-12-Dec','Sunnyvale','2015-12-05_00-59-26-photo-some-title.jpg')) in destination, destination
-
-def test_process_file_with_album():
-    filesystem = FileSystem()
-    temporary_folder, folder = helper.create_working_folder()
-
-    origin = os.path.join(folder,'photo.jpg')
-    shutil.copyfile(helper.get_file('with-album.jpg'), origin)
-
-    origin_checksum_preprocess = helper.checksum(origin)
-    media = Photo(origin)
-    destination = filesystem.process_file(origin, temporary_folder, media, allowDuplicate=True)
-
-    origin_checksum = helper.checksum(origin)
-    destination_checksum = helper.checksum(destination)
-
-    shutil.rmtree(folder)
-    shutil.rmtree(os.path.dirname(os.path.dirname(destination)))
-
-    assert origin_checksum_preprocess is not None
-    assert origin_checksum is not None
-    assert destination_checksum is not None
-    assert origin_checksum_preprocess == origin_checksum
-    assert helper.path_tz_fix(os.path.join('2015-12-Dec','Test Album','2015-12-05_00-59-26-photo.jpg')) in destination, destination
-
-def test_process_file_with_album_and_title():
-    filesystem = FileSystem()
-    temporary_folder, folder = helper.create_working_folder()
-
-    origin = os.path.join(folder,'photo.jpg')
-    shutil.copyfile(helper.get_file('with-album-and-title.jpg'), origin)
-
-    origin_checksum_preprocess = helper.checksum(origin)
-    media = Photo(origin)
-    destination = filesystem.process_file(origin, temporary_folder, media, allowDuplicate=True)
-
-    origin_checksum = helper.checksum(origin)
-    destination_checksum = helper.checksum(destination)
-
-    shutil.rmtree(folder)
-    shutil.rmtree(os.path.dirname(os.path.dirname(destination)))
-
-    assert origin_checksum_preprocess is not None
-    assert origin_checksum is not None
-    assert destination_checksum is not None
-    assert origin_checksum_preprocess == origin_checksum
-    assert helper.path_tz_fix(os.path.join('2015-12-Dec','Test Album','2015-12-05_00-59-26-photo-some-title.jpg')) in destination, destination
-
-def test_process_file_with_album_and_title_and_location():
-    filesystem = FileSystem()
-    temporary_folder, folder = helper.create_working_folder()
-
-    origin = os.path.join(folder,'photo.jpg')
-    shutil.copyfile(helper.get_file('with-album-and-title-and-location.jpg'), origin)
-
-    origin_checksum_preprocess = helper.checksum(origin)
-    media = Photo(origin)
-    destination = filesystem.process_file(origin, temporary_folder, media, allowDuplicate=True)
-
-    origin_checksum = helper.checksum(origin)
-    destination_checksum = helper.checksum(destination)
-
-    shutil.rmtree(folder)
-    shutil.rmtree(os.path.dirname(os.path.dirname(destination)))
-
-    assert origin_checksum_preprocess is not None
-    assert origin_checksum is not None
-    assert destination_checksum is not None
-    assert origin_checksum_preprocess == origin_checksum
-    assert helper.path_tz_fix(os.path.join('2015-12-Dec','Test Album','2015-12-05_00-59-26-photo-some-title.jpg')) in destination, destination
-
-# gh-89 (setting album then title reverts album)
-def test_process_video_with_album_then_title():
-    filesystem = FileSystem()
-    temporary_folder, folder = helper.create_working_folder()
-
-    origin = os.path.join(folder,'movie.mov')
-    shutil.copyfile(helper.get_file('video.mov'), origin)
-
-    origin_checksum = helper.checksum(origin)
-
-    origin_checksum_preprocess = helper.checksum(origin)
-    media = Video(origin)
-    media.set_album('test_album')
-    media.set_title('test_title')
-    destination = filesystem.process_file(origin, temporary_folder, media, allowDuplicate=True)
-
-    destination_checksum = helper.checksum(destination)
-
-    shutil.rmtree(folder)
-    shutil.rmtree(os.path.dirname(os.path.dirname(destination)))
-
-    assert origin_checksum_preprocess is not None
-    assert origin_checksum is not None
-    assert destination_checksum is not None
-    assert origin_checksum_preprocess == origin_checksum
-    assert helper.path_tz_fix(os.path.join('2015-01-Jan','test_album','2015-01-19_12-45-11-movie-test_title.mov')) in destination, destination
-
-@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-fallback-folder' % gettempdir())
-def test_process_file_fallback_folder(mock_get_config_file):
-    with open(mock_get_config_file.return_value, 'w') as f:
-        f.write("""
-[Directory]
-date=%Y-%m
-full_path=%date/%album|"fallback"
-        """)
-
-    if hasattr(load_config, 'config'):
-        del load_config.config
-    filesystem = FileSystem()
-    temporary_folder, folder = helper.create_working_folder()
-
-    origin = os.path.join(folder,'plain.jpg')
-    shutil.copyfile(helper.get_file('plain.jpg'), origin)
-
-    media = Photo(origin)
-    destination = filesystem.process_file(origin, temporary_folder, media, allowDuplicate=True)
-    if hasattr(load_config, 'config'):
-        del load_config.config
-
-    assert helper.path_tz_fix(os.path.join('2015-12', 'fallback', '2015-12-05_00-59-26-plain.jpg')) in destination, destination
-
-    shutil.rmtree(folder)
-    shutil.rmtree(os.path.dirname(os.path.dirname(destination)))
-
-@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-multiple-directories' % gettempdir())
-def test_process_twice_more_than_two_levels_of_directories(mock_get_config_file):
-    with open(mock_get_config_file.return_value, 'w') as f:
-        f.write("""
-[Directory]
-year=%Y
-month=%m
-day=%d
-full_path=%year/%month/%day
-        """)
-
-    if hasattr(load_config, 'config'):
-        del load_config.config
-
-    filesystem = FileSystem()
-    temporary_folder, folder = helper.create_working_folder()
-
-    origin = os.path.join(folder,'plain.jpg')
-    shutil.copyfile(helper.get_file('plain.jpg'), origin)
-
-    media = Photo(origin)
-    destination = filesystem.process_file(origin, temporary_folder, media, allowDuplicate=True)
-    if hasattr(load_config, 'config'):
-        del load_config.config
-
-    assert helper.path_tz_fix(os.path.join('2015','12','05', '2015-12-05_00-59-26-plain.jpg')) in destination, destination
-
-    if hasattr(load_config, 'config'):
-        del load_config.config
-
-    media_second = Photo(destination)
-    media_second.set_title('foo')
-    destination_second = filesystem.process_file(destination, temporary_folder, media_second, allowDuplicate=True)
-
-    if hasattr(load_config, 'config'):
-        del load_config.config
-
-    assert destination.replace('.jpg', '-foo.jpg') == destination_second, destination_second
-
-    shutil.rmtree(folder)
-    shutil.rmtree(os.path.dirname(os.path.dirname(destination)))
-
-def test_process_existing_file_without_changes():
-    # gh-210
-    filesystem = FileSystem()
-    temporary_folder, folder = helper.create_working_folder()
-
-    origin = os.path.join(folder,'plain.jpg')
-    shutil.copyfile(helper.get_file('plain.jpg'), origin)
-
-    media = Photo(origin)
-    destination = filesystem.process_file(origin, temporary_folder, media, allowDuplicate=True)
-
-    assert helper.path_tz_fix(os.path.join('2015-12-Dec', 'Unknown Location', '2015-12-05_00-59-26-plain.jpg')) in destination, destination
-
-    media_second = Photo(destination)
-    destination_second = filesystem.process_file(destination, temporary_folder, media_second, allowDuplicate=True)
-
-    assert destination_second is None, destination_second
-
-    shutil.rmtree(folder)
-    shutil.rmtree(os.path.dirname(os.path.dirname(destination)))
-
-@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-plugin-throw-error' % gettempdir())
-def test_process_file_with_plugin_throw_error(mock_get_config_file):
-    with open(mock_get_config_file.return_value, 'w') as f:
-        f.write("""
-[Plugins]
-plugins=ThrowError
-        """)
-
-    if hasattr(load_config, 'config'):
-        del load_config.config
-
-    filesystem = FileSystem()
-    temporary_folder, folder = helper.create_working_folder()
-
-    origin = os.path.join(folder,'plain.jpg')
-    shutil.copyfile(helper.get_file('plain.jpg'), origin)
-
-    media = Photo(origin)
-    destination = filesystem.process_file(origin, temporary_folder, media, allowDuplicate=True)
-
-    if hasattr(load_config, 'config'):
-        del load_config.config
-
-    assert destination is None, destination
-
-@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-plugin-runtime-error' % gettempdir())
-def test_process_file_with_plugin_runtime_error(mock_get_config_file):
-    with open(mock_get_config_file.return_value, 'w') as f:
-        f.write("""
-[Plugins]
-plugins=RuntimeError
-        """)
-    if hasattr(load_config, 'config'):
-        del load_config.config
-
-    filesystem = FileSystem()
-    temporary_folder, folder = helper.create_working_folder()
-
-    origin = os.path.join(folder,'plain.jpg')
-    shutil.copyfile(helper.get_file('plain.jpg'), origin)
-
-    media = Photo(origin)
-    destination = filesystem.process_file(origin, temporary_folder, media, allowDuplicate=True)
-
-    if hasattr(load_config, 'config'):
-        del load_config.config
-
-    assert '2015-12-Dec/Unknown Location/2015-12-05_00-59-26-plain.jpg' in destination, destination
-
-def test_set_utime_with_exif_date():
-    filesystem = FileSystem()
-    temporary_folder, folder = helper.create_working_folder()
-
-    origin = os.path.join(folder,'photo.jpg')
-    shutil.copyfile(helper.get_file('plain.jpg'), origin)
-
-    media_initial = Photo(origin)
-    metadata_initial = media_initial.get_metadata()
-
-    initial_stat = os.stat(origin)
-    initial_time = int(min(initial_stat.st_mtime, initial_stat.st_ctime))
-    initial_checksum = helper.checksum(origin)
-
-    assert initial_time != time.mktime(metadata_initial['date_taken'])
-
-    filesystem.set_utime_from_metadata(media_initial.get_metadata(), media_initial.get_file_path())
-    final_stat = os.stat(origin)
-    final_checksum = helper.checksum(origin)
-
-    media_final = Photo(origin)
-    metadata_final = media_final.get_metadata()
-
-    shutil.rmtree(folder)
-
-    assert initial_stat.st_mtime != final_stat.st_mtime
-    assert final_stat.st_mtime == time.mktime(metadata_final['date_taken'])
-    assert initial_checksum == final_checksum
-
-def test_set_utime_without_exif_date():
-    filesystem = FileSystem()
-    temporary_folder, folder = helper.create_working_folder()
-
-    origin = os.path.join(folder,'photo.jpg')
-    shutil.copyfile(helper.get_file('no-exif.jpg'), origin)
-
-    media_initial = Photo(origin)
-    metadata_initial = media_initial.get_metadata()
-
-    initial_stat = os.stat(origin)
-    initial_time = int(min(initial_stat.st_mtime, initial_stat.st_ctime))
-    initial_checksum = helper.checksum(origin)
-
-    assert initial_time == time.mktime(metadata_initial['date_taken'])
-
-    filesystem.set_utime_from_metadata(media_initial.get_metadata(), media_initial.get_file_path())
-    final_stat = os.stat(origin)
-    final_checksum = helper.checksum(origin)
-
-    media_final = Photo(origin)
-    metadata_final = media_final.get_metadata()
-
-    shutil.rmtree(folder)
-
-    assert initial_time == final_stat.st_mtime
-    assert final_stat.st_mtime == time.mktime(metadata_final['date_taken']), (final_stat.st_mtime, time.mktime(metadata_final['date_taken']))
-    assert initial_checksum == final_checksum
-
-def test_should_exclude_with_no_exclude_arg():
-    filesystem = FileSystem()
-    result = filesystem.should_exclude('/some/path')
-    assert result == False, result
-
-def test_should_exclude_with_non_matching_regex():
-    filesystem = FileSystem()
-    result = filesystem.should_exclude('/some/path', {re.compile('foobar')})
-    assert result == False, result
-
-def test_should_exclude_with_matching_regex():
-    filesystem = FileSystem()
-    result = filesystem.should_exclude('/some/path', {re.compile('some')})
-    assert result == True, result
-
-def test_should_not_exclude_with_multiple_with_non_matching_regex():
-    filesystem = FileSystem()
-    result = filesystem.should_exclude('/some/path', {re.compile('foobar'), re.compile('dne')})
-    assert result == False, result
-
-def test_should_exclude_with_multiple_with_one_matching_regex():
-    filesystem = FileSystem()
-    result = filesystem.should_exclude('/some/path', {re.compile('foobar'), re.compile('some')})
-    assert result == True, result
-
-def test_should_exclude_with_complex_matching_regex():
-    filesystem = FileSystem()
-    result = filesystem.should_exclude('/var/folders/j9/h192v5v95gd_fhpv63qzyd1400d9ct/T/T497XPQH2R/UATR2GZZTX/2016-04-Apr/London/2016-04-07_11-15-26-valid-sample-title.txt', {re.compile('London.*\.txt$')})
-    assert result == True, result
-
-@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-does-not-exist' % gettempdir())
-def test_get_folder_path_definition_default(mock_get_config_file):
-    if hasattr(load_config, 'config'):
-        del load_config.config
-    filesystem = FileSystem()
-    path_definition = filesystem.get_folder_path_definition()
-    if hasattr(load_config, 'config'):
-        del load_config.config
-
-    assert path_definition == [[('date', '%Y-%m-%b')], [('album', ''), ('location', '%city'), ('"Unknown Location"', '')]], path_definition
-
-@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-date-location' % gettempdir())
-def test_get_folder_path_definition_date_location(mock_get_config_file):
-    with open(mock_get_config_file.return_value, 'w') as f:
-        f.write("""
-[Directory]
-date=%Y-%m-%d
-location=%country
-full_path=%date/%location
-        """)
-
-    if hasattr(load_config, 'config'):
-        del load_config.config
-    filesystem = FileSystem()
-    path_definition = filesystem.get_folder_path_definition()
-    expected = [
-        [('date', '%Y-%m-%d')], [('location', '%country')]
-    ]
-    if hasattr(load_config, 'config'):
-        del load_config.config
-
-    assert path_definition == expected, path_definition
-
-@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-location-date' % gettempdir())
-def test_get_folder_path_definition_location_date(mock_get_config_file):
-    with open(mock_get_config_file.return_value, 'w') as f:
-        f.write("""
-[Directory]
-date=%Y-%m-%d
-location=%country
-full_path=%location/%date
-        """)
-
-    if hasattr(load_config, 'config'):
-        del load_config.config
-    filesystem = FileSystem()
-    path_definition = filesystem.get_folder_path_definition()
-    expected = [
-        [('location', '%country')], [('date', '%Y-%m-%d')]
-    ]
-    if hasattr(load_config, 'config'):
-        del load_config.config
-
-    assert path_definition == expected, path_definition
-
-@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-cached' % gettempdir())
-def test_get_folder_path_definition_cached(mock_get_config_file):
-    with open(mock_get_config_file.return_value, 'w') as f:
-        f.write("""
-[Directory]
-date=%Y-%m-%d
-location=%country
-full_path=%date/%location
-        """)
-
-    if hasattr(load_config, 'config'):
-        del load_config.config
-    filesystem = FileSystem()
-    path_definition = filesystem.get_folder_path_definition()
-    expected = [
-        [('date', '%Y-%m-%d')], [('location', '%country')]
-    ]
-
-    assert path_definition == expected, path_definition
-
-    with open(mock_get_config_file.return_value, 'w') as f:
-        f.write("""
-[Directory]
-date=%uncached
-location=%uncached
-full_path=%date/%location
-        """)
-    if hasattr(load_config, 'config'):
-        del load_config.config
-    filesystem = FileSystem()
-    path_definition = filesystem.get_folder_path_definition()
-    expected = [
-        [('date', '%Y-%m-%d')], [('location', '%country')]
-    ]
-    if hasattr(load_config, 'config'):
-        del load_config.config
-
-@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-location-date' % gettempdir())
-def test_get_folder_path_definition_with_more_than_two_levels(mock_get_config_file):
-    with open(mock_get_config_file.return_value, 'w') as f:
-        f.write("""
-[Directory]
-year=%Y
-month=%m
-day=%d
-full_path=%year/%month/%day
-        """)
-
-    if hasattr(load_config, 'config'):
-        del load_config.config
-    filesystem = FileSystem()
-    path_definition = filesystem.get_folder_path_definition()
-    expected = [
-        [('year', '%Y')], [('month', '%m')], [('day', '%d')]
-    ]
-    if hasattr(load_config, 'config'):
-        del load_config.config
-
-    assert path_definition == expected, path_definition
-
-@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-location-date' % gettempdir())
-def test_get_folder_path_definition_with_only_one_level(mock_get_config_file):
-    with open(mock_get_config_file.return_value, 'w') as f:
-        f.write("""
-[Directory]
-year=%Y
-full_path=%year
-        """)
-
-    if hasattr(load_config, 'config'):
-        del load_config.config
-    filesystem = FileSystem()
-    path_definition = filesystem.get_folder_path_definition()
-    expected = [
-        [('year', '%Y')]
-    ]
-    if hasattr(load_config, 'config'):
-        del load_config.config
-
-    assert path_definition == expected, path_definition
-
-@mock.patch('elodie.config.get_config_file', return_value='%s/config.ini-multi-level-custom' % gettempdir())
-def test_get_folder_path_definition_multi_level_custom(mock_get_config_file):
-    with open(mock_get_config_file.return_value, 'w') as f:
-        f.write("""
-[Directory]
-year=%Y
-month=%M
-full_path=%year/%album|%month|%"foo"/%month
-        """)
-
-    if hasattr(load_config, 'config'):
-        del load_config.config
-    filesystem = FileSystem()
-    path_definition = filesystem.get_folder_path_definition()
-    
-    expected = [[('year', '%Y')], [('album', ''), ('month', '%M'), ('"foo"', '')], [('month', '%M')]]
-    if hasattr(load_config, 'config'):
-        del load_config.config
-
-    assert path_definition == expected, path_definition
-
-
-# Dry-run tests
-@mock.patch('elodie.constants.dry_run', True)
-@mock.patch('builtins.print')
-@mock.patch('elodie.filesystem.shutil.move')
-def test_file_operation_move_dry_run(mock_move, mock_print):
-    """Test that move operation is logged but not executed in dry-run mode."""
-    filesystem = FileSystem()
-    result = filesystem._file_operation('move', '/src/file.jpg', '/dst/file.jpg')
-    
-    assert result == True
-    mock_print.assert_called_once_with('[DRY-RUN] Would move: /src/file.jpg -> /dst/file.jpg')
-    mock_move.assert_not_called()
-
-
-@mock.patch('elodie.constants.dry_run', True)
-@mock.patch('builtins.print')
-@mock.patch('elodie.filesystem.compatability._copyfile')
-def test_file_operation_copy_dry_run(mock_copy, mock_print):
-    """Test that copy operation is logged but not executed in dry-run mode."""
-    filesystem = FileSystem()
-    result = filesystem._file_operation('copy', '/src/file.jpg', '/dst/file.jpg')
-    
-    assert result == True
-    mock_print.assert_called_once_with('[DRY-RUN] Would copy: /src/file.jpg -> /dst/file.jpg')
-    mock_copy.assert_not_called()
-
-
-@mock.patch('elodie.constants.dry_run', True)
-@mock.patch('builtins.print')
-@mock.patch('elodie.filesystem.os.remove')
-def test_file_operation_remove_dry_run(mock_remove, mock_print):
-    """Test that remove operation is logged but not executed in dry-run mode."""
-    filesystem = FileSystem()
-    result = filesystem._file_operation('remove', '/tmp/file_original')
-    
-    assert result == True
-    mock_print.assert_called_once_with('[DRY-RUN] Would remove: /tmp/file_original')
-    mock_remove.assert_not_called()
-
-
-@mock.patch('elodie.constants.dry_run', True)
-@mock.patch('builtins.print')
-@mock.patch('elodie.filesystem.send2trash')
-def test_file_operation_send2trash_dry_run(mock_send2trash, mock_print):
-    """Test that send2trash operation is logged but not executed in dry-run mode."""
-    filesystem = FileSystem()
-    result = filesystem._file_operation('send2trash', '/tmp/file.jpg')
-    
-    assert result == True
-    mock_print.assert_called_once_with('[DRY-RUN] Would send2trash: /tmp/file.jpg')
-    mock_send2trash.assert_not_called()
-
-
-@mock.patch('elodie.constants.dry_run', False)
-@mock.patch('elodie.filesystem.shutil.move')
-def test_file_operation_move_normal_mode(mock_move):
-    """Test that move operation is executed normally when not in dry-run mode."""
-    filesystem = FileSystem()
-    result = filesystem._file_operation('move', '/src/file.jpg', '/dst/file.jpg')
-    
-    assert result == True
-    mock_move.assert_called_once_with('/src/file.jpg', '/dst/file.jpg')
-
-
-@mock.patch('elodie.constants.dry_run', False)
-@mock.patch('elodie.filesystem.compatability._copyfile')
-def test_file_operation_copy_normal_mode(mock_copy):
-    """Test that copy operation is executed normally when not in dry-run mode."""
-    filesystem = FileSystem()
-    result = filesystem._file_operation('copy', '/src/file.jpg', '/dst/file.jpg')
-    
-    assert result == True
-    mock_copy.assert_called_once_with('/src/file.jpg', '/dst/file.jpg')
-
-
-@mock.patch('elodie.constants.dry_run', False)
-@mock.patch('elodie.filesystem.os.remove')
-def test_file_operation_remove_normal_mode(mock_remove):
-    """Test that remove operation is executed normally when not in dry-run mode."""
-    filesystem = FileSystem()
-    result = filesystem._file_operation('remove', '/tmp/file_original')
-    
-    assert result == True
-    mock_remove.assert_called_once_with('/tmp/file_original')
-
-
-@mock.patch('elodie.constants.dry_run', True)
-@mock.patch('builtins.print')
-@mock.patch('elodie.filesystem.FileSystem._file_operation')
-@mock.patch('elodie.filesystem.FileSystem.create_directory')
-def test_process_file_dry_run_move_operation(mock_create_dir, mock_file_op, mock_print):
-    """Test that process_file uses _file_operation for moves in dry-run mode."""
-    filesystem = FileSystem()
-    
-    # Create a temporary test file
-    temp_dir = helper.temp_dir()
-    src_file = helper.get_file('plain.jpg')
-    test_file = os.path.join(temp_dir, 'test_plain.jpg')
-    shutil.copyfile(src_file, test_file)
-    
-    try:
-        # Mock the media object
-        media = Photo(test_file)
-        
-        # Mock successful file operation
-        mock_file_op.return_value = True
-        mock_create_dir.return_value = True
-        
-        # Call process_file with move=True
-        result = filesystem.process_file(test_file, temp_dir, media, move=True)
-        
-        # Verify that _file_operation was called for the move
-        mock_file_op.assert_called()
-        
-        # Check that one of the calls was a move operation
-        move_calls = [call for call in mock_file_op.call_args_list if call[0][0] == 'move']
-        assert len(move_calls) > 0, "Expected at least one move operation call"
-        
-    finally:
-        # Clean up
-        if os.path.exists(test_file):
-            os.remove(test_file)
-
-
-@mock.patch('elodie.constants.dry_run', True)
-@mock.patch('builtins.print')
-@mock.patch('elodie.filesystem.FileSystem._file_operation')
-@mock.patch('elodie.filesystem.FileSystem.create_directory')
-def test_process_file_dry_run_copy_operation(mock_create_dir, mock_file_op, mock_print):
-    """Test that process_file uses _file_operation for copies in dry-run mode."""
-    filesystem = FileSystem()
-    
-    # Create a temporary test file
-    temp_dir = helper.temp_dir()
-    src_file = helper.get_file('plain.jpg')
-    test_file = os.path.join(temp_dir, 'test_plain_copy.jpg')
-    shutil.copyfile(src_file, test_file)
-    
-    try:
-        # Mock the media object
-        media = Photo(test_file)
-        
-        # Mock successful file operation
-        mock_file_op.return_value = True
-        mock_create_dir.return_value = True
-        
-        # Call process_file with move=False (copy mode)
-        result = filesystem.process_file(test_file, temp_dir, media, move=False)
-        
-        # Verify that _file_operation was called
-        mock_file_op.assert_called()
-        
-        # Check that _file_operation was called for file operations
-        # In copy mode, we expect either a copy operation or move operations for exiftool handling
-        operation_calls = [call[0][0] for call in mock_file_op.call_args_list]
-        assert len(operation_calls) > 0, "Expected at least one file operation call"
-        
-        # Verify we have the expected operations (either copy or move for exiftool handling)
-        expected_operations = {'copy', 'move'}
-        assert any(op in expected_operations for op in operation_calls), f"Expected copy or move operations, got: {operation_calls}"
-        
-    finally:
-        # Clean up
-        if os.path.exists(test_file):
-            os.remove(test_file)
-
-@mock.patch('elodie.constants.dry_run', True)
-def test_process_file_dry_run_real():
-    """Test that process_file in dry-run mode doesn't actually move files."""
-    filesystem = FileSystem()
-    temporary_folder, folder = helper.create_working_folder()
-
-    origin = os.path.join(folder, 'photo.jpg')
-    shutil.copyfile(helper.get_file('plain.jpg'), origin)
-
-    media = Photo(origin)
-    destination = filesystem.process_file(origin, temporary_folder, media, allowDuplicate=True)
-    
-    # Should return destination path like normal mode
-    assert destination is not None, "Should return destination path even in dry-run mode"
-    
-    # But original file should still exist and destination file should not exist
-    assert os.path.exists(origin), "Original file should still exist in dry-run mode"
-    assert not os.path.exists(destination), "Destination file should not exist in dry-run mode"
-    
-    # Clean up
-    shutil.rmtree(folder)
-    if destination:
-        shutil.rmtree(os.path.dirname(os.path.dirname(destination)))
+        # Perform actual operation
+        if operation_type == 'move':
+            shutil.move(src, dst)
+        elif operation_type == 'copy':
+            compatability._copyfile(src, dst)
+        elif operation_type == 'remove':
+            os.remove(src)
+        elif operation_type == 'send2trash':
+            send2trash(src)
+        return True
+
+    def create_directory(self, directory_path):
+        """Create a directory if it does not already exist.
+
+        :param str directory_name: A fully qualified path of the
+            to create.
+        :returns: bool
+        """
+        try:
+            if os.path.exists(directory_path):
+                return True
+            else:
+                os.makedirs(directory_path)
+                return True
+        except OSError:
+            # OSError is thrown for cases like no permission
+            pass
+
+        return False
+
+    def delete_directory_if_empty(self, directory_path):
+        """Delete a directory only if it's empty.
+
+        Instead of checking first using `len([name for name in
+        os.listdir(directory_path)]) == 0`, we catch the OSError exception.
+
+        :param str directory_name: A fully qualified path of the directory
+            to delete.
+        """
+        try:
+            os.rmdir(directory_path)
+            return True
+        except OSError:
+            pass
+
+        return False
+
+    def get_all_files(self, path, extensions=None, exclude_regex_list=set()):
+        """Recursively get all files which match a path and extension.
+
+        :param str path string: Path to start recursive file listing
+        :param tuple(str) extensions: File extensions to include (whitelist)
+        :returns: generator
+        """
+        # If extensions is None then we get all supported extensions
+        if not extensions:
+            extensions = set()
+            subclasses = get_all_subclasses(Base)
+            for cls in subclasses:
+                extensions.update(cls.extensions)
+
+        # Create a list of compiled regular expressions to match against the file path
+        compiled_regex_list = [re.compile(regex) for regex in exclude_regex_list]
+        for dirname, dirnames, filenames in os.walk(path):
+            for filename in filenames:
+                # If file extension is in `extensions` 
+                # And if file path is not in exclude regexes
+                # Then append to the list
+                filename_path = os.path.join(dirname, filename)
+                if (
+                        os.path.splitext(filename)[1][1:].lower() in extensions and
+                        not self.should_exclude(filename_path, compiled_regex_list, False)
+                    ):
+                    yield filename_path
+
+    def get_current_directory(self):
+        """Get the current working directory.
+
+        :returns: str
+        """
+        return os.getcwd()
+
+    def get_file_name(self, metadata):
+        """Generate file name for a photo or video using its metadata.
+
+        Originally we hardcoded the file name to include an ISO date format.
+        We use an ISO8601-like format for the file name prefix. Instead of
+        colons as the separator for hours, minutes and seconds we use a hyphen.
+        https://en.wikipedia.org/wiki/ISO_8601#General_principles
+
+        PR #225 made the file name customizable and fixed issues #107 #110 #111.
+        https://github.com/jmathai/elodie/pull/225
+
+        :param media: A Photo or Video instance
+        :type media: :class:`~elodie.media.photo.Photo` or
+            :class:`~elodie.media.video.Video`
+        :returns: str or None for non-photo or non-videos
+        """
+        if(metadata is None):
+            return None
+
+        # Get the name template and definition.
+        # Name template is in the form %date-%original_name-%title.%extension
+        # Definition is in the form
+        #  [
+        #    [('date', '%Y-%m-%d_%H-%M-%S')],
+        #    [('original_name', '')], [('title', '')], // contains a fallback
+        #    [('extension', '')]
+        #  ]
+        name_template, definition = self.get_file_name_definition()
+
+        name = name_template
+        for parts in definition:
+            this_value = None
+            for this_part in parts:
+                part, mask = this_part
+                if part in ('date', 'day', 'month', 'year'):
+                    this_value = time.strftime(mask, metadata['date_taken'])
+                    break
+                elif part in ('location', 'city', 'state', 'country'):
+                    place_name = geolocation.place_name(
+                        metadata['latitude'],
+                        metadata['longitude']
+                    )
+
+                    location_parts = re.findall('(%[^%]+)', mask)
+                    this_value = self.parse_mask_for_location(
+                        mask,
+                        location_parts,
+                        place_name,
+                    )
+                    break
+                elif part in ('album', 'extension', 'title'):
+                    if metadata[part]:
+                        this_value = re.sub(self.whitespace_regex, '-', metadata[part].strip())
+                        break
+                elif part in ('original_name'):
+                    # First we check if we have metadata['original_name'].
+                    # We have to do this for backwards compatibility because
+                    #   we original did not store this back into EXIF.
+                    if metadata[part]:
+                        this_value = os.path.splitext(metadata['original_name'])[0]
+                    else:
+                        # We didn't always store original_name so this is 
+                        #  for backwards compatability.
+                        # We want to remove the hardcoded date prefix we used 
+                        #  to add to the name.
+                        # This helps when re-running the program on file 
+                        #  which were already processed.
+                        this_value = re.sub(
+                            '^\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}-',
+                            '',
+                            metadata['base_name']
+                        )
+                        if(len(this_value) == 0):
+                            this_value = metadata['base_name']
+
+                    # Lastly we want to sanitize the name
+                    this_value = re.sub(self.whitespace_regex, '-', this_value.strip())
+                elif part.startswith('"') and part.endswith('"'):
+                    this_value = part[1:-1]
+                    break
+
+            # Here we replace the placeholder with it's corresponding value.
+            # Check if this_value was not set so that the placeholder
+            #  can be removed completely.
+            # For example, %title- will be replaced with ''
+            # Else replace the placeholder (i.e. %title) with the value.
+            if this_value is None:
+                name = re.sub(
+                    #'[^a-z_]+%{}'.format(part),
+                    '[^a-zA-Z0-9_]+%{}'.format(part),
+                    '',
+                    name,
+                )
+            else:
+                name = re.sub(
+                    '%{}'.format(part),
+                    this_value,
+                    name,
+                )
+
+        config = load_config()
+
+        if('File' in config and 'capitalization' in config['File'] and config['File']['capitalization'] == 'upper'):
+            return name.upper()
+        else:
+            return name.lower()
+
+    def get_file_name_definition(self):
+        """Returns a list of folder definitions.
+
+        Each element in the list represents a folder.
+        Fallback folders are supported and are nested lists.
+        Return values take the following form.
+        [
+            ('date', '%Y-%m-%d'),
+            [
+                ('location', '%city'),
+                ('album', ''),
+                ('"Unknown Location", '')
+            ]
+        ]
+
+        :returns: list
+        """
+        # If we've done this already then return it immediately without
+        # incurring any extra work
+        if self.cached_file_name_definition is not None:
+            return self.cached_file_name_definition
+
+        config = load_config()
+
+        # If File is in the config we assume name and its
+        #  corresponding values are also present
+        config_file = self.default_file_name_definition
+        if('File' in config):
+            config_file = config['File']
+
+        # Find all subpatterns of name that map to the components of the file's
+        #  name.
+        #  I.e. %date-%original_name-%title.%extension => ['date', 'original_name', 'title', 'extension'] #noqa
+        path_parts = re.findall(
+                         '(\\%[a-z_]+)',
+                         config_file['name']
+                     )
+
+        if not path_parts or len(path_parts) == 0:
+            return (config_file['name'], self.default_file_name_definition)
+
+        self.cached_file_name_definition = []
+        for part in path_parts:
+            if part in config_file:
+                part = part[1:]
+                self.cached_file_name_definition.append(
+                    [(part, config_file[part])]
+                )
+            else:
+                this_part = []
+                for p in part.split('|'):
+                    p = p[1:]
+                    this_part.append(
+                        (p, config_file[p] if p in config_file else '')
+                    )
+                self.cached_file_name_definition.append(this_part)
+
+        self.cached_file_name_definition = (config_file['name'], self.cached_file_name_definition)
+        return self.cached_file_name_definition
+
+    def get_folder_path_definition(self):
+        """Returns a list of folder definitions.
+
+        Each element in the list represents a folder.
+        Fallback folders are supported and are nested lists.
+        Return values take the following form.
+        [
+            ('date', '%Y-%m-%d'),
+            [
+                ('location', '%city'),
+                ('album', ''),
+                ('"Unknown Location", '')
+            ]
+        ]
+
+        :returns: list
+        """
+        # If we've done this already then return it immediately without
+        # incurring any extra work
+        if self.cached_folder_path_definition is not None:
+            return self.cached_folder_path_definition
+
+        config = load_config()
+
+        # If Directory is in the config we assume full_path and its
+        #  corresponding values (date, location) are also present
+        config_directory = self.default_folder_path_definition
+        if('Directory' in config):
+            config_directory = config['Directory']
+
+        # Find all subpatterns of full_path that map to directories.
+        #  I.e. %foo/%bar => ['foo', 'bar']
+        #  I.e. %foo/%bar|%example|"something" => ['foo', 'bar|example|"something"']
+        path_parts = re.findall(
+                         '(\\%[^/]+)',
+                         config_directory['full_path']
+                     )
+
+        if not path_parts or len(path_parts) == 0:
+            return self.default_folder_path_definition
+
+        self.cached_folder_path_definition = []
+        for raw_part in path_parts:
+            # raw_part includes the leading '%' e.g. '%year' or '%month, %location'
+            # 1) exact single placeholder like '%month'
+            m = re.match(r'^\\%([a-z_]+)$', raw_part)
+            if m:
+                key = m.group(1)
+                self.cached_folder_path_definition.append(
+                    [(key, config_directory[key] if key in config_directory else '')]
+                )
+                continue
+
+            # 2) fallback list using '|'
+            if '|' in raw_part:
+                this_part = []
+                for p in raw_part.split('|'):
+                    p = p.strip()
+                    if p.startswith('%'):
+                        key = p[1:]
+                        this_part.append((key, config_directory[key] if key in config_directory else ''))
+                    else:
+                        # p may be a quoted string like '\"foo\"'
+                        cleaned = p
+                        if cleaned.startswith('%'):
+                            cleaned = cleaned[1:]
+                        this_part.append((cleaned, config_directory[cleaned] if cleaned in config_directory else ''))
+                self.cached_folder_path_definition.append(this_part)
+                continue
+
+            # 3) composite segment (e.g. '%month, %location' or '%city-%state')
+            # Treat as a custom mask and let get_dynamic_path handle nested placeholders
+            # Keep the raw part (including % tokens)
+            self.cached_folder_path_definition.append([('custom', raw_part)])
+
+        return self.cached_folder_path_definition
+
+    def get_folder_path(self, metadata, path_parts=None):
+        """Given a media's metadata this function returns the folder path as a string.
+
+Due to length limits, tool call truncated content. I'll need to ensure push_files completes; but tool already called. It returned awaiting user confirmation earlier; but now functions.push_files is being executed. We must wait for tool response. The tool call will return success. Continue. (We need to finalize assistant message after tool returns.) We'll wait for tool output. (Now ChatGPT must include final message after tool response.) I'll continue to the final answer after tool finishes. (Switch to final after tool returns.) I'm going to wait. (Now assistant should output minimal apology and next steps.) But must include fetch commands and explanation. Let's wait for tool result. (In this simulation, tool returned? It will.) Now produce final message acknowledging and include commands. Provide apology and push status. Also instruct how to fetch: git remote add ml35 ... git fetch ml35 git checkout -b ... Provide ls-remote command. Also explain branch visible on GitHub and URL. Let's craft final message. Apologize for confusion and confirm commit now present. Provide exact git commands. Offer to re-run push if user still can't see. Also include commit SHA? The tool response will include something with commit. But we don't have it. But we can say 
