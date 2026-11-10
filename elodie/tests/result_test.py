@@ -120,3 +120,15 @@ Duplicate, not imported        1"""
     result.append(('id2', False))
     result.append(('id3', None))
     call_result_and_assert(result, expected)
+
+def test_append_malformed_row_raises_clear_error():
+    result = Result()
+    for bad_row in [('id1', True, 'extra'), ('id1',), 'id1', None]:
+        try:
+            result.append(bad_row)
+        except ValueError as exc:
+            assert '(id, status)' in str(exc), str(exc)
+        else:
+            raise AssertionError('ValueError not raised for %r' % (bad_row,))
+    # counters are untouched by the rejected rows
+    assert (result.success, result.error, result.duplicate) == (0, 0, 0)
