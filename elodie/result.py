@@ -12,7 +12,12 @@ class Result(object):
         self.duplicate_items = []
 
     def append(self, row):
-        id, status = row
+        try:
+            id, status = row
+        except (TypeError, ValueError):
+            raise ValueError(
+                'Result row must be an (id, status) pair, got %r' % (row,)
+            ) from None
 
         # status can only be True, False, or None
         if status is True:
