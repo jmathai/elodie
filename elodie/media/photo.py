@@ -31,6 +31,12 @@ class Photo(Media):
     #: Valid extensions for photo files.
     extensions = ('arw', 'cr2', 'dng', 'gif', 'heic', 'jpeg', 'jpg', 'nef', 'png', 'rw2')
 
+    _subsecond_tags = {
+        'EXIF:DateTimeOriginal': 'EXIF:SubSecTimeOriginal',
+        'EXIF:CreateDate': 'EXIF:SubSecTimeDigitized',
+        'EXIF:ModifyDate': 'EXIF:SubSecTime',
+    }
+
     def __init__(self, source=None):
         super(Photo, self).__init__(source)
 
@@ -47,15 +53,19 @@ class Photo(Media):
 
         :returns: time object or None for non-photo files or 0 timestamp
         """
+        return self._get_date_taken_parts()[0]
+
+    def _get_date_taken_parts(self):
         if(not self.is_valid()):
-            return None
+            return None, 0
 
         source = self.source
         seconds_since_epoch = min(os.path.getmtime(source), os.path.getctime(source))  # noqa
+        microsecond = 0
 
         exif = self.get_exiftool_attributes()
         if not exif:
-            return seconds_since_epoch
+            return seconds_since_epoch, microsecond
 
         # We need to parse a string from EXIF into a timestamp.
         # EXIF DateTimeOriginal and EXIF DateTime are both stored
@@ -74,15 +84,18 @@ class Photo(Media):
                         dt_list = map(int, dt_list)
                         time_tuple = datetime(*dt_list).timetuple()
                         seconds_since_epoch = time.mktime(time_tuple)
+                        subseconds = str(exif.get(self._subsecond_tags.get(key), ''))
+                        if re.fullmatch(r'[0-9]+', subseconds):
+                            microsecond = int(subseconds[:6].ljust(6, '0'))
                         break
             except BaseException as e:
                 log.error(e)
                 pass
 
         if(seconds_since_epoch == 0):
-            return None
+            return None, 0
 
-        return time.gmtime(seconds_since_epoch)
+        return time.gmtime(seconds_since_epoch), microsecond
 
     def is_valid(self):
         """Check the file extension against valid file extensions.

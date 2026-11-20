@@ -74,6 +74,10 @@ class Base(object):
     def get_camera_model(self):
         return None
 
+    def _get_date_taken_parts(self):
+        """Return the existing timestamp and its fractional component."""
+        return self.get_date_taken(), 0
+
     def get_metadata(self, update_cache=False):
         """Get a dictionary of metadata for any file.
 
@@ -88,9 +92,11 @@ class Base(object):
             return self.metadata
 
         source = self.source
+        date_taken, microsecond = self._get_date_taken_parts()
 
         self.metadata = {
-            'date_taken': self.get_date_taken(),
+            'date_taken': date_taken,
+            'date_taken_microsecond': microsecond,
             'camera_make': self.get_camera_make(),
             'camera_model': self.get_camera_model(),
             'latitude': self.get_coordinate('latitude'),

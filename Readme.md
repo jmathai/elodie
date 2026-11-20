@@ -330,6 +330,9 @@ If you'd like to specify your own naming convention it's recommended you include
 
 By default the resulting filename is all lowercased. To change this behavior to uppercasing add capitalization=upper.
 
+Use `%f` in a filename's date format for six digits of EXIF subsecond precision.
+Elodie writes `000000` when the selected timestamp has no EXIF subsecond value.
+
 ```
 [File]
 date=%Y-%m-%b-%H-%M-%S

@@ -6,6 +6,7 @@ import sys
 import shutil
 
 from click.testing import CliRunner
+import piexif
 import pytest
 # assert_raises replaced with pytest.raises
 from six import text_type, unichr as six_unichr
@@ -78,6 +79,44 @@ def test_import_file_photo():
     shutil.rmtree(folder_destination)
 
     assert helper.path_tz_fix(os.path.join('2015-12-Dec','Unknown Location','2015-12-05_00-59-26-plain.jpg')) in dest_path, dest_path
+
+@pytest.mark.parametrize('subseconds, expected', [(b'0123', '012300'), (None, '000000')])
+def test_import_photo_filename_with_microseconds(tmp_path, monkeypatch, subseconds, expected):
+    config = tmp_path / 'config.ini'
+    config.write_text(
+        '[File]\ndate=%Y-%m-%d_%H-%M-%S-%f-%%f\n'
+        'name=%date-%original_name.%extension\n'
+    )
+    monkeypatch.setattr('elodie.config.get_config_file', lambda: str(config))
+    monkeypatch.delattr(load_config, 'config', raising=False)
+
+    source = tmp_path / 'source' / 'plain.jpg'
+    source.parent.mkdir()
+    shutil.copyfile(helper.get_file('plain.jpg'), source)
+    exif = piexif.load(str(source))
+    exif['Exif'][piexif.ExifIFD.SubSecTimeDigitized] = b'987'
+    if subseconds is not None:
+        exif['Exif'][piexif.ExifIFD.SubSecTimeOriginal] = subseconds
+    else:
+        exif['Exif'].pop(piexif.ExifIFD.SubSecTimeOriginal, None)
+    piexif.insert(piexif.dump(exif), str(source))
+    destination = tmp_path / 'destination'
+    destination.mkdir()
+
+    try:
+        monkeypatch.setattr(elodie, 'FILESYSTEM', elodie.FileSystem())
+        result = CliRunner().invoke(elodie._import, [
+            '--destination', str(destination), '--allow-duplicates', str(source),
+        ])
+    finally:
+        if hasattr(load_config, 'config'):
+            del load_config.config
+
+    assert result.exit_code == 0, result.output
+    imported = list(destination.rglob('*.jpg'))
+    assert [path.name for path in imported] == [
+        helper.path_tz_fix('2015-12-05_00-59-26-{}-%f-plain.jpg'.format(expected)),
+    ]
 
 def test_import_file_video():
     temporary_folder, folder = helper.create_working_folder()
