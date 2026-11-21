@@ -175,6 +175,14 @@ class FileSystem(object):
             for this_part in parts:
                 part, mask = this_part
                 if part in ('date', 'day', 'month', 'year'):
+                    if '%f' in mask:
+                        microseconds = '{:06d}'.format(metadata.get('date_taken_microsecond', 0))
+                        # Pass escaped percent signs through to strftime.
+                        mask = re.sub(
+                            r'%%|%f',
+                            lambda token: microseconds if token[0] == '%f' else '%%',
+                            mask,
+                        )
                     this_value = time.strftime(mask, metadata['date_taken'])
                     break
                 elif part in ('location', 'city', 'state', 'country'):
